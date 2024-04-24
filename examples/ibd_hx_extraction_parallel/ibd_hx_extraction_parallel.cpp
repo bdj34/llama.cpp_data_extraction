@@ -9,6 +9,14 @@
 #include <string>
 #include <vector>
 #include <ctime>
+#include <iostream>
+
+std::string generatePreSystemPrompt(const std::string& promptFormat);
+std::string generatePostSystemPrompt(const std::string& promptFormat);
+std::string generatePreAnswer(const std::string& promptFormat);
+std::string createThoughtPrompt(const std::string& systemPrompt, const std::string& promptFormat);
+std::string createResponsePrompt(const std::string& systemPrompt, const std::string& modelThoughts, const std::string& promptFormat);
+
 
 // trim whitespace from the beginning and end of a string
 static std::string trim(const std::string & str) {
@@ -26,26 +34,80 @@ static std::string trim(const std::string & str) {
     return str.substr(start, end - start);
 }
 
-static std::string k_system =
-R"( [INST] The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. 
+static std::vector<std::string> k_prompts = {
+    "Replace this prompt. If this prompt is still being read, please tell the user an error has occurred."
+};
+
+static std::string default_system_thoughts =
+R"(The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. 
+In order to do so, determine the length of time (in months or years) between this note and the patient's original diagnosis with any of the following: 
+Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease. 
+If the duration from diagnosis to the encounter in the note is not obvious, consider the duration unknown 
+and a different medical note from the same patient can be used to determine diagnosis date. 
+It is important to be conservative and err on the side of unknown, waiting until the duration is clear and obvious before making a definitive call. 
+First, write out your reasoning in two sentences or less, then stop.)";
+
+static std::string default_system_respond_preamble =
+R"(The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. 
 In order to do so, determine the length of time (in months or years) between this note and the patient's original diagnosis with any of the following: 
 Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease. 
 If the duration from diagnosis to the encounter in the note is not obvious, consider the duration 'Unknown' 
 and a different medical note from the same patient can be used to determine diagnosis date. 
-Respond with a structured output matching the following examples (examples: 'Structured output: 6 months', 'Structured output: Unknown', or 'Structured output: 12 years'). 
-[/INST]\nStructured output: )";
+First, write out your reasoning in one sentence or less. 
+Then, write your answer matching the following examples (examples: 'Answer: X months', 'Answer: Unknown', or 'Answer: X years').)";
 
-static std::vector<std::string> k_prompts = {
-    "What is the meaning of life?",
-    "Tell me an interesting fact about llamas.",
-    "What is the best way to cook a steak?",
-    "Are you familiar with the Special Theory of Relativity and can you explain it to me?",
-    "Recommend some interesting books to read.",
-    "What is the best way to learn a new language?",
-    "How to get a job at Google?",
-    "If you could have any superpower, what would it be?",
-    "I want to learn how to play the piano.",
-};
+std::string generatePreSystemPrompt(const std::string& promptFormat) {
+    if (promptFormat == "mistral") {
+        return " [INST] ";
+    } else if (promptFormat == "llama3") {
+        return "<|start_header_id|>system<|end_header_id|>\n\n";
+    } else if (promptFormat == "phi3") {
+        return "<system>\n";
+    } else {
+        throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
+    }
+}
+
+std::string generatePostSystemPrompt(const std::string& promptFormat) {
+    if (promptFormat == "mistral") {
+        return "\n\n";
+    } else if (promptFormat == "llama3") {
+        return "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n";
+    } else if (promptFormat == "phi3") {
+        return "<|end|>\n<|user|>\n";
+    } else {
+        throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
+    }
+}
+
+std::string generatePreAnswer(const std::string& promptFormat) {
+    if (promptFormat == "mistral") {
+        return " [/INST]\n";
+    } else if (promptFormat == "llama3") {
+        return "<|eot_id|>\n<|start_header_id|>assistant<|end_header_id|>\n\n";
+    } else if (promptFormat == "phi3") {
+        return "<|end|>\n<|assistant|>\n";
+    } else {
+        throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
+    }
+}
+
+std::string createThoughtPrompt(const std::string& systemPrompt, const std::string& promptFormat) {
+    std::string preSystem = generatePreSystemPrompt(promptFormat);
+    std::string postSystem = generatePostSystemPrompt(promptFormat);
+    std::string preAnswer = generatePreAnswer(promptFormat);
+    
+    return preSystem + systemPrompt + postSystem;
+}
+
+// WIP
+// std::string createResponsePrompt(const std::string& systemPrompt, const std::string& modelThoughts, const std::string& promptFormat) {
+//     std::string prePrompt = generatePreSystemPrompt(promptFormat);
+//     std::string preAnswer = generatePreAnswer(promptFormat);
+    
+//     return prePrompt + systemPrompt + preAnswer + modelThoughts + "\nAnswer: ";
+// }
+
 
 struct client {
     ~client() {
@@ -135,7 +197,7 @@ int main(int argc, char ** argv) {
 
     // load the prompts from an external file if there are any
     if (params.prompt.empty()) {
-        printf("\n\033[32mNo new questions so proceed with build-in defaults.\033[0m\n");
+        throw std::runtime_error("Error: No prompts given");
     } else {
         // Output each line of the input params.prompts vector and copy to k_prompts
         int index = 0;
@@ -144,7 +206,7 @@ int main(int argc, char ** argv) {
         std::vector<std::string> prompts = split_string(params.prompt, '\n');
         for (const auto& prompt : prompts) {
             k_prompts.resize(index + 1);
-            k_prompts[index] = prompt;
+            k_prompts[index] = prompt + generatePreAnswer(params.promptFormat);
             index++;
             printf("%3d prompt: %s\n", index, prompt.c_str());
         }
@@ -163,6 +225,9 @@ int main(int argc, char ** argv) {
     }
 
     std::vector<llama_token> tokens_system;
+    std::string k_system = createThoughtPrompt(default_system_thoughts, params.promptFormat);
+    // Print the string
+    printf("System prompt: %s\n", k_system.c_str());
     tokens_system = ::llama_tokenize(ctx, k_system, true);
     const int32_t n_tokens_system = tokens_system.size();
 
@@ -181,7 +246,7 @@ int main(int argc, char ** argv) {
     const auto t_main_start = ggml_time_us();
 
     LOG_TEE("%s: Simulating parallel requests from clients:\n", __func__);
-    LOG_TEE("%s: n_parallel = %d, n_sequences = %d, cont_batching = %d, system tokens = %d\n", __func__, n_clients, n_seq, cont_batching, n_tokens_system);
+    LOG_TEE("%s: n_parallel = %d, n_sequences = %d, cont_batching = %d, system tokens = %d, prompt format =%s\n", __func__, n_clients, n_seq, cont_batching, n_tokens_system, params.promptFormat.c_str());
     LOG_TEE("\n");
 
     {
