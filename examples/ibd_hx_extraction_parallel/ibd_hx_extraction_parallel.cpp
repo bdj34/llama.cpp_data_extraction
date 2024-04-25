@@ -422,13 +422,18 @@ int main(int argc, char ** argv) {
                 //printf("client %d, seq %d, token %d, pos %d, batch %d: %s\n",
                 //        client.id, client.seq_id, id, client.n_decoded, client.i_batch, token_str.c_str());
 
+                // Brian edit: force model to stop on eos OR eot
+                // Also make it so n_decoded  and not n_decoded + n_prompt is >= n_predict.
                 if (client.n_decoded > 2 &&
-                        (id == llama_token_eos(model) ||
-                         (params.n_predict > 0 && client.n_decoded + client.n_prompt >= params.n_predict) ||
-                         client.response.find("User:") != std::string::npos ||
-                         client.response.find('\n') != std::string::npos)) {
-                    // basic reverse prompt
-                    const size_t pos = client.response.find("User:");
+                        (llama_token_is_eog(model, id) ||
+                         (params.n_predict > 0 && client.n_decoded >= params.n_predict))) {
+                    
+                    // Brian edit: basic reverse prompt identifying the EOT or EOS tokens
+                    const std::string eos_str = llama_token_to_piece(ctx, llama_token_eos(model));
+                    const std::string eot_str = llama_token_to_piece(ctx, llama_token_eot(model));
+                    const size_t pos_eos = client.response.find(eos_str);
+                    const size_t pos_eot = client.response.find(eot_str);
+                    const size_t pos = (pos_eos < pos_eot) ? pos_eos : pos_eot;
                     if (pos != std::string::npos) {
                         client.response = client.response.substr(0, pos);
                     }
