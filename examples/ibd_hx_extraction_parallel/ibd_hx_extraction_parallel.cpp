@@ -45,7 +45,7 @@ Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or
 If the duration from diagnosis to the encounter in the note is not obvious, consider the duration unknown 
 and a different medical note from the same patient can be used to determine diagnosis date. 
 It is important to be conservative and err on the side of unknown, waiting until the duration is clear and obvious before making a definitive call. 
-First, write out your reasoning in two sentences or less, then stop.)";
+First, write out your reasoning in a single sentence.)";
 
 static std::string default_system_respond_preamble =
 R"(The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. 
@@ -70,7 +70,7 @@ std::string generatePreSystemPrompt(const std::string& promptFormat) {
 
 std::string generatePostSystemPrompt(const std::string& promptFormat) {
     if (promptFormat == "mistral") {
-        return "\n\n";
+        return "\n<<<\n";
     } else if (promptFormat == "llama3") {
         return "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n";
     } else if (promptFormat == "phi3") {
@@ -82,7 +82,7 @@ std::string generatePostSystemPrompt(const std::string& promptFormat) {
 
 std::string generatePreAnswer(const std::string& promptFormat) {
     if (promptFormat == "mistral") {
-        return " [/INST]\n";
+        return "\n>>> [/INST] ";
     } else if (promptFormat == "llama3") {
         return "<|eot_id|>\n<|start_header_id|>assistant<|end_header_id|>\n\n";
     } else if (promptFormat == "phi3") {
@@ -424,16 +424,38 @@ int main(int argc, char ** argv) {
 
                 // Brian edit: force model to stop on eos OR eot
                 // Also make it so n_decoded  and not n_decoded + n_prompt is >= n_predict.
+                //auto findStop = std::find(params.antiprompt.begin(), params.antiprompt.end(), client.response);
+
+                bool foundStop = false;
+                for (const auto& item : params.antiprompt) {
+                    //printf("\nantiPrompt vec item = %s\n", item.c_str());
+                    if (client.response.find(item) != std::string::npos) {
+                    //if (client.response.find('\n') != std::string::npos) {
+                        foundStop = true;
+                        break;
+                    }
+                }
+
                 if (client.n_decoded > 2 &&
-                        (llama_token_is_eog(model, id) ||
+                        (llama_token_is_eog(model, id) || 
+                        foundStop ||
                          (params.n_predict > 0 && client.n_decoded >= params.n_predict))) {
                     
                     // Brian edit: basic reverse prompt identifying the EOT or EOS tokens
                     const std::string eos_str = llama_token_to_piece(ctx, llama_token_eos(model));
                     const std::string eot_str = llama_token_to_piece(ctx, llama_token_eot(model));
-                    const size_t pos_eos = client.response.find(eos_str);
-                    const size_t pos_eot = client.response.find(eot_str);
-                    const size_t pos = (pos_eos < pos_eot) ? pos_eos : pos_eot;
+                    //printf("\nEOT string = '%s'\n", eot_str.c_str());
+                    //printf("\nEOS string = '%s'\n", eos_str.c_str());
+                    size_t pos;
+                    if (eot_str.empty()) {
+                        pos = client.response.find(eos_str);
+                    } else{
+                        const size_t pos_eos = client.response.find(eos_str);
+                        const size_t pos_eot = client.response.find(eot_str);
+                        pos = (pos_eos < pos_eot) ? pos_eos : pos_eot;
+                    }
+                    printf("\nEOS/EOT position = %zu\n", pos);
+
                     if (pos != std::string::npos) {
                         client.response = client.response.substr(0, pos);
                     }
