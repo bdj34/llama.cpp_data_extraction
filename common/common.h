@@ -94,6 +94,7 @@ struct gpt_params {
 
     std::string model                = "models/7B/ggml-model-f16.gguf"; // model path
     std::string promptFormat         = ""; // promptFormat to use for the ibd hx extraction
+    std::string systemPrompt         = ""; // systemPrompt set by user
     std::string model_draft          = "";  // draft model for speculative decoding
     std::string model_alias          = "unknown"; // model alias
     std::string model_url            = "";  // model url to download

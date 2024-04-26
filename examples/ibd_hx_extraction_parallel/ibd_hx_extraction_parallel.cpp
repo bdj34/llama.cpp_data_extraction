@@ -221,11 +221,17 @@ int main(int argc, char ** argv) {
     for (size_t i = 0; i < clients.size(); ++i) {
         auto & client = clients[i];
         client.id = i;
+        //// Modify to selectively use grammar. Probably don't want it here but want it later.
         client.ctx_sampling = llama_sampling_init(params.sparams);
     }
 
     std::vector<llama_token> tokens_system;
-    std::string k_system = createThoughtPrompt(default_system_thoughts, params.promptFormat);
+    std::string system = default_system_thoughts;
+    if(!params.systemPrompt.empty()){
+        system = params.systemPrompt;
+    }
+
+    std::string k_system = createThoughtPrompt(system, params.promptFormat);
     // Print the string
     printf("System prompt: %s\n", k_system.c_str());
     tokens_system = ::llama_tokenize(ctx, k_system, true);
@@ -263,6 +269,7 @@ int main(int argc, char ** argv) {
 
         // assign the system KV cache to all parallel sequences
         for (int32_t i = 1; i <= n_clients; ++i) {
+            // Copying the cache from client 0 to all n_clients clients (what are the last two args?)
             llama_kv_cache_seq_cp(ctx, 0, i, -1, -1);
         }
 
@@ -271,6 +278,7 @@ int main(int argc, char ** argv) {
 
     LOG_TEE("Processing requests ...\n\n");
 
+    size_t promptNumber = 0;
     while (true) {
         if (dump_kv_cache) {
             llama_kv_cache_view_update(ctx, &kvc_view);
@@ -312,7 +320,8 @@ int main(int argc, char ** argv) {
                     client.t_start_prompt = ggml_time_us();
                     client.t_start_gen    = 0;
 
-                    client.input    = k_prompts[rand() % k_prompts.size()];
+                    client.input    = k_prompts[promptNumber];
+                    promptNumber++;
                     client.prompt   = client.input;
                     client.response = "";
 
@@ -454,7 +463,7 @@ int main(int argc, char ** argv) {
                         const size_t pos_eot = client.response.find(eot_str);
                         pos = (pos_eos < pos_eot) ? pos_eos : pos_eot;
                     }
-                    printf("\nEOS/EOT position = %zu\n", pos);
+                    //printf("\nEOS/EOT position = %zu\n", pos);
 
                     if (pos != std::string::npos) {
                         client.response = client.response.substr(0, pos);
@@ -466,13 +475,18 @@ int main(int argc, char ** argv) {
 
                     const auto t_main_end = ggml_time_us();
 
-                    LOG_TEE("\033[31mClient %3d, seq %3d/%3d, prompt %4d t, response %4d t, time %5.2f s, speed %5.2f t/s, cache miss %d \033[0m \nInput:    %s\n\033[35mResponse: %s\033[0m\n\n",
-                            client.id, client.seq_id, n_seq, client.n_prompt, client.n_decoded,
-                            (t_main_end - client.t_start_prompt) / 1e6,
-                            (double) (client.n_prompt + client.n_decoded) / (t_main_end - client.t_start_prompt) * 1e6,
-                            n_cache_miss,
+                    LOG_TEE("\033[31mSystem:    %s\n\033Input:    %s\n\033[35mResponse: %s\033[0m\n\n",
+                            ::trim(system).c_str(),
                             ::trim(client.input).c_str(),
                             ::trim(client.response).c_str());
+
+                    // LOG_TEE("\033[31mClient %3d, seq %3d/%3d, prompt %4d t, response %4d t, time %5.2f s, speed %5.2f t/s, cache miss %d \033[0m \nInput:    %s\n\033[35mResponse: %s\033[0m\n\n",
+                    //         client.id, client.seq_id, n_seq, client.n_prompt, client.n_decoded,
+                    //         (t_main_end - client.t_start_prompt) / 1e6,
+                    //         (double) (client.n_prompt + client.n_decoded) / (t_main_end - client.t_start_prompt) * 1e6,
+                    //         n_cache_miss,
+                    //         ::trim(client.input).c_str(),
+                    //         ::trim(client.response).c_str());
 
                     n_total_prompt += client.n_prompt;
                     n_total_gen    += client.n_decoded;
