@@ -195,6 +195,7 @@ int main(int argc, char ** argv) {
     // load the target model
     std::tie(model, ctx) = llama_init_from_gpt_params(params);
 
+    std::vector<std::string> prompts;
     // load the prompts from an external file if there are any
     if (params.prompt.empty()) {
         throw std::runtime_error("Error: No prompts given");
@@ -203,7 +204,7 @@ int main(int argc, char ** argv) {
         int index = 0;
         printf("\n\033[32mNow printing the external prompt file %s\033[0m\n\n", params.prompt_file.c_str());
 
-        std::vector<std::string> prompts = split_string(params.prompt, '\n');
+        prompts = split_string(params.prompt, '\n');
         for (const auto& prompt : prompts) {
             k_prompts.resize(index + 1);
             k_prompts[index] = prompt + generatePreAnswer(params.promptFormat);
@@ -475,9 +476,9 @@ int main(int argc, char ** argv) {
 
                     const auto t_main_end = ggml_time_us();
 
-                    LOG_TEE("\033[31mSystem:    %s\n\033Input:    %s\n\033[35mResponse: %s\033[0m\n\n",
+                    LOG_TEE("System:    %s\nInput:    \033[96m%s\n\033[0mResponse: \033[31m%s\033[0m\n\n",
                             ::trim(system).c_str(),
-                            ::trim(client.input).c_str(),
+                            ::trim(prompts[client.id]).c_str(),
                             ::trim(client.response).c_str());
 
                     // LOG_TEE("\033[31mClient %3d, seq %3d/%3d, prompt %4d t, response %4d t, time %5.2f s, speed %5.2f t/s, cache miss %d \033[0m \nInput:    %s\n\033[35mResponse: %s\033[0m\n\n",
