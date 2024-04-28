@@ -45,7 +45,8 @@ Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or
 If the duration from diagnosis to the encounter in the note is not obvious, consider the duration unknown 
 and a different medical note from the same patient can be used to determine diagnosis date. 
 It is important to be conservative and err on the side of unknown, waiting until the duration is clear and obvious before making a definitive call. 
-First, write out your reasoning in a single sentence.)";
+First, write out your reasoning in a single sentence. 
+Then, write your answer matching the following examples (examples: 'Answer: X months', 'Answer: Unknown', or 'Answer: X years').)";
 
 static std::string default_system_respond_preamble =
 R"(The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. 
@@ -62,7 +63,9 @@ std::string generatePreSystemPrompt(const std::string& promptFormat) {
     } else if (promptFormat == "llama3") {
         return "<|start_header_id|>system<|end_header_id|>\n\n";
     } else if (promptFormat == "phi3") {
-        return "<system>\n";
+        return "<user>\n ";
+    //} else if (promptFormat == "phi3") {
+    //    return "<system>\n";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
     }
@@ -74,7 +77,7 @@ std::string generatePostSystemPrompt(const std::string& promptFormat) {
     } else if (promptFormat == "llama3") {
         return "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n";
     } else if (promptFormat == "phi3") {
-        return "<|end|>\n<|user|>\n";
+        return "\n<<<\n";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
     }
@@ -86,7 +89,7 @@ std::string generatePreAnswer(const std::string& promptFormat) {
     } else if (promptFormat == "llama3") {
         return "<|eot_id|>\n<|start_header_id|>assistant<|end_header_id|>\n\n";
     } else if (promptFormat == "phi3") {
-        return "<|end|>\n<|assistant|>\n";
+        return "\n>>> <|end|>\n <|assistant|>";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
     }
@@ -205,11 +208,13 @@ int main(int argc, char ** argv) {
         printf("\n\033[32mNow printing the external prompt file %s\033[0m\n\n", params.prompt_file.c_str());
 
         prompts = split_string(params.prompt, '\n');
+        std::string tmpPrompt;
         for (const auto& prompt : prompts) {
             k_prompts.resize(index + 1);
-            k_prompts[index] = prompt + generatePreAnswer(params.promptFormat);
+            tmpPrompt = prompt + generatePreAnswer(params.promptFormat);
+            k_prompts[index] = tmpPrompt;
             index++;
-            printf("%3d prompt: %s\n", index, prompt.c_str());
+            printf("%3d prompt: %s\n", index, tmpPrompt.c_str());
         }
     }
 
@@ -454,8 +459,9 @@ int main(int argc, char ** argv) {
                     // Brian edit: basic reverse prompt identifying the EOT or EOS tokens
                     const std::string eos_str = llama_token_to_piece(ctx, llama_token_eos(model));
                     const std::string eot_str = llama_token_to_piece(ctx, llama_token_eot(model));
-                    //printf("\nEOT string = '%s'\n", eot_str.c_str());
-                    //printf("\nEOS string = '%s'\n", eos_str.c_str());
+                    printf("\nEOT string = '%s'\n", eot_str.c_str());
+                    printf("\nEOS string = '%s'\n", eos_str.c_str());
+                    printf("Client response (before chopping) = '%s'\n", client.response.c_str());
                     size_t pos;
                     if (eot_str.empty()) {
                         pos = client.response.find(eos_str);
@@ -464,7 +470,7 @@ int main(int argc, char ** argv) {
                         const size_t pos_eot = client.response.find(eot_str);
                         pos = (pos_eos < pos_eot) ? pos_eos : pos_eot;
                     }
-                    //printf("\nEOS/EOT position = %zu\n", pos);
+                    printf("\nEOS/EOT position = %zu\n", pos);
 
                     if (pos != std::string::npos) {
                         client.response = client.response.substr(0, pos);
