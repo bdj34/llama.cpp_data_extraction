@@ -17,6 +17,15 @@ std::string generatePreAnswer(const std::string& promptFormat);
 std::string createThoughtPrompt(const std::string& systemPrompt, const std::string& promptFormat);
 std::string createResponsePrompt(const std::string& systemPrompt, const std::string& modelThoughts, const std::string& promptFormat);
 
+// Struct which will serve as the value of a key-value pair in an unordered map.
+struct info {
+    std::string inputText;
+    std::string inputDate;
+    std::string fullPrompt;
+    std::string output;
+    double yesProb;
+    double noProb;
+};
 
 // trim whitespace from the beginning and end of a string
 static std::string trim(const std::string & str) {
@@ -159,6 +168,8 @@ static std::vector<std::string> split_string(const std::string& input, char deli
     return tokens;
 }
 
+size_t promptNumber = 0;
+
 int main(int argc, char ** argv) {
     srand(1234);
 
@@ -284,7 +295,6 @@ int main(int argc, char ** argv) {
 
     LOG_TEE("Processing requests ...\n\n");
 
-    size_t promptNumber = 0;
     while (true) {
         if (dump_kv_cache) {
             llama_kv_cache_view_update(ctx, &kvc_view);
@@ -484,7 +494,8 @@ int main(int argc, char ** argv) {
 
                     LOG_TEE("System:    %s\nInput:    \033[96m%s\n\033[0mResponse: \033[31m%s\033[0m\n\n",
                             ::trim(system).c_str(),
-                            ::trim(prompts[client.id]).c_str(),
+                            //::trim(prompts[promptNumber]).c_str(),
+                            ::trim(client.input).c_str(),
                             ::trim(client.response).c_str());
 
                     // LOG_TEE("\033[31mClient %3d, seq %3d/%3d, prompt %4d t, response %4d t, time %5.2f s, speed %5.2f t/s, cache miss %d \033[0m \nInput:    %s\n\033[35mResponse: %s\033[0m\n\n",
