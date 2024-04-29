@@ -170,8 +170,8 @@ struct gpt_params {
     std::string cache_type_v = "f16"; // KV cache data type for the V
 
     // multimodal models (see examples/llava)
-    std::string mmproj = ""; // path to multimodal projector
-    std::string image  = ""; // path to an image file
+    std::string mmproj = "";        // path to multimodal projector
+    std::vector<std::string> image; // path to image file(s)
 };
 
 bool parse_kv_override(const char * data, std::vector<llama_model_kv_override> & overrides);
@@ -199,6 +199,7 @@ bool validate_file_name(const std::string & filename);
 std::vector<llama_sampler_type> sampler_types_from_names(const std::vector<std::string> & names, bool allow_alt_names);
 std::vector<llama_sampler_type> sampler_types_from_chars(const std::string & names_string);
 std::vector<std::string> string_split(std::string input, char separator);
+std::string string_strip(const std::string & str);
 std::string sampler_type_to_name_string(llama_sampler_type sampler_type);
 
 //
