@@ -10,18 +10,20 @@
 #include <vector>
 #include <ctime>
 #include <iostream>
+#include <regex> 
 
 std::string generatePreSystemPrompt(const std::string& promptFormat);
 std::string generatePostSystemPrompt(const std::string& promptFormat);
 std::string generatePreAnswer(const std::string& promptFormat);
 std::string createThoughtPrompt(const std::string& systemPrompt, const std::string& promptFormat);
 std::string createResponsePrompt(const std::string& systemPrompt, const std::string& modelThoughts, const std::string& promptFormat);
+bool containsYesOrNo(const std::string& input);
+static std::vector<float> softmax(const std::vector<float>& logits);
 
 // Struct which will serve as the value of a key-value pair in an unordered map.
 struct info {
     std::string inputText;
     std::string inputDate;
-    std::string fullPrompt;
     std::string output;
     double yesProb;
     double noProb;
@@ -49,8 +51,8 @@ static std::vector<std::string> k_prompts = {
 
 static std::string default_system =
 R"(The text provided is a pathology report, with samples originating from the colon or rectum unless specified otherwise. 
-We are interested in identifying the presence of invasive adenocarcinoma in *any* colon or rectal sample. 
-Does the pathology report indicate that the patient has an invasive colorectal adenocarcinoma? 
+We are interested in identifying whether invasive adenocarcinoma is present in *any* colon or rectal sample. 
+Does the pathology report indicate that the patient has an invasive colorectal adenocarcinoma in any colon or rectal sample? 
 Answer yes or no, matching the format 'Answer: Yes' or 'Answer: No'.)";
 
 std::string generatePreSystemPrompt(const std::string& promptFormat) {
@@ -81,11 +83,11 @@ std::string generatePostSystemPrompt(const std::string& promptFormat) {
 
 std::string generatePreAnswer(const std::string& promptFormat) {
     if (promptFormat == "mistral") {
-        return "\n>>> [/INST] Answer: ";
+        return "\n>>> [/INST] Answer:";
     } else if (promptFormat == "llama3") {
-        return "<|eot_id|>\n<|start_header_id|>assistant<|end_header_id|>\n\nAnswer: ";
+        return "<|eot_id|>\n<|start_header_id|>assistant<|end_header_id|>\n\nAnswer:";
     } else if (promptFormat == "phi3") {
-        return "\n>>> <|end|>\n <|assistant|> Answer: ";
+        return "\n>>> <|end|>\n <|assistant|> Answer:";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
     }
@@ -153,6 +155,41 @@ static std::vector<std::string> split_string(const std::string& input, char deli
         tokens.push_back(token);
     }
     return tokens;
+}
+
+// Define a function to evaluate yes and no
+bool containsYesOrNo(const std::string& input) {
+    // Convert the input string to lowercase for case-insensitive comparison
+    std::string lowerInput = input;
+    std::transform(lowerInput.begin(), lowerInput.end(), lowerInput.begin(),
+                   [](unsigned char c){ return std::tolower(c); });
+
+    // Define regex patterns to check for standalone "yes" or "no"
+    std::regex yesNoPattern("\\b(yes|no)\\b"); // Word boundary, "yes" or "no", word boundary
+
+    // Use regex_search to find the pattern in the string
+    return std::regex_search(lowerInput, yesNoPattern);
+}
+
+// Define softmax function from examples/perplexity
+static std::vector<float> softmax(const std::vector<float>& logits) {
+    std::vector<float> probs(logits.size());
+    float max_logit = logits[0];
+    for (float v : logits) {
+        max_logit = std::max(max_logit, v);
+    }
+    double sum_exp = 0.0;
+    for (size_t i = 0; i < logits.size(); i++) {
+        // Subtract the maximum logit value from the current logit value for numerical stability
+        const float logit = logits[i] - max_logit;
+        const float exp_logit = expf(logit);
+        sum_exp += exp_logit;
+        probs[i] = exp_logit;
+    }
+    for (size_t i = 0; i < probs.size(); i++) {
+        probs[i] /= sum_exp;
+    }
+    return probs;
 }
 
 size_t promptNumber = 0;
@@ -447,6 +484,51 @@ int main(int argc, char ** argv) {
                         break;
                     }
                 }
+                
+                if(client.response == " Yes" || client.response == " No"){
+                    // Extract logits (trying to get probability)
+                    auto   n_vocab = llama_n_vocab(model);
+                    auto * logits_ptr  = llama_get_logits_ith(ctx, client.i_batch);
+
+                    std::vector<float> logits;
+                    logits.reserve(n_vocab);
+
+                    for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
+                        logits.emplace_back(logits_ptr[token_id]);
+                    }
+
+                    //std::vector<float> logits(logits_ptr, logits_ptr + n_vocab);
+                    // std::vector<llama_token_data> candidates;
+
+                    // candidates.reserve(n_vocab);
+
+                    // Add logits to candidate vector
+                    // std::vector<float> logits;
+                    // logits.reserve(candidates_p.size);
+                    // Apply softmax to the extracted logits
+                    std::vector<float> probabilities = softmax(logits);
+
+                    auto max_it = std::max_element(probabilities.begin(), probabilities.end());
+
+                    // Find the index of the maximum element
+                    int max_index = std::distance(probabilities.begin(), max_it);
+
+                    // Get the maximum value
+                    float max_prob = *max_it;
+
+                    // Get the string associated with it
+                    std::string max_str = llama_token_to_piece(ctx, max_index);
+
+                    printf("The maximum probability is %.3f with logits %.3f for string: '%s'\n", max_prob, logits[max_index], max_str.c_str());
+
+                    for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
+                        std::string token_str = llama_token_to_piece(ctx, token_id);
+                        if(containsYesOrNo(token_str)) {
+                            printf("Token ID: %d Token str: '%s' Logits: %.6f Probability: %.6f\n", token_id, token_str.c_str(), logits[token_id], probabilities[token_id]);
+                        }
+                    }
+                }
+                
 
                 if (client.n_decoded > 2 &&
                         (llama_token_is_eog(model, id) || 
@@ -468,16 +550,6 @@ int main(int argc, char ** argv) {
                         pos = (pos_eos < pos_eot) ? pos_eos : pos_eot;
                     }
                     printf("\nEOS/EOT position = %zu\n", pos);
-
-                    // // Extract logits (trying to get probability)
-                    // auto * logits  = llama_get_logits_ith(ctx, pos-1);
-                    // std::vector<llama_token_data> candidates;
-                    // candidates.reserve(n_vocab);
-
-                    // for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
-                    //     candidates.emplace_back(llama_token_data{ token_id, logits[token_id], 0.0f });
-                    // }
-                    
 
                     if (pos != std::string::npos) {
                         client.response = client.response.substr(0, pos);
