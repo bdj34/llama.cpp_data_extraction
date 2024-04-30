@@ -47,24 +47,11 @@ static std::vector<std::string> k_prompts = {
     "Replace this prompt. If this prompt is still being read, please tell the user an error has occurred."
 };
 
-static std::string default_system_thoughts =
-R"(The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. 
-In order to do so, determine the length of time (in months or years) between this note and the patient's original diagnosis with any of the following: 
-Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease. 
-If the duration from diagnosis to the encounter in the note is not obvious, consider the duration unknown 
-and a different medical note from the same patient can be used to determine diagnosis date. 
-It is important to be conservative and err on the side of unknown, waiting until the duration is clear and obvious before making a definitive call. 
-First, write out your reasoning in a single sentence. 
-Then, write your answer matching the following examples (examples: 'Answer: X months', 'Answer: Unknown', or 'Answer: X years').)";
-
-static std::string default_system_respond_preamble =
-R"(The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. 
-In order to do so, determine the length of time (in months or years) between this note and the patient's original diagnosis with any of the following: 
-Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease. 
-If the duration from diagnosis to the encounter in the note is not obvious, consider the duration 'Unknown' 
-and a different medical note from the same patient can be used to determine diagnosis date. 
-First, write out your reasoning in one sentence or less. 
-Then, write your answer matching the following examples (examples: 'Answer: X months', 'Answer: Unknown', or 'Answer: X years').)";
+static std::string default_system =
+R"(The text provided is a pathology report, with samples originating from the colon or rectum unless specified otherwise. 
+We are interested in identifying the presence of invasive adenocarcinoma in *any* colon or rectal sample. 
+Does the pathology report indicate that the patient has an invasive colorectal adenocarcinoma? 
+Answer yes or no, matching the format 'Answer: Yes' or 'Answer: No'.)";
 
 std::string generatePreSystemPrompt(const std::string& promptFormat) {
     if (promptFormat == "mistral") {
@@ -94,11 +81,11 @@ std::string generatePostSystemPrompt(const std::string& promptFormat) {
 
 std::string generatePreAnswer(const std::string& promptFormat) {
     if (promptFormat == "mistral") {
-        return "\n>>> [/INST] ";
+        return "\n>>> [/INST] Answer: ";
     } else if (promptFormat == "llama3") {
-        return "<|eot_id|>\n<|start_header_id|>assistant<|end_header_id|>\n\n";
+        return "<|eot_id|>\n<|start_header_id|>assistant<|end_header_id|>\n\nAnswer: ";
     } else if (promptFormat == "phi3") {
-        return "\n>>> <|end|>\n <|assistant|>";
+        return "\n>>> <|end|>\n <|assistant|> Answer: ";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
     }
@@ -243,7 +230,7 @@ int main(int argc, char ** argv) {
     }
 
     std::vector<llama_token> tokens_system;
-    std::string system = default_system_thoughts;
+    std::string system = default_system;
     if(!params.systemPrompt.empty()){
         system = params.systemPrompt;
     }

@@ -38,7 +38,7 @@ int main(int argc, char ** argv) {
 
     llama_model_params model_params = llama_model_default_params();
 
-    // model_params.n_gpu_layers = 99; // offload all layers to the GPU
+    model_params.n_gpu_layers = 0; // offload all layers to the GPU
 
     llama_model * model = llama_load_model_from_file(params.model.c_str(), model_params);
 
