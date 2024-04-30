@@ -31,6 +31,8 @@
     fprintf(stderr, "%s: built with %s for %s\n", __func__, LLAMA_COMPILER, LLAMA_BUILD_TARGET);    \
 } while(0)
 
+#define DEFAULT_MODEL_PATH "models/7B/ggml-model-f16.gguf"
+
 // build info
 extern int LLAMA_BUILD_NUMBER;
 extern char const *LLAMA_COMMIT;
@@ -92,7 +94,7 @@ struct gpt_params {
     // // sampling parameters
     struct llama_sampling_params sparams;
 
-    std::string model                = "models/7B/ggml-model-f16.gguf"; // model path
+    std::string model                = ""; // model path
     std::string promptFormat         = ""; // promptFormat to use for the ibd hx extraction
     std::string outDir               = ""; // out dir to write out txt files
     std::string systemPrompt         = ""; // systemPrompt set by user
@@ -173,6 +175,8 @@ struct gpt_params {
     std::string mmproj = "";        // path to multimodal projector
     std::vector<std::string> image; // path to image file(s)
 };
+
+void gpt_params_handle_model_default(gpt_params & params);
 
 bool parse_kv_override(const char * data, std::vector<llama_model_kv_override> & overrides);
 
