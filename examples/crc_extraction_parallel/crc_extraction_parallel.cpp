@@ -50,10 +50,12 @@ static std::string trim(const std::string & str) {
 static std::vector<std::string> k_prompts;
 
 static std::string default_system =
-R"(The text provided is a pathology report, with samples originating from the colon or rectum unless specified otherwise. 
-We are interested in identifying whether invasive adenocarcinoma is present in *any* colon or rectal sample. 
-Answer yes or no to the following question, matching the format 'Answer: Yes' or 'Answer: No'. 
-Does the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?)";
+"The text provided is a pathology report, with samples originating from the colon or rectum unless specified otherwise. "
+"We are interested in identifying whether invasive adenocarcinoma (stage greater than or equal to 1) is present in *any* colon or rectal sample. "
+"Without definite invasion identified, conditions such as 'high-grade dysplasia', 'in-situ [adeno]carcinoma', or 'intramucosal [adeno]carcinoma' are not typically classified as invasive adenocarcinoma. "
+"If the sample is classified as having adenocarcinoma without further specification, this typically implies invasive adenocarcinoma. "
+"Answer yes or no to the following question, matching the format 'Answer: Yes' or 'Answer: No'. Then, explain your reasoning. "
+"Does the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?";
 
 std::string generatePreSystemPrompt(const std::string& promptFormat) {
     if (promptFormat == "mistral") {
@@ -61,7 +63,7 @@ std::string generatePreSystemPrompt(const std::string& promptFormat) {
     } else if (promptFormat == "llama3") {
         return "<|start_header_id|>system<|end_header_id|>\n\n";
     } else if (promptFormat == "phi3") {
-        return "<user>\n ";
+        return "<user>\n";
     //} else if (promptFormat == "phi3") {
     //    return "<system>\n";
     } else {
@@ -73,9 +75,9 @@ std::string generatePostSystemPrompt(const std::string& promptFormat) {
     if (promptFormat == "mistral") {
         return "\n<<<\nPathology report: ";
     } else if (promptFormat == "llama3") {
-        return "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\nPathology report: '";
+        return "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n<<<\nPathology report: ";
     } else if (promptFormat == "phi3") {
-        return "\n<<<\nPathology report: '";
+        return "\n<<<\nPathology report: ";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
     }
@@ -83,11 +85,11 @@ std::string generatePostSystemPrompt(const std::string& promptFormat) {
 
 std::string generatePreAnswer(const std::string& promptFormat) {
     if (promptFormat == "mistral") {
-        return "\n>>>\nDoes the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample? [/INST] Answer:";
+        return "\n>>>\n\nDoes the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample? [/INST] Answer:";
     } else if (promptFormat == "llama3") {
-        return "'\n\nDoes the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?<|eot_id|>\n<|start_header_id|>assistant<|end_header_id|>\n\nAnswer:";
+        return "\n>>>\n\nDoes the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nAnswer:";
     } else if (promptFormat == "phi3") {
-        return "\n>>>\nDoes the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample? <|end|>\n <|assistant|> Answer:";
+        return "\n>>>\n\nDoes the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?<|end|>\n <|assistant|> Answer:";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
     }
@@ -183,7 +185,7 @@ static std::vector<float> softmax(const std::vector<float>& logits) {
     return probs;
 }
 
-// Function to escape quotes, newlines, and tabs, and enclose the first 20 characters of the string in quotes
+// Function to escape quotes, newlines, and tabs, and enclose the first charsCopy characters of the string in quotes
 std::string quoteAndEscape(const std::string& input, int maxLen) {
     std::string truncated;
     if (maxLen == -1) {
@@ -236,6 +238,9 @@ int main(int argc, char ** argv) {
     const bool cont_batching = params.cont_batching;
 
     const bool dump_kv_cache = params.dump_kv_cache;
+
+    // How many chars from input do we want to keep in output (to make sure they match)
+    int charsCopy = 50;
 
     // Get current time
     std::time_t now = std::time(nullptr);
@@ -327,8 +332,9 @@ int main(int argc, char ** argv) {
     }
 
     // Write each prompt to the out file
-    outFile2 << "Output file format: {Y/N text}\\t{Yes Prob.}\\t{No Prob.}\\t\"{First 20 chars of input (to make sure we have the right input mapped to the right output. \\n's and \\t's are escaped)}\"" << std::endl << std::endl;
+    outFile2 << "Output file format: {Y/N text}\\t{Yes Prob.}\\t{No Prob.}\\t\"{First " << charsCopy << " chars of input (to make sure we have the right input mapped to the right output. \\n's and \\t's are escaped)}\"" << std::endl << std::endl;
     outFile2 << "Model path: " << params.model << std::endl << std::endl;
+    outFile2 << "Input file path: " << params.prompt_file << std::endl << std::endl;
     outFile2 << quoteAndEscape(promptFormat_example, -1) << std::endl << std::endl << "Prompt format tokenized:" << std::endl; // Adding newline for separation in file
 
     // Iterate through the vector and write each element to the file
@@ -633,7 +639,7 @@ int main(int argc, char ** argv) {
                     // Write yes and no probs to file.
                     outFile4 << yesProb << "\t";
                     outFile4 << noProb << "\t";
-                    outFile4 << quoteAndEscape(client.input, 20) << std::endl;
+                    outFile4 << quoteAndEscape(client.input, charsCopy) << std::endl;
                 }
                 
 
