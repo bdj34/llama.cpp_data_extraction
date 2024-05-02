@@ -246,9 +246,9 @@ int main(int argc, char ** argv) {
     std::time_t now = std::time(nullptr);
     std::tm* now_tm = std::localtime(&now);
     // Buffer to hold the date-time format
-    char dateTimeBuffer[20];  // Ensure the buffer is large enough for the format
+    char dateTimeBuffer[30];  // Ensure the buffer is large enough for the format
     // Format the date and time with strftime
-    strftime(dateTimeBuffer, sizeof(dateTimeBuffer), "%H%M_%d%m%Y", now_tm);
+    strftime(dateTimeBuffer, sizeof(dateTimeBuffer), "%Y-%m-%d_%H-%M-%S", now_tm);
     // Convert to string for use in filenames or other outputs
     std::string dateTimeOutFile = dateTimeBuffer;
 
@@ -271,9 +271,8 @@ int main(int argc, char ** argv) {
     // Set file names
     std::string dirPath = params.outDir;
     std::string inputFile = dirPath + "/inputTextNoFormatting_" + dateTimeOutFile + ".txt";
-    std::string systemFile = dirPath + "/systemPromptNoFormatting_" + dateTimeOutFile + ".txt";
-    std::string outputFile = dirPath + "/outputYN_withProbs_" + dateTimeOutFile + ".txt";
     std::string metadataFile = dirPath + "/metadata_" + dateTimeOutFile + ".txt";
+    std::string outputFile = dirPath + "/outputYN_withProbs_" + dateTimeOutFile + ".txt";
 
     std::vector<std::string> prompts;
     // load the prompts from an external file if there are any
@@ -332,18 +331,16 @@ int main(int argc, char ** argv) {
     }
 
     // Write each prompt to the out file
-    outFile2 << "Output file format: {Y/N text}\\t{Yes Prob.}\\t{No Prob.}\\t\"{First " << charsCopy << " chars of input (to make sure we have the right input mapped to the right output. \\n's and \\t's are escaped)}\"" << std::endl << std::endl;
+    outFile2 << "Output file format: {Y/N text} \\t {Yes Prob.} \\t {No Prob.} \\t \"{First " << charsCopy << " chars of input (to make sure we have the right input mapped to the right output. \\n's and \\t's are escaped)}\"" << std::endl << std::endl;
     outFile2 << "Model path: " << params.model << std::endl << std::endl;
     outFile2 << "Input file path: " << params.prompt_file << std::endl << std::endl;
     outFile2 << quoteAndEscape(promptFormat_example, -1) << std::endl << std::endl << "Prompt format tokenized:" << std::endl; // Adding newline for separation in file
 
     // Iterate through the vector and write each element to the file
     for (size_t i = 0; i < tokens_format.size(); ++i) {
-        outFile2 << tokens_format[i] << std::endl;
+        outFile2 << tokens_format[i] << "\t";
     }
-
-    // Close the file
-    outFile2.close();
+    outFile2 << std::endl << std::endl;
 
     std::vector<client> clients(n_clients);
     for (size_t i = 0; i < clients.size(); ++i) {
@@ -359,21 +356,11 @@ int main(int argc, char ** argv) {
         system = params.systemPrompt;
     }
 
-
-    // Create and open a text file to save the system prompt
-    std::ofstream outFile3(systemFile.c_str());
-
-    // Check if the file was opened successfully
-    if (!outFile3) {
-        std::cerr << "Failed to open the system prompt out file." << std::endl;
-        return 1; // Return with error code
-    }
-
     // Write each prompt to the out file
-    outFile3 << system << std::endl; // Adding newline for separation in file
+    outFile2 << "System prompt: " << quoteAndEscape(system, -1) << std::endl << std::endl; // Adding newline for separation in file
 
     // Close the file
-    outFile3.close();
+    outFile2.close();
 
     std::string k_system = formatSystemPrompt(system, params.promptFormat);
     // Print the string
@@ -423,9 +410,9 @@ int main(int argc, char ** argv) {
     LOG_TEE("Processing requests ...\n\n");
 
     // Open output file to write to
-    std::ofstream outFile4(outputFile.c_str());
+    std::ofstream outFile3(outputFile.c_str());
     // Check if the file was opened successfully
-    if (!outFile4) {
+    if (!outFile3) {
         std::cerr << "Failed to open the output out file." << std::endl;
         return 1; // Return with error code
     }
@@ -515,12 +502,6 @@ int main(int argc, char ** argv) {
         int32_t n_batch = params.n_batch;
 
         for (int32_t i = 0; i < (int32_t) batch.n_tokens; i += n_batch) {
-            // experiment: process in powers of 2
-            //if (i + n_batch > (int32_t) batch.n_tokens && n_batch > 32) {
-            //    n_batch /= 2;
-            //    i -= n_batch;
-            //    continue;
-            //}
 
             const int32_t n_tokens = std::min(n_batch, (int32_t) (batch.n_tokens - i));
 
@@ -578,23 +559,6 @@ int main(int argc, char ** argv) {
 
                 client.response += token_str;
                 client.sampled = id;
-
-                //printf("client %d, seq %d, token %d, pos %d, batch %d: %s\n",
-                //        client.id, client.seq_id, id, client.n_decoded, client.i_batch, token_str.c_str());
-
-                // Brian edit: force model to stop on eos OR eot
-                // Also make it so n_decoded  and not n_decoded + n_prompt is >= n_predict.
-                //auto findStop = std::find(params.antiprompt.begin(), params.antiprompt.end(), client.response);
-
-                bool foundStop = false;
-                for (const auto& item : params.antiprompt) {
-                    //printf("\nantiPrompt vec item = %s\n", item.c_str());
-                    if (client.response.find(item) != std::string::npos) {
-                    //if (client.response.find('\n') != std::string::npos) {
-                        foundStop = true;
-                        break;
-                    }
-                }
                 
                 if(client.response == " Yes" || client.response == " No"){
                     // Extract logits (trying to get probability)
@@ -611,16 +575,8 @@ int main(int argc, char ** argv) {
                     // Apply softmax to the extracted logits to get probabilities
                     std::vector<float> probabilities = softmax(logits);
 
-                    // auto max_it = std::max_element(probabilities.begin(), probabilities.end());
-                    // // Find the index of the maximum element
-                    // int max_index = std::distance(probabilities.begin(), max_it);
-                    // // Get the maximum value
-                    // float max_prob = *max_it;
-                    // // Get the string associated with it
-                    // std::string max_str = llama_token_to_piece(ctx, max_index);
-
                     // Copy the client response
-                    outFile4 << client.response << "\t";
+                    outFile3 << client.response << "\t";
                     float yesProb = -1.0;
                     float noProb = -1.0;
 
@@ -637,36 +593,50 @@ int main(int argc, char ** argv) {
                         }
                     }
                     // Write yes and no probs to file.
-                    outFile4 << yesProb << "\t";
-                    outFile4 << noProb << "\t";
-                    outFile4 << quoteAndEscape(client.input, charsCopy) << std::endl;
-                }
-                
+                    outFile3 << yesProb << "\t";
+                    outFile3 << noProb << "\t";
+                    outFile3 << quoteAndEscape(client.input, charsCopy) << std::endl;
 
-                if (client.n_decoded > 2 &&
-                        (llama_token_is_eog(model, id) || 
-                        foundStop ||
-                         (params.n_predict > 0 && client.n_decoded >= params.n_predict))) {
+                //// IMPORTANT NOTE: FOR STREAMLINING CRC YES-NO CLASSIFICATION, WE STOP AFTER " YES" OR " NO", WHICH ARE THE ONLY
+                //// OPTIONS ALLOWED BY THE GRAMMAR. THIS IS NOT FELXIBLE, BUT WILL SAVE US 1 TOKEN OF GENERATION FOR EVERY INPUT, 
+                //// SPEEDING US UP IN A SIGNIFICANT WAY, ESPECIALLY WITH CPU ONLY. ALL COMMENTED OUT CODE BELOW THIS SHOULD BE KEPT
+                //// IN CASE WE WANT TO REVERT FOR ANY REASON (FOR EXAMPLE, IF WE WANT THE MODEL TO PRODUCE THOUGHTS, THEN RESPOND.)
+                //}
+
+                // bool foundStop = false;
+                // for (const auto& item : params.antiprompt) {
+                //     //printf("\nantiPrompt vec item = %s\n", item.c_str());
+                //     if (client.response.find(item) != std::string::npos) {
+                //     //if (client.response.find('\n') != std::string::npos) {
+                //         foundStop = true;
+                //         break;
+                //     }
+                // }
+
+                // if (client.n_decoded > 2 &&
+                //         (llama_token_is_eog(model, id) || 
+                //         foundStop ||
+                //          (params.n_predict > 0 && client.n_decoded >= params.n_predict))) {
                     
                     // Brian edit: basic reverse prompt identifying the EOT or EOS tokens
-                    const std::string eos_str = llama_token_to_piece(ctx, llama_token_eos(model));
-                    const std::string eot_str = llama_token_to_piece(ctx, llama_token_eot(model));
-                    printf("\nEOT string = '%s'\n", eot_str.c_str());
-                    printf("\nEOS string = '%s'\n", eos_str.c_str());
-                    printf("Client response (before chopping) = '%s'\n", client.response.c_str());
-                    size_t pos;
-                    if (eot_str.empty()) {
-                        pos = client.response.find(eos_str);
-                    } else{
-                        const size_t pos_eos = client.response.find(eos_str);
-                        const size_t pos_eot = client.response.find(eot_str);
-                        pos = (pos_eos < pos_eot) ? pos_eos : pos_eot;
-                    }
-                    printf("\nEOS/EOT position = %zu\n", pos);
+                    // const std::string eos_str = llama_token_to_piece(ctx, llama_token_eos(model));
+                    // const std::string eot_str = llama_token_to_piece(ctx, llama_token_eot(model));
+                    // printf("\nEOT string = '%s'\n", eot_str.c_str());
+                    // printf("\nEOS string = '%s'\n", eos_str.c_str());
+                    // printf("Client response (before chopping) = '%s'\n", client.response.c_str());
+                    // size_t pos;
+                    // if (eot_str.empty()) {
+                    //     pos = client.response.find(eos_str);
+                    // } else{
+                    //     const size_t pos_eos = client.response.find(eos_str);
+                    //     const size_t pos_eot = client.response.find(eot_str);
+                    //     pos = (pos_eos < pos_eot) ? pos_eos : pos_eot;
+                    // }
+                    // printf("\nEOS/EOT position = %zu\n", pos);
 
-                    if (pos != std::string::npos) {
-                        client.response = client.response.substr(0, pos);
-                    }
+                    // if (pos != std::string::npos) {
+                    //     client.response = client.response.substr(0, pos);
+                    // }
 
                     // delete only the generated part of the sequence, i.e. keep the system prompt in the cache
                     llama_kv_cache_seq_rm(ctx, client.id + 1, -1, -1);
@@ -674,7 +644,6 @@ int main(int argc, char ** argv) {
 
                     LOG_TEE("System:    %s\nInput:    \033[96m%s\n\033[0mResponse: \033[31m%s\033[0m\n\n",
                             ::trim(system).c_str(),
-                            //::trim(prompts[promptNumber]).c_str(),
                             ::trim(client.input).c_str(),
                             ::trim(client.response).c_str());
 
@@ -690,7 +659,7 @@ int main(int argc, char ** argv) {
     }
 
     // Close the file
-    outFile4.close();
+    outFile3.close();
 
     const auto t_main_end = ggml_time_us();
 
@@ -709,6 +678,16 @@ int main(int argc, char ** argv) {
     LOG_TEE("Cache misses:        %6d\n", n_cache_miss);
 
     LOG_TEE("\n");
+
+    // Reopen the metadata file in append mode
+    std::ofstream metaFile(metadataFile, std::ios::app);  // Append mode
+
+    if (metaFile.is_open()) {
+        metaFile << "Runtime: " << (t_main_end - t_main_start) / 1e6 << " seconds" << std::endl;
+        metaFile.close();
+    } else {
+        std::cerr << "Unable to open metadata file for appending." << std::endl;
+    }
 
     llama_print_timings(ctx);
 
