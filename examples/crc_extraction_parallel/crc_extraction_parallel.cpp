@@ -20,7 +20,7 @@ std::string formatSystemPrompt(const std::string& systemPrompt, const std::strin
 std::string createResponsePrompt(const std::string& systemPrompt, const std::string& modelThoughts, const std::string& promptFormat);
 bool containsYesOrNo(const std::string& input);
 static std::vector<float> softmax(const std::vector<float>& logits);
-std::string quoteAndEscape(const std::string& input, int maxLen);
+std::string quoteAndEscape(const std::string& input, bool quote);
 
 // Struct which will serve as the value of a key-value pair in an unordered map.
 struct info {
@@ -185,17 +185,14 @@ static std::vector<float> softmax(const std::vector<float>& logits) {
     return probs;
 }
 
-// Function to escape quotes, newlines, and tabs, and enclose the first charsCopy characters of the string in quotes
-std::string quoteAndEscape(const std::string& input, int maxLen) {
-    std::string truncated;
-    if (maxLen == -1) {
-        truncated = input;  // Use the full string if maxLen is -1
-    } else {
-        truncated = input.substr(0, maxLen); // Truncate to maxLen characters
-    }
+// Function to escape quotes, newlines, and tabs, and optionally enclosethe string in quotes
+std::string quoteAndEscape(const std::string& input, bool quote) {
 
-    std::string output = "\"";  // Start with an opening quote
-    for (char ch : truncated) {
+    std::string output;
+    if(quote){
+        output = "\"";  // Start with an opening quote
+    }
+    for (char ch : input) {
         switch (ch) {
             case '"':
                 output += "\"\"";  // Escape quotes by doubling them
@@ -210,7 +207,9 @@ std::string quoteAndEscape(const std::string& input, int maxLen) {
                 output += ch;
         }
     }
-    output += "\"";  // End with a closing quote
+    if(quote){
+        output += "\"";  // End with a closing quote
+    }
     return output;
 }
 
@@ -238,9 +237,6 @@ int main(int argc, char ** argv) {
     const bool cont_batching = params.cont_batching;
 
     const bool dump_kv_cache = params.dump_kv_cache;
-
-    // How many chars from input do we want to keep in output (to make sure they match)
-    int charsCopy = 50;
 
     // Get current time
     std::time_t now = std::time(nullptr);
@@ -331,10 +327,10 @@ int main(int argc, char ** argv) {
     }
 
     // Write each prompt to the out file
-    outFile2 << "Output file format: {Y/N text} \\t {Yes Prob.} \\t {No Prob.} \\t \"{First " << charsCopy << " chars of input (to make sure we have the right input mapped to the right output. \\n's and \\t's are escaped)}\"" << std::endl << std::endl;
+    outFile2 << "Output file format: {Y/N text} \\t {Yes Prob.} \\t {No Prob.} \\t {Full path report input (to make sure we have the right input mapped to the right output. \\n's and \\t's are escaped)}" << std::endl << std::endl;   
     outFile2 << "Model path: " << params.model << std::endl << std::endl;
     outFile2 << "Input file path: " << params.prompt_file << std::endl << std::endl;
-    outFile2 << quoteAndEscape(promptFormat_example, -1) << std::endl << std::endl << "Prompt format tokenized:" << std::endl; // Adding newline for separation in file
+    outFile2 << quoteAndEscape(promptFormat_example, true) << std::endl << std::endl << "Prompt format tokenized:" << std::endl; // Adding newline for separation in file
 
     // Iterate through the vector and write each element to the file
     for (size_t i = 0; i < tokens_format.size(); ++i) {
@@ -357,7 +353,7 @@ int main(int argc, char ** argv) {
     }
 
     // Write each prompt to the out file
-    outFile2 << "System prompt: " << quoteAndEscape(system, -1) << std::endl << std::endl; // Adding newline for separation in file
+    outFile2 << "System prompt: " << quoteAndEscape(system, true) << std::endl << std::endl; // Adding newline for separation in file
 
     // Close the file
     outFile2.close();
@@ -595,7 +591,7 @@ int main(int argc, char ** argv) {
                     // Write yes and no probs to file.
                     outFile3 << yesProb << "\t";
                     outFile3 << noProb << "\t";
-                    outFile3 << quoteAndEscape(client.input, charsCopy) << std::endl;
+                    outFile3 << quoteAndEscape(client.input, false) << std::endl;
 
                 //// IMPORTANT NOTE: FOR STREAMLINING CRC YES-NO CLASSIFICATION, WE STOP AFTER " YES" OR " NO", WHICH ARE THE ONLY
                 //// OPTIONS ALLOWED BY THE GRAMMAR. THIS IS NOT FELXIBLE, BUT WILL SAVE US 1 TOKEN OF GENERATION FOR EVERY INPUT, 
@@ -642,10 +638,12 @@ int main(int argc, char ** argv) {
                     llama_kv_cache_seq_rm(ctx, client.id + 1, -1, -1);
                     llama_kv_cache_seq_cp(ctx, 0, client.id + 1, -1, -1);
 
-                    LOG_TEE("System:    %s\nInput:    \033[96m%s\n\033[0mResponse: \033[31m%s\033[0m\n\n",
-                            ::trim(system).c_str(),
+                    LOG_TEE("Runtime (prompt + gen):    %5.2f seconds.\nInput:    \033[96m%s\n\033[0mResponse: \033[31m%s\033[0m\n\n",
+                            (ggml_time_us() - client.t_start_prompt) / 1e6f,
+                            //::trim(system).c_str(),
                             ::trim(client.input).c_str(),
-                            ::trim(client.response).c_str());
+                            ::trim(client.response).c_str()
+                            );
 
                     n_total_prompt += client.n_prompt;
                     n_total_gen    += client.n_decoded;
