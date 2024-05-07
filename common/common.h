@@ -122,6 +122,8 @@ struct gpt_params {
 
     std::vector<llama_control_vector_load_info> control_vectors; // control vector with user defined scale
 
+    size_t promptStartingNumber = 0;    // Start at this prompt
+
     int32_t control_vector_layer_start = -1; // layer range for control vector
     int32_t control_vector_layer_end   = -1; // layer range for control vector
 

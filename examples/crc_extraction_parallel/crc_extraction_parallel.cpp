@@ -213,8 +213,6 @@ std::string quoteAndEscape(const std::string& input, bool quote) {
     return output;
 }
 
-size_t promptNumber = 0;
-
 int main(int argc, char ** argv) {
     srand(1234);
 
@@ -224,6 +222,9 @@ int main(int argc, char ** argv) {
         return 1;
     }
 
+    // Get the prompt Number we start at
+    size_t promptNumber = params.promptStartingNumber;
+
     // number of simultaneous "clients" to simulate
     const int32_t n_clients = params.n_parallel;
 
@@ -231,7 +232,7 @@ int main(int argc, char ** argv) {
     params.n_parallel += 1;
 
     // requests to simulate
-    const int32_t n_seq = params.n_sequences;
+    int32_t n_seq = params.n_sequences;
 
     // insert new requests as soon as the previous one is done
     const bool cont_batching = params.cont_batching;
@@ -270,14 +271,14 @@ int main(int argc, char ** argv) {
     std::string metadataFile = dirPath + "/metadata_" + dateTimeOutFile + ".txt";
     std::string outputFile = dirPath + "/outputYN_withProbs_" + dateTimeOutFile + ".txt";
 
-    std::vector<std::string> prompts;
+    std::vector<std::string> allPrompts;
     // load the prompts from an external file if there are any
     if (params.prompt.empty()) {
         throw std::runtime_error("Error: No prompts given");
     } else {
         // Output each line of the input params.prompts vector and copy to k_prompts
-        int index = 0;
-        printf("\n\033[32mNow printing the external prompt file %s\033[0m\n\n", params.prompt_file.c_str());
+        size_t index = 0;
+        printf("\n\033[32mNow printing the external prompt file starting with line %zu from %s\033[0m\n\n", params.promptStartingNumber, params.prompt_file.c_str());
 
 
         // Create and open a text file
@@ -289,17 +290,28 @@ int main(int argc, char ** argv) {
             return 1; // Return with error code
         }
 
-        prompts = split_string(params.prompt, '\n');
-        std::string tmpPrompt;
-        for (const auto& prompt : prompts) {
-            k_prompts.resize(index + 1);
-            tmpPrompt = prompt + generatePreAnswer(params.promptFormat);
-            k_prompts[index] = tmpPrompt;
-            index++;
-            printf("%3d prompt: %s\n", index, tmpPrompt.c_str());
+        allPrompts = split_string(params.prompt, '\n');
 
-            // Write each prompt to the out file
-            outFile1 << prompt << std::endl; // Adding newline for separation in file
+        // Make sure we only run as many prompts as there are
+        size_t n_prompts = allPrompts.size();
+        if(n_seq + params.promptStartingNumber > n_prompts){
+            n_seq -= params.promptStartingNumber;
+        }
+
+        // Print the prompts and write to outfile (only those equal to or after starting index)
+        std::string tmpPrompt;
+        for (const auto& prompt : allPrompts) {
+            if(index >= params.promptStartingNumber){
+                k_prompts.resize(index + 1);
+                tmpPrompt = prompt + generatePreAnswer(params.promptFormat);
+                k_prompts[index] = tmpPrompt;
+
+                printf("%zu prompt: %s\n", index, tmpPrompt.c_str());
+
+                // Write each prompt to the out file
+                outFile1 << prompt << std::endl; // Adding newline for separation in file
+            }
+            index++;
         }
 
         // Close the file
@@ -329,7 +341,8 @@ int main(int argc, char ** argv) {
     // Write each prompt to the out file
     outFile2 << "Output file format: {Y/N text} \\t {Yes Prob.} \\t {No Prob.} \\t {Full path report input (to make sure we have the right input mapped to the right output. \\n's and \\t's are escaped)}" << std::endl << std::endl;   
     outFile2 << "Model path: " << params.model << std::endl << std::endl;
-    outFile2 << "Input file path: " << params.prompt_file << std::endl << std::endl;
+    outFile2 << "Input file path: " << params.prompt_file << std::endl;
+    outFile2 << "Reading from line " << params.promptStartingNumber << " to " << n_seq+params.promptStartingNumber << " (zero-based index)" << std::endl << std::endl;
     outFile2 << quoteAndEscape(promptFormat_example, true) << std::endl << std::endl << "Prompt format tokenized:" << std::endl; // Adding newline for separation in file
 
     // Iterate through the vector and write each element to the file

@@ -300,6 +300,14 @@ bool gpt_params_find_arg(int argc, char ** argv, const std::string & arg, gpt_pa
         params.promptFormat = argv[i];
         return true;
     }
+    if (arg == "--promptStartingNumber") {
+        if (++i >= argc) {
+            invalid_param = true;
+            return true;
+        }
+        params.promptStartingNumber = std::stoi(argv[i]);
+        return true;
+    }
     if (arg == "--outDir") {
         if (++i >= argc) {
             invalid_param = true;
@@ -1437,7 +1445,8 @@ void gpt_print_usage(int /*argc*/, char ** argv, const gpt_params & params) {
     printf("usage: %s [options]\n", argv[0]);
     printf("\n");
     printf("options:\n");
-    printf("  --promptFormat        For Brian's IBD extraction, specify one of mistral, llama3, or phi3 for prompt construction.\n");
+    printf("  --promptFormat        For Brian's IBD/CRC extraction, specify one of mistral, llama3, or phi3 for prompt construction.\n");
+    printf("  --promptStartingNumber        For Brian's CRC extraction, default is 0. Allows us to not re-run.\n");
     printf("  --outDir              Brian added, specify directory to output txt files. Will not overwrite, instead adding _n to the folder name until dir doesn't exist.\n");
     printf("  --systemPrompt        Brian added. Allow user to set system prompt\n");
     printf("  -h, --help            show this help message and exit\n");
