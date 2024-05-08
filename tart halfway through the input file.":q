@@ -1,0 +1,140 @@
+[1mdiff --git a/common/common.cpp b/common/common.cpp[m
+[1mindex 1bccc172..40acc116 100644[m
+[1m--- a/common/common.cpp[m
+[1m+++ b/common/common.cpp[m
+[36m@@ -300,6 +300,14 @@[m [mbool gpt_params_find_arg(int argc, char ** argv, const std::string & arg, gpt_pa[m
+         params.promptFormat = argv[i];[m
+         return true;[m
+     }[m
+[32m+[m[32m    if (arg == "--promptStartingNumber") {[m
+[32m+[m[32m        if (++i >= argc) {[m
+[32m+[m[32m            invalid_param = true;[m
+[32m+[m[32m            return true;[m
+[32m+[m[32m        }[m
+[32m+[m[32m        params.promptStartingNumber = std::stoi(argv[i]);[m
+[32m+[m[32m        return true;[m
+[32m+[m[32m    }[m
+     if (arg == "--outDir") {[m
+         if (++i >= argc) {[m
+             invalid_param = true;[m
+[36m@@ -1437,7 +1445,8 @@[m [mvoid gpt_print_usage(int /*argc*/, char ** argv, const gpt_params & params) {[m
+     printf("usage: %s [options]\n", argv[0]);[m
+     printf("\n");[m
+     printf("options:\n");[m
+[31m-    printf("  --promptFormat        For Brian's IBD extraction, specify one of mistral, llama3, or phi3 for prompt construction.\n");[m
+[32m+[m[32m    printf("  --promptFormat        For Brian's IBD/CRC extraction, specify one of mistral, llama3, or phi3 for prompt construction.\n");[m
+[32m+[m[32m    printf("  --promptStartingNumber        For Brian's CRC extraction, default is 0. Allows us to not re-run.\n");[m
+     printf("  --outDir              Brian added, specify directory to output txt files. Will not overwrite, instead adding _n to the folder name until dir doesn't exist.\n");[m
+     printf("  --systemPrompt        Brian added. Allow user to set system prompt\n");[m
+     printf("  -h, --help            show this help message and exit\n");[m
+[1mdiff --git a/common/common.h b/common/common.h[m
+[1mindex fc072c72..f28c4fce 100644[m
+[1m--- a/common/common.h[m
+[1m+++ b/common/common.h[m
+[36m@@ -122,6 +122,8 @@[m [mstruct gpt_params {[m
+ [m
+     std::vector<llama_control_vector_load_info> control_vectors; // control vector with user defined scale[m
+ [m
+[32m+[m[32m    size_t promptStartingNumber = 0;    // Start at this prompt[m
+[32m+[m
+     int32_t control_vector_layer_start = -1; // layer range for control vector[m
+     int32_t control_vector_layer_end   = -1; // layer range for control vector[m
+ [m
+[1mdiff --git a/examples/crc_extraction_parallel/crc_extraction_parallel.cpp b/examples/crc_extraction_parallel/crc_extraction_parallel.cpp[m
+[1mindex 8bd38b37..64187640 100644[m
+[1m--- a/examples/crc_extraction_parallel/crc_extraction_parallel.cpp[m
+[1m+++ b/examples/crc_extraction_parallel/crc_extraction_parallel.cpp[m
+[36m@@ -213,8 +213,6 @@[m [mstd::string quoteAndEscape(const std::string& input, bool quote) {[m
+     return output;[m
+ }[m
+ [m
+[31m-size_t promptNumber = 0;[m
+[31m-[m
+ int main(int argc, char ** argv) {[m
+     srand(1234);[m
+ [m
+[36m@@ -224,6 +222,9 @@[m [mint main(int argc, char ** argv) {[m
+         return 1;[m
+     }[m
+ [m
+[32m+[m[32m    // Get the prompt Number we start at[m
+[32m+[m[32m    size_t promptNumber = params.promptStartingNumber;[m
+[32m+[m
+     // number of simultaneous "clients" to simulate[m
+     const int32_t n_clients = params.n_parallel;[m
+ [m
+[36m@@ -231,7 +232,7 @@[m [mint main(int argc, char ** argv) {[m
+     params.n_parallel += 1;[m
+ [m
+     // requests to simulate[m
+[31m-    const int32_t n_seq = params.n_sequences;[m
+[32m+[m[32m    int32_t n_seq = params.n_sequences;[m
+ [m
+     // insert new requests as soon as the previous one is done[m
+     const bool cont_batching = params.cont_batching;[m
+[36m@@ -270,14 +271,14 @@[m [mint main(int argc, char ** argv) {[m
+     std::string metadataFile = dirPath + "/metadata_" + dateTimeOutFile + ".txt";[m
+     std::string outputFile = dirPath + "/outputYN_withProbs_" + dateTimeOutFile + ".txt";[m
+ [m
+[31m-    std::vector<std::string> prompts;[m
+[32m+[m[32m    std::vector<std::string> allPrompts;[m
+     // load the prompts from an external file if there are any[m
+     if (params.prompt.empty()) {[m
+         throw std::runtime_error("Error: No prompts given");[m
+     } else {[m
+         // Output each line of the input params.prompts vector and copy to k_prompts[m
+[31m-        int index = 0;[m
+[31m-        printf("\n\033[32mNow printing the external prompt file %s\033[0m\n\n", params.prompt_file.c_str());[m
+[32m+[m[32m        size_t index = 0;[m
+[32m+[m[32m        printf("\n\033[32mNow printing the external prompt file starting with line %zu from %s\033[0m\n\n", params.promptStartingNumber, params.prompt_file.c_str());[m
+ [m
+ [m
+         // Create and open a text file[m
+[36m@@ -289,17 +290,28 @@[m [mint main(int argc, char ** argv) {[m
+             return 1; // Return with error code[m
+         }[m
+ [m
+[31m-        prompts = split_string(params.prompt, '\n');[m
+[32m+[m[32m        allPrompts = split_string(params.prompt, '\n');[m
+[32m+[m
+[32m+[m[32m        // Make sure we only run as many prompts as there are[m
+[32m+[m[32m        size_t n_prompts = allPrompts.size();[m
+[32m+[m[32m        if(n_seq + params.promptStartingNumber > n_prompts){[m
+[32m+[m[32m            n_seq -= params.promptStartingNumber;[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        // Print the prompts and write to outfile (only those equal to or after starting index)[m
+         std::string tmpPrompt;[m
+[31m-        for (const auto& prompt : prompts) {[m
+[31m-            k_prompts.resize(index + 1);[m
+[31m-            tmpPrompt = prompt + generatePreAnswer(params.promptFormat);[m
+[31m-            k_prompts[index] = tmpPrompt;[m
+[31m-            index++;[m
+[31m-            printf("%3d prompt: %s\n", index, tmpPrompt.c_str());[m
+[32m+[m[32m        for (const auto& prompt : allPrompts) {[m
+[32m+[m[32m            if(index >= params.promptStartingNumber){[m
+[32m+[m[32m                k_prompts.resize(index + 1);[m
+[32m+[m[32m                tmpPrompt = prompt + generatePreAnswer(params.promptFormat);[m
+[32m+[m[32m                k_prompts[index] = tmpPrompt;[m
+[32m+[m
+[32m+[m[32m                printf("%zu prompt: %s\n", index, tmpPrompt.c_str());[m
+ [m
+[31m-            // Write each prompt to the out file[m
+[31m-            outFile1 << prompt << std::endl; // Adding newline for separation in file[m
+[32m+[m[32m                // Write each prompt to the out file[m
+[32m+[m[32m                outFile1 << prompt << std::endl; // Adding newline for separation in file[m
+[32m+[m[32m            }[m
+[32m+[m[32m            index++;[m
+         }[m
+ [m
+         // Close the file[m
+[36m@@ -329,7 +341,8 @@[m [mint main(int argc, char ** argv) {[m
+     // Write each prompt to the out file[m
+     outFile2 << "Output file format: {Y/N text} \\t {Yes Prob.} \\t {No Prob.} \\t {Full path report input (to make sure we have the right input mapped to the right output. \\n's and \\t's are escaped)}" << std::endl << std::endl;   [m
+     outFile2 << "Model path: " << params.model << std::endl << std::endl;[m
+[31m-    outFile2 << "Input file path: " << params.prompt_file << std::endl << std::endl;[m
+[32m+[m[32m    outFile2 << "Input file path: " << params.prompt_file << std::endl;[m
+[32m+[m[32m    outFile2 << "Reading from line " << params.promptStartingNumber << " to " << n_seq+params.promptStartingNumber << " (zero-based index)" << std::endl << std::endl;[m
+     outFile2 << quoteAndEscape(promptFormat_example, true) << std::endl << std::endl << "Prompt format tokenized:" << std::endl; // Adding newline for separation in file[m
+ [m
+     // Iterate through the vector and write each element to the file[m
