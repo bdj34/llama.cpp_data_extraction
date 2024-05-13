@@ -3,6 +3,8 @@
 #include "llama.h"
 #include "common.h"
 
+// Change JSON_ASSERT from assert() to GGML_ASSERT:
+#define JSON_ASSERT GGML_ASSERT
 #include "json.hpp"
 
 #include <string>
@@ -369,15 +371,15 @@ static json oaicompat_completion_params_parse(
     llama_params["presence_penalty"]  = json_value(body,   "presence_penalty",  0.0);
     llama_params["seed"]              = json_value(body,   "seed",              LLAMA_DEFAULT_SEED);
     llama_params["stream"]            = json_value(body,   "stream",            false);
-    llama_params["temperature"]       = json_value(body,   "temperature",       0.0);
+    llama_params["temperature"]       = json_value(body,   "temperature",       1.0);
     llama_params["top_p"]             = json_value(body,   "top_p",             1.0);
 
     // Apply chat template to the list of messages
-    llama_params["prompt"] = format_chat(model, chat_template, body["messages"]);
+    llama_params["prompt"] = format_chat(model, chat_template, body.at("messages"));
 
     // Handle "stop" field
-    if (body.contains("stop") && body["stop"].is_string()) {
-        llama_params["stop"] = json::array({body["stop"].get<std::string>()});
+    if (body.contains("stop") && body.at("stop").is_string()) {
+        llama_params["stop"] = json::array({body.at("stop").get<std::string>()});
     } else {
         llama_params["stop"] = json_value(body, "stop", json::array());
     }
