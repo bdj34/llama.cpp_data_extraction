@@ -18,7 +18,6 @@ std::string generatePostSystemPrompt(const std::string& promptFormat);
 std::string generatePreAnswer(const std::string& promptFormat);
 std::string formatSystemPrompt(const std::string& systemPrompt, const std::string& promptFormat);
 std::string createResponsePrompt(const std::string& systemPrompt, const std::string& modelThoughts, const std::string& promptFormat);
-bool containsYesOrNo(const std::string& input);
 static std::vector<float> softmax(const std::vector<float>& logits);
 std::string quoteAndEscape(const std::string& input, bool quote);
 
@@ -98,7 +97,7 @@ std::string generatePreAnswer(const std::string& promptFormat) {
 std::string formatSystemPrompt(const std::string& systemPrompt, const std::string& promptFormat) {
     std::string preSystem = generatePreSystemPrompt(promptFormat);
     std::string postSystem = generatePostSystemPrompt(promptFormat);
-    std::string preAnswer = generatePreAnswer(promptFormat);
+    //std::string preAnswer = generatePreAnswer(promptFormat);
     
     return preSystem + systemPrompt + postSystem;
 }
@@ -150,19 +149,6 @@ static std::vector<std::string> split_string(const std::string& input, char deli
     return tokens;
 }
 
-// Define a function to evaluate yes and no
-bool containsYesOrNo(const std::string& input) {
-    // Convert the input string to lowercase for case-insensitive comparison
-    std::string lowerInput = input;
-    std::transform(lowerInput.begin(), lowerInput.end(), lowerInput.begin(),
-                   [](unsigned char c){ return std::tolower(c); });
-
-    // Define regex patterns to check for standalone "yes" or "no"
-    std::regex yesNoPattern("\\b(yes|no)\\b"); // Word boundary, "yes" or "no", word boundary
-
-    // Use regex_search to find the pattern in the string
-    return std::regex_search(lowerInput, yesNoPattern);
-}
 
 // Define softmax function from examples/perplexity
 static std::vector<float> softmax(const std::vector<float>& logits) {
@@ -365,7 +351,7 @@ int main(int argc, char ** argv) {
         system = params.systemPrompt;
     }
 
-    // Write each prompt to the out file
+    // Write system prompt to the out file
     outFile2 << "System prompt: " << quoteAndEscape(system, true) << std::endl << std::endl; // Adding newline for separation in file
 
     // Close the file

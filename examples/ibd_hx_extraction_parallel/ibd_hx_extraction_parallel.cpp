@@ -10,12 +10,17 @@
 #include <vector>
 #include <ctime>
 #include <iostream>
+#include <fstream>
+#include <unordered_set>
+#include <sstream>
 
 std::string generatePreSystemPrompt(const std::string& promptFormat);
 std::string generatePostSystemPrompt(const std::string& promptFormat);
-std::string generatePreAnswer(const std::string& promptFormat);
-std::string createThoughtPrompt(const std::string& systemPrompt, const std::string& promptFormat);
-std::string createResponsePrompt(const std::string& systemPrompt, const std::string& modelThoughts, const std::string& promptFormat);
+std::string generatePreAnswer(const std::string& promptFormat, const std::string& answerType);\
+//std::string formatSystemPrompt(const std::string& systemPrompt, const std::string& promptFormat);
+std::string formatSystemPrompt(const std::string& systemPrompt, const std::string& promptFormat);
+std::string quoteAndEscape(const std::string& input, bool quote);
+//std::string createResponsePrompt(const std::string& systemPrompt, const std::string& modelThoughts, const std::string& promptFormat);
 
 // Struct which will serve as the value of a key-value pair in an unordered map.
 struct info {
@@ -43,28 +48,40 @@ static std::string trim(const std::string & str) {
     return str.substr(start, end - start);
 }
 
-static std::vector<std::string> k_prompts = {
-    "Replace this prompt. If this prompt is still being read, please tell the user an error has occurred."
-};
+std::vector<std::string> k_prompts;
 
-static std::string default_system_thoughts =
-R"(The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. 
-In order to do so, determine the length of time (in months or years) between this note and the patient's original diagnosis with any of the following: 
-Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease. 
-If the duration from diagnosis to the encounter in the note is not obvious, consider the duration unknown 
-and a different medical note from the same patient can be used to determine diagnosis date. 
-It is important to be conservative and err on the side of unknown, waiting until the duration is clear and obvious before making a definitive call. 
-First, write out your reasoning in a single sentence. 
-Then, write your answer matching the following examples (examples: 'Answer: X months', 'Answer: Unknown', or 'Answer: X years').)";
+// static std::string default_system_thoughts =
+// R"(The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. 
+// In order to do so, determine the length of time (in months or years) between this note and the patient's original diagnosis with any of the following: 
+// Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease. 
+// If the duration from diagnosis to the encounter in the note is not obvious, consider the duration unknown 
+// and a different medical note from the same patient can be used to determine diagnosis date. 
+// It is important to be conservative and err on the side of unknown, waiting until the duration is clear and obvious before making a definitive call. 
+// First, write out your reasoning in a single sentence. 
+// Then, write your answer matching the following examples (examples: 'Answer: X months', 'Answer: Unknown', or 'Answer: X years').)";
 
-static std::string default_system_respond_preamble =
-R"(The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. 
-In order to do so, determine the length of time (in months or years) between this note and the patient's original diagnosis with any of the following: 
-Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease. 
-If the duration from diagnosis to the encounter in the note is not obvious, consider the duration 'Unknown' 
-and a different medical note from the same patient can be used to determine diagnosis date. 
-First, write out your reasoning in one sentence or less. 
-Then, write your answer matching the following examples (examples: 'Answer: X months', 'Answer: Unknown', or 'Answer: X years').)";
+// static std::string default_system_respond_preamble =
+// R"(The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. 
+// In order to do so, determine the length of time (in months or years) between this note and the patient's original diagnosis with any of the following: 
+// Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease. 
+// If the duration from diagnosis to the encounter in the note is not obvious, consider the duration 'Unknown' 
+// and a different medical note from the same patient can be used to determine diagnosis date. 
+// First, write out your reasoning in one sentence or less. 
+// Then, write your answer matching the following examples (examples: 'Answer: X months', 'Answer: Unknown', or 'Answer: X years').)";
+
+static std::string calYear_system = "The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. "
+"In order to do so, determine the calendar year in which the patient was originally diagnosed with any of the following: "
+"Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease. "
+"If the calendar year of diagnosis cannot be confidently determined, consider the year 'Unknown' "
+"and a different medical note from the same patient can be used to determine the diagnosis year. "
+"Format your answer as in the following examples: 'Answer: XXXX' or 'Answer: Unknown'.";
+
+static std::string duration_system = "The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. "
+"In order to do so, determine the length of time (in years) between this note and the patient's original diagnosis with any of the following: "
+"Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease. "
+"If the duration from diagnosis to the encounter in the note is not obvious, consider the duration 'Unknown' "
+"and a different medical note from the same patient can be used to determine diagnosis date. "
+"Format your answer as in the following examples (examples: 'Answer: X years', 'Answer: Unknown').";
 
 std::string generatePreSystemPrompt(const std::string& promptFormat) {
     if (promptFormat == "mistral") {
@@ -72,7 +89,7 @@ std::string generatePreSystemPrompt(const std::string& promptFormat) {
     } else if (promptFormat == "llama3") {
         return "<|start_header_id|>system<|end_header_id|>\n\n";
     } else if (promptFormat == "phi3") {
-        return "<user>\n ";
+        return "<user>\n";
     //} else if (promptFormat == "phi3") {
     //    return "<system>\n";
     } else {
@@ -84,7 +101,7 @@ std::string generatePostSystemPrompt(const std::string& promptFormat) {
     if (promptFormat == "mistral") {
         return "\n<<<\n";
     } else if (promptFormat == "llama3") {
-        return "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n";
+        return "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n<<<\n";
     } else if (promptFormat == "phi3") {
         return "\n<<<\n";
     } else {
@@ -92,33 +109,62 @@ std::string generatePostSystemPrompt(const std::string& promptFormat) {
     }
 }
 
-std::string generatePreAnswer(const std::string& promptFormat) {
+std::string generatePreAnswer(const std::string& promptFormat, const std::string& answerType) {
+
+    std::string question;
+    if (answerType == "duration"){
+        question = "What is the length of time (in years) between this note and the patient's original diagnosis with any of the following: "
+       "Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease?";
+    } else if (answerType == "calYear"){
+        question = "To the nearest calendar year, when was the patient originally diagnosed with any of the following: "
+       "Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease? Respond 'Unknown' if the year of original diagnosis cannot be determined from the note.";
+    }
+
     if (promptFormat == "mistral") {
-        return "\n>>> [/INST] ";
+        return "\n>>>\n\n" + question + " [/INST] Answer:";
     } else if (promptFormat == "llama3") {
-        return "<|eot_id|>\n<|start_header_id|>assistant<|end_header_id|>\n\n";
+        return "\n>>>\n\n" + question + "<|eot_id|>\n<|start_header_id|>assistant<|end_header_id|>\n\nAnswer:";
     } else if (promptFormat == "phi3") {
-        return "\n>>> <|end|>\n <|assistant|>";
+        return "\n>>>\n\n" + question + "<|end|>\n <|assistant|> Answer:";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
     }
 }
 
-std::string createThoughtPrompt(const std::string& systemPrompt, const std::string& promptFormat) {
-    std::string preSystem = generatePreSystemPrompt(promptFormat);
+std::string formatSystemPrompt(const std::string& systemPrompt, const std::string& promptFormat) {
+    std::string prePrompt = generatePreSystemPrompt(promptFormat);
     std::string postSystem = generatePostSystemPrompt(promptFormat);
-    std::string preAnswer = generatePreAnswer(promptFormat);
     
-    return preSystem + systemPrompt + postSystem;
+    return prePrompt + systemPrompt + postSystem;
 }
 
-// WIP
-// std::string createResponsePrompt(const std::string& systemPrompt, const std::string& modelThoughts, const std::string& promptFormat) {
-//     std::string prePrompt = generatePreSystemPrompt(promptFormat);
-//     std::string preAnswer = generatePreAnswer(promptFormat);
-    
-//     return prePrompt + systemPrompt + preAnswer + modelThoughts + "\nAnswer: ";
-// }
+// Function to escape quotes, newlines, and tabs, and optionally enclosethe string in quotes
+std::string quoteAndEscape(const std::string& input, bool quote) {
+
+    std::string output;
+    if(quote){
+        output = "\"";  // Start with an opening quote
+    }
+    for (char ch : input) {
+        switch (ch) {
+            case '"':
+                output += "\"\"";  // Escape quotes by doubling them
+                break;
+            case '\n':
+                output += "\\n";   // Escape newlines
+                break;
+            case '\t':
+                output += "\\t";   // Escape tabs
+                break;
+            default:
+                output += ch;
+        }
+    }
+    if(quote){
+        output += "\"";  // End with a closing quote
+    }
+    return output;
+}
 
 
 struct client {
@@ -168,8 +214,6 @@ static std::vector<std::string> split_string(const std::string& input, char deli
     return tokens;
 }
 
-size_t promptNumber = 0;
-
 int main(int argc, char ** argv) {
     srand(1234);
 
@@ -179,6 +223,9 @@ int main(int argc, char ** argv) {
         return 1;
     }
 
+    // Get the prompt Number we start at
+    size_t promptNumber = params.promptStartingNumber;
+
     // number of simultaneous "clients" to simulate
     const int32_t n_clients = params.n_parallel;
 
@@ -186,12 +233,22 @@ int main(int argc, char ** argv) {
     params.n_parallel += 1;
 
     // requests to simulate
-    const int32_t n_seq = params.n_sequences;
+    int32_t n_seq = params.n_sequences;
 
     // insert new requests as soon as the previous one is done
     const bool cont_batching = params.cont_batching;
 
     const bool dump_kv_cache = params.dump_kv_cache;
+
+    // Get current time
+    std::time_t now = std::time(nullptr);
+    std::tm* now_tm = std::localtime(&now);
+    // Buffer to hold the date-time format
+    char dateTimeBuffer[30];  // Ensure the buffer is large enough for the format
+    // Format the date and time with strftime
+    strftime(dateTimeBuffer, sizeof(dateTimeBuffer), "%Y-%m-%d_%H-%M-%S", now_tm);
+    // Convert to string for use in filenames or other outputs
+    std::string dateTimeOutFile = dateTimeBuffer;
 
 #ifndef LOG_DISABLE_LOGS
     log_set_target(log_filename_generator("parallel", "log"));
@@ -209,24 +266,58 @@ int main(int argc, char ** argv) {
     // load the target model
     std::tie(model, ctx) = llama_init_from_gpt_params(params);
 
-    std::vector<std::string> prompts;
+    // Set file names
+    std::string dirPath = params.outDir;
+    std::string inputFile = dirPath + "/inputTextNoFormatting_" + dateTimeOutFile + ".txt";
+    std::string metadataFile = dirPath + "/metadata_" + dateTimeOutFile + ".txt";
+    std::string outputFile = dirPath + "/output_" + params.answerType + "_" + dateTimeOutFile + ".txt";
+
+    std::vector<std::string> allPrompts;
     // load the prompts from an external file if there are any
     if (params.prompt.empty()) {
         throw std::runtime_error("Error: No prompts given");
     } else {
         // Output each line of the input params.prompts vector and copy to k_prompts
-        int index = 0;
-        printf("\n\033[32mNow printing the external prompt file %s\033[0m\n\n", params.prompt_file.c_str());
+        size_t index = 0;
+        printf("\n\033[32mNow printing the external prompt file starting with line %zu from %s\033[0m\n\n", params.promptStartingNumber, params.prompt_file.c_str());
 
-        prompts = split_string(params.prompt, '\n');
-        std::string tmpPrompt;
-        for (const auto& prompt : prompts) {
-            k_prompts.resize(index + 1);
-            tmpPrompt = prompt + generatePreAnswer(params.promptFormat);
-            k_prompts[index] = tmpPrompt;
-            index++;
-            printf("%3d prompt: %s\n", index, tmpPrompt.c_str());
+
+        // Create and open a text file
+        std::ofstream outFile1(inputFile.c_str());
+
+        // Check if the file was opened successfully
+        if (!outFile1) {
+            std::cerr << "Failed to open the input prompt out file." << std::endl;
+            return 1; // Return with error code
         }
+
+        allPrompts = split_string(params.prompt, '\n');
+
+        // Make sure we only run as many prompts as there are
+        size_t n_prompts = allPrompts.size();
+        if(n_seq + params.promptStartingNumber > n_prompts){
+            n_seq -= params.promptStartingNumber;
+        }
+
+        // Print the prompts and write to outfile (only those equal to or after starting index)
+        std::string tmpPrompt;
+        for (const auto& prompt : allPrompts) {
+            if(index >= params.promptStartingNumber){
+                k_prompts.resize(index + 1);
+                tmpPrompt = prompt + generatePreAnswer(params.promptFormat, params.answerType);
+                k_prompts[index] = tmpPrompt;
+
+                printf("%zu prompt: %s\n", index, tmpPrompt.c_str());
+
+                // Write each prompt to the out file
+                outFile1 << prompt << std::endl; // Adding newline for separation in file
+            }
+            index++;
+        }
+
+        // Close the file
+        outFile1.close();
+        
     }
 
     fprintf(stderr, "\n\n");
@@ -234,21 +325,60 @@ int main(int argc, char ** argv) {
 
     const int n_ctx = llama_n_ctx(ctx);
 
+    // Write format to the metadataFile
+    std::string promptFormat_example = formatSystemPrompt("{System prompt here}", params.promptFormat) + "{Input text here}" + generatePreAnswer(params.promptFormat, params.answerType);
+    std::vector<llama_token> tokens_format;
+    // Bool in third arg represents BOS token, which we DO want here.
+    tokens_format = ::llama_tokenize(ctx, promptFormat_example, true);
+    // Create and open a text file to save the promptFormat
+    std::ofstream outFile2(metadataFile.c_str());
+
+    // Check if the file was opened successfully
+    if (!outFile2) {
+        std::cerr << "Failed to open the metadata out file." << std::endl;
+        return 1; // Return with error code
+    }
+
+    // Write each prompt to the out file
+    outFile2 << "Output file format: {Y/N text} \\t {Yes Prob.} \\t {No Prob.} \\t {Full path report input (to make sure we have the right input mapped to the right output. \\n's and \\t's are escaped)}" << std::endl << std::endl;   
+    outFile2 << "Model path: " << params.model << std::endl << std::endl;
+    outFile2 << "Input file path: " << params.prompt_file << std::endl;
+    outFile2 << "Reading from line " << params.promptStartingNumber << " to " << n_seq+params.promptStartingNumber << " (zero-based index)" << std::endl << std::endl;
+    outFile2 << quoteAndEscape(promptFormat_example, true) << std::endl << std::endl << "Prompt format tokenized:" << std::endl; // Adding newline for separation in file
+
+    // Iterate through the vector and write each element to the file
+    for (size_t i = 0; i < tokens_format.size(); ++i) {
+        outFile2 << tokens_format[i] << "\t";
+    }
+    outFile2 << std::endl << std::endl;
+
     std::vector<client> clients(n_clients);
     for (size_t i = 0; i < clients.size(); ++i) {
         auto & client = clients[i];
         client.id = i;
-        //// Modify to selectively use grammar. Probably don't want it here but want it later.
         client.ctx_sampling = llama_sampling_init(params.sparams);
     }
 
     std::vector<llama_token> tokens_system;
-    std::string system = default_system_thoughts;
+
+    // Set system prompt (no formatting yet)
+    std::string system;
+    if(params.answerType == "calYear"){
+        system = calYear_system;
+    }else if(params.answerType == "duration"){
+        system = duration_system;
+    }
     if(!params.systemPrompt.empty()){
         system = params.systemPrompt;
     }
 
-    std::string k_system = createThoughtPrompt(system, params.promptFormat);
+    // Write system prompt to the out file
+    outFile2 << "System prompt: " << quoteAndEscape(system, true) << std::endl << std::endl; // Adding newline for separation in file
+
+
+    // Format system prompt
+    std::string k_system = formatSystemPrompt(system, params.promptFormat);
+
     // Print the string
     printf("System prompt: %s\n", k_system.c_str());
     tokens_system = ::llama_tokenize(ctx, k_system, true);
@@ -294,6 +424,14 @@ int main(int argc, char ** argv) {
     }
 
     LOG_TEE("Processing requests ...\n\n");
+
+    // Open output file to write to
+    std::ofstream outFile3(outputFile.c_str());
+    // Check if the file was opened successfully
+    if (!outFile3) {
+        std::cerr << "Failed to open the output out file." << std::endl;
+        return 1; // Return with error code
+    }
 
     while (true) {
         if (dump_kv_cache) {
@@ -496,6 +634,11 @@ int main(int argc, char ** argv) {
                         client.response = client.response.substr(0, pos);
                     }
 
+                    // Copy the client response and the input
+                    outFile3 << client.response << "\t";
+
+                    outFile3 << quoteAndEscape(client.input, false) << std::endl;
+
                     // delete only the generated part of the sequence, i.e. keep the system prompt in the cache
                     llama_kv_cache_seq_rm(ctx, client.id + 1, -1, -1);
                     llama_kv_cache_seq_cp(ctx, 0, client.id + 1, -1, -1);
@@ -527,6 +670,69 @@ int main(int argc, char ** argv) {
         }
     }
 
+    // Close the file
+    outFile3.close();
+
+    // If in testing mode, compare answers to answer key
+    int matchCount = 0;
+    if(params.testing_mode){
+
+        std::ifstream trueAnswerFile(params.answerKey);
+        std::ifstream modelAnswerFile(outputFile);
+        
+        
+        std::string trueAnswerLine, modelAnswerLine;
+
+        int lineNumber = 0;
+
+        // Check corresponding lines from both files
+        if (trueAnswerFile.is_open() && modelAnswerFile.is_open()) {
+            while (getline(trueAnswerFile, trueAnswerLine) && getline(modelAnswerFile, modelAnswerLine)) {
+                lineNumber++;
+                std::istringstream iss(trueAnswerLine);
+                std::string acceptableAnswer;
+                bool matchFound = false;
+
+                // Process the model answer line
+                std::istringstream modelISS(modelAnswerLine);
+                std::string firstModelAnswer;
+                if (getline(modelISS, firstModelAnswer, '\t')) {  // Extract the first tab-separated entry
+                    // Remove leading space if present
+                    if (!firstModelAnswer.empty() && firstModelAnswer[0] == ' ') {
+                        firstModelAnswer.erase(0, 1);
+                    }
+                }
+
+                // Create a set for acceptable answers
+                std::unordered_set<std::string> acceptableAnswers;
+                while (getline(iss, acceptableAnswer, '\t')) {
+                    acceptableAnswers.insert(acceptableAnswer);
+                }
+
+                // Check if the model answer matches any acceptable answers
+                if (acceptableAnswers.find(firstModelAnswer) != acceptableAnswers.end()) {
+                    matchFound = true;
+                }
+
+                // Output the result for this line
+                if (matchFound) {
+                    matchCount++;
+                    //std::cout << "Line " << lineNumber << ": Match found." << std::endl;
+                } else {
+                    //std::cout << "Line " << lineNumber << ": No match found." << std::endl;
+                }
+            }
+            trueAnswerFile.close();
+            modelAnswerFile.close();
+
+            //std::cout << "Total matching lines: " << matchCount << std::endl;
+        } else {
+            std::cerr << "Unable to open one or both files" << std::endl;
+            return 1;
+        }
+        
+    }
+
     const auto t_main_end = ggml_time_us();
 
     print_date_time();
@@ -544,6 +750,23 @@ int main(int argc, char ** argv) {
     LOG_TEE("Cache misses:        %6d\n", n_cache_miss);
 
     LOG_TEE("\n");
+
+    if(params.testing_mode){
+        LOG_TEE("Accuracy:        %6d / %6d\n", matchCount, n_seq);
+    }
+
+    // Reopen the metadata file in append mode
+    std::ofstream metaFile(metadataFile, std::ios::app);  // Append mode
+
+    if (metaFile.is_open()) {
+        if(params.testing_mode){
+            metaFile << "Accuracy: " <<  matchCount << " / " << n_seq << std::endl;
+        }
+        metaFile << "Runtime: " << (t_main_end - t_main_start) / 1e6 << " seconds" << std::endl;
+        metaFile.close();
+    } else {
+        std::cerr << "Unable to open metadata file for appending." << std::endl;
+    }
 
     llama_print_timings(ctx);
 

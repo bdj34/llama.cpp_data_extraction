@@ -318,12 +318,28 @@ bool gpt_params_find_arg(int argc, char ** argv, const std::string & arg, gpt_pa
         params.outDir = argv[i];
         return true;
     }
+    if (arg == "--answerKey") {
+        if (++i >= argc) {
+            invalid_param = true;
+            return true;
+        }
+        params.answerKey = argv[i];
+        return true;
+    }
     if (arg == "--systemPrompt") {
         if (++i >= argc) {
             invalid_param = true;
             return true;
         }
         params.systemPrompt = argv[i];
+        return true;
+    }
+    if (arg == "--answerType") {
+        if (++i >= argc) {
+            invalid_param = true;
+            return true;
+        }
+        params.answerType = argv[i];
         return true;
     }
     if (arg == "-t" || arg == "--threads") {
@@ -1112,6 +1128,10 @@ bool gpt_params_find_arg(int argc, char ** argv, const std::string & arg, gpt_pa
         params.verbose_prompt = true;
         return true;
     }
+    if (arg == "--testing-mode") {
+        params.testing_mode = true;
+        return true;
+    }
     if (arg == "--no-display-prompt") {
         params.display_prompt = false;
         return true;
@@ -1456,7 +1476,9 @@ void gpt_print_usage(int /*argc*/, char ** argv, const gpt_params & params) {
     printf("  --promptFormat        For Brian's IBD/CRC extraction, specify one of mistral, llama3, or phi3 for prompt construction.\n");
     printf("  --promptStartingNumber        For Brian's CRC extraction, default is 0. Allows us to not re-run.\n");
     printf("  --outDir              Brian added, specify directory to output txt files. Will not overwrite, instead adding _n to the folder name until dir doesn't exist.\n");
+    printf("  --answerKey           Brian added, specify path to the IBD hx answer key. Only relevant when running in testing-mode.\n");
     printf("  --systemPrompt        Brian added. Allow user to set system prompt\n");
+    printf("  --answerType          Brian added. For IBD hx extraction, either get 'duration' or calendar year ('calYear'). Default is calYear. \n");
     printf("  -h, --help            show this help message and exit\n");
     printf("  --version             show version and build info\n");
     printf("  -i, --interactive     run in interactive mode\n");
@@ -1594,6 +1616,7 @@ void gpt_print_usage(int /*argc*/, char ** argv, const gpt_params & params) {
         printf("                        or for intermediate results and KV (with split-mode = row) (default: %d)\n", params.main_gpu);
     }
     printf("  --verbose-prompt      print a verbose prompt before generation (default: %s)\n", params.verbose_prompt ? "true" : "false");
+    printf("  --testing-mode        For Brian's IBD hx extraction, testing mode means we'll run an R script to compare answers with an answer key\n");
     printf("  --no-display-prompt   don't print prompt at generation (default: %s)\n", !params.display_prompt ? "true" : "false");
     printf("  -gan N, --grp-attn-n N\n");
     printf("                        group-attention factor (default: %d)\n", params.grp_attn_n);

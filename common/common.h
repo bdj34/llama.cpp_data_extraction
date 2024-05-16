@@ -98,6 +98,8 @@ struct gpt_params {
     std::string promptFormat         = ""; // promptFormat to use for the ibd hx extraction
     std::string outDir               = ""; // out dir to write out txt files
     std::string systemPrompt         = ""; // systemPrompt set by user
+    std::string answerKey            = ""; // Path to txt file to be fed into R to evaluate the answers
+    std::string answerType           = "calYear"; // For IBD hx extraction, either calYear or duration. Default is calYear
     std::string model_draft          = "";  // draft model for speculative decoding
     std::string model_alias          = "unknown"; // model alias
     std::string model_url            = "";  // model url to download
@@ -166,6 +168,7 @@ struct gpt_params {
     bool use_mmap          = true;  // use mmap for faster loads
     bool use_mlock         = false; // use mlock to keep model in memory
     bool verbose_prompt    = false; // print prompt tokens before generation
+    bool testing_mode      = false;
     bool display_prompt    = true;  // print prompt before generation
     bool infill            = false; // use infill mode
     bool dump_kv_cache     = false; // dump the KV cache contents for debugging purposes
