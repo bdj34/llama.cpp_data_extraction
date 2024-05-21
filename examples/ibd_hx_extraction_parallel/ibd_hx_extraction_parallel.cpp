@@ -74,6 +74,7 @@ static std::string calYear_system = "The text provided is an excerpt from a medi
 "Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease. "
 "If the calendar year of diagnosis cannot be confidently determined, consider the year 'Unknown' "
 "and a different medical note from the same patient can be used to determine the diagnosis year. "
+"This patient has several other notes containing information on their IBD history, so be conservative in answering. "
 "Format your answer as in the following examples: 'Answer: XXXX' or 'Answer: Unknown'.";
 
 static std::string duration_system = "The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. "
@@ -117,7 +118,8 @@ std::string generatePreAnswer(const std::string& promptFormat, const std::string
        "Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease?";
     } else if (answerType == "calYear"){
         question = "To the nearest calendar year, when was the patient originally diagnosed with any of the following: "
-       "Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease? Respond 'Unknown' if the year of original diagnosis cannot be determined from the note.";
+       "Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease? "
+       "Be conservative, responding 'Unknown' if the exact year of original diagnosis cannot be easily determined from the note.";
     }
 
     if (promptFormat == "mistral") {
@@ -225,6 +227,15 @@ int main(int argc, char ** argv) {
 
     // Get the prompt Number we start at
     size_t promptNumber = params.promptStartingNumber;
+
+    if(params.testing_mode){
+        if(promptNumber != 0){
+            throw std::runtime_error("Error: Testing mode is not compatible with nonzero prompt number. Answer key and prompts will not match.");
+        }
+        if(params.n_parallel != 1){
+            throw std::runtime_error("Error: Testing mode is not compatible with multiple simultaneous requests. Answer key and input prompts may not match as client requests may change order.");
+        }
+    }
 
     // number of simultaneous "clients" to simulate
     const int32_t n_clients = params.n_parallel;
