@@ -60,6 +60,7 @@ struct gpt_params {
     int32_t n_threads_batch       = -1;    // number of threads to use for batch processing (-1 = use n_threads)
     int32_t n_threads_batch_draft = -1;
     int32_t n_predict             = -1;    // new tokens to predict
+    size_t n_minNotes            = 2;    // Number of notes per patient to consider at minimum
     int32_t n_ctx                 = 512;   // context size
     int32_t n_batch               = 2048;  // logical batch size for prompt processing (must be >=32 to use BLAS)
     int32_t n_ubatch              = 512;   // physical batch size for prompt processing (must be >=32 to use BLAS)
@@ -78,6 +79,7 @@ struct gpt_params {
     int32_t grp_attn_n            = 1;     // group-attention factor
     int32_t grp_attn_w            = 512;   // group-attention width
     int32_t n_print               = -1;    // print token count every n tokens (-1 = disabled)
+    float   minConsensusFraction  = 0.70f;  // Minimum fraction of notes that must agree for IBD history
     float   rope_freq_base        = 0.0f;  // RoPE base frequency
     float   rope_freq_scale       = 0.0f;  // RoPE frequency scaling factor
     float   yarn_ext_factor       = -1.0f; // YaRN extrapolation mix factor
@@ -111,7 +113,9 @@ struct gpt_params {
     std::string hf_repo              = "";  // HF repo
     std::string hf_file              = "";  // HF file
     std::string prompt               = "";
+    std::string patients             = "";
     std::string prompt_file          = "";  // store the external prompt file name
+    std::string patient_file          = "";  // store the external patient ID file name
     std::string path_prompt_cache    = "";  // path to file for saving/loading prompt eval state
     std::string input_prefix         = "";  // string to prefix user inputs with
     std::string input_suffix         = "";  // string to suffix user inputs with

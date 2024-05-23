@@ -451,6 +451,41 @@ bool gpt_params_find_arg(int argc, char ** argv, const std::string & arg, gpt_pa
         }
         return true;
     }
+    if (arg == "--patientFile") {
+        if (++i >= argc) {
+            invalid_param = true;
+            return true;
+        }
+        std::ifstream patientFile(argv[i]);
+        if (!patientFile) {
+            fprintf(stderr, "error: failed to open patientFile '%s'\n", argv[i]);
+            invalid_param = true;
+            return true;
+        }
+        // store the external patientFile name in params
+        params.patient_file = argv[i];
+        std::copy(std::istreambuf_iterator<char>(patientFile), std::istreambuf_iterator<char>(), back_inserter(params.patients));
+        if (!params.patients.empty() && params.patients.back() == '\n') {
+            params.patients.pop_back();
+        }
+        return true;
+    }
+    if (arg == "--minConsensusNotes") {
+        if (++i >= argc) {
+            invalid_param = true;
+            return true;
+        }
+        params.n_minNotes = std::stoi(argv[i]);
+        return true;
+    }
+    if (arg == "--minConsensusFraction") {
+        if (++i >= argc) {
+            invalid_param = true;
+            return true;
+        }
+        params.minConsensusFraction = std::atof(argv[i]);
+        return true;
+    }
     if (arg == "-n" || arg == "--n-predict") {
         if (++i >= argc) {
             invalid_param = true;
@@ -1416,6 +1451,9 @@ void gpt_params_print_usage(int /*argc*/, char ** argv, const gpt_params & param
     printf("  --outDir              Brian added, specify directory to output txt files. Will not overwrite, instead adding _n to the folder name until dir doesn't exist.\n");
     printf("  --answerKey           Brian added, specify path to the IBD hx answer key. Only relevant when running in testing-mode.\n");
     printf("  --systemPrompt        Brian added. Allow user to set system prompt\n");
+    printf("  --patientFile         Brian added. For IBD hx extraction. A txt file with patient identifiers which must be in the same order as the prompt txt file.\n");
+    printf("  --minConsensusNotes           Brian added. For IBD hx extraction. How many non-Unknown notes must be considered before moving to next patient. Default is 2.\n");
+    printf("  --minConsensusFraction        Brian added. For IBD hx extraction. What fraction of notes must agree to move to next patient. Default is 0.7.\n");
     printf("  --answerType          Brian added. For IBD hx extraction, either get 'duration' or calendar year ('calYear'). Default is calYear. \n");
     printf("  -h, --help            show this help message and exit\n");
     printf("  --version             show version and build info\n");
