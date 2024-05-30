@@ -11,10 +11,8 @@
 #include <ctime>
 #include <iostream>
 #include <fstream>
-#include <set>
+#include <unordered_set>
 #include <sstream>
-#include <unordered_map>
-#include <cctype>
 
 std::string generatePreSystemPrompt(const std::string& promptFormat);
 std::string generatePostSystemPrompt(const std::string& promptFormat);
@@ -22,8 +20,6 @@ std::string generatePreAnswer(const std::string& promptFormat, const std::string
 //std::string formatSystemPrompt(const std::string& systemPrompt, const std::string& promptFormat);
 std::string formatSystemPrompt(const std::string& systemPrompt, const std::string& promptFormat);
 std::string quoteAndEscape(const std::string& input, bool quote);
-bool contains(const std::string& str, const std::string& substring);
-std::string extractDigits(const std::string& str);
 //std::string createResponsePrompt(const std::string& systemPrompt, const std::string& modelThoughts, const std::string& promptFormat);
 
 // Struct which will serve as the value of a key-value pair in an unordered map.
@@ -54,20 +50,6 @@ static std::string trim(const std::string & str) {
 
 std::vector<std::string> k_prompts;
 
-bool contains(const std::string& str, const std::string& substring) {
-    return str.find(substring) != std::string::npos;
-}
-
-std::string extractDigits(const std::string& str) {
-    std::string result;
-    for (char ch : str) {
-        if (std::isdigit(static_cast<unsigned char>(ch))) {
-            result += ch;
-        }
-    }
-    return result;
-}
-
 // static std::string default_system_thoughts =
 // R"(The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. 
 // In order to do so, determine the length of time (in months or years) between this note and the patient's original diagnosis with any of the following: 
@@ -92,11 +74,13 @@ static std::string calYear_system = "The text provided is an excerpt from a medi
 "Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease. "
 "If the calendar year of diagnosis cannot be confidently determined, consider the year 'Unknown' "
 "and a different medical note from the same patient can be used to determine the diagnosis year. "
-"This patient has several other notes containing information on their IBD history, so be conservative in answering. "
-"In addition to the your answer, also provide the note's confidence in the diagnosis year, either 'Certain' (only if the exact year of diagnosis is 100% certain), 'High', 'Medium' or 'Low', "
-"and the resolution of the answer, either 'Exact' (if the exact year is given) or 'Approximate' (if the note conveys uncertainty or approximates the year). "
-"Be conservative when stating the confidence and resolution of the answer. "
-"Format your answer as in the following examples: 'Answer: X, Confidence: Y, Resolution: Z' or 'Answer: Unknown'.";
+"Here are some examples:\n<<<\nNote date: 03/04/01 Note text: 'Patient has long standing history of IBD'\nAnswer: Unknown\n"
+"Note date: 2/22/03 Note text: 'History of colitis and colectomy in 1982.'\nAnswer: 1982, Confidence: Low, Resolution: Exact\n"
+"Note date: 12/21/23 Note text: 'White female with Crohn's diagnosed recently by colonoscopy last May.'\nAnswer: 2023, Confidence: High, Resolution: Exact\n"
+"Note date: 1/3/12 Note text: 'on Sulfasalazine for ten yrs. UC dx 15-20 yrs ago.'\nAnswer: 1995, Confidence: Medium, Resolution: Approximate\n"
+"Note date: 9/8/19 Note text: 'History of DM dx in 1990.\n Also, proctitis diagnosed about 10 years ago here'\nAnswer: 2009, Confidence: High, Resolution: Exact\n>>>\n"
+"This specific patient has several other notes containing information on their IBD history, so be conservative in answering. "
+"Format your answer as in the examples (i.e. 'Answer: XXXX' or 'Answer: Unknown').";
 
 static std::string duration_system = "The text provided is an excerpt from a medical note. You are responsible for building an accurate structured dataset from these notes. "
 "In order to do so, determine the length of time (in years) between this note and the patient's original diagnosis with any of the following: "
@@ -246,14 +230,18 @@ int main(int argc, char ** argv) {
         return 1;
     }
 
-    // Start with patient 0
-    size_t patientNumber = 0;
+    // Get the prompt Number we start at
+    size_t promptNumber = params.promptStartingNumber;
 
-    if(params.n_parallel != 1){
-        throw std::runtime_error("Error: CPU mode only allows consecutive sequential processing (n_parallel = 1) for IBD hx at the moment.");
+    if(params.testing_mode){
+        if(promptNumber != 0){
+            throw std::runtime_error("Error: Testing mode is not compatible with nonzero prompt number. Answer key and prompts will not match.");
+        }
+        if(params.n_parallel != 1){
+            throw std::runtime_error("Error: Testing mode is not compatible with multiple simultaneous requests. Answer key and input prompts may not match as client requests may change order.");
+        }
     }
 
-    // What if we had more clients than n_parallel (# of IBD patients is # of clients, but only n_parallel are processed at a time)
     // number of simultaneous "clients" to simulate
     const int32_t n_clients = params.n_parallel;
 
@@ -299,20 +287,16 @@ int main(int argc, char ** argv) {
     std::string inputFile = dirPath + "/inputTextNoFormatting_" + dateTimeOutFile + ".txt";
     std::string metadataFile = dirPath + "/metadata_" + dateTimeOutFile + ".txt";
     std::string outputFile = dirPath + "/output_" + params.answerType + "_" + dateTimeOutFile + ".txt";
-    std::string consensusFile = dirPath + "/consensus_" + params.answerType + "_" + dateTimeOutFile + ".txt";
 
     std::vector<std::string> allPrompts;
-    std::vector<std::string> allPatients;
-
-    // load the prompts and patients from external files
+    // load the prompts from an external file if there are any
     if (params.prompt.empty()) {
         throw std::runtime_error("Error: No prompts given");
-    } else if (params.patients.empty()){
-        throw std::runtime_error("Error: No patient IDs given");
     } else {
         // Output each line of the input params.prompts vector and copy to k_prompts
         size_t index = 0;
         printf("\n\033[32mNow printing the external prompt file starting with line %zu from %s\033[0m\n\n", params.promptStartingNumber, params.prompt_file.c_str());
+
 
         // Create and open a text file
         std::ofstream outFile1(inputFile.c_str());
@@ -324,7 +308,6 @@ int main(int argc, char ** argv) {
         }
 
         allPrompts = split_string(params.prompt, '\n');
-        allPatients = split_string(params.patients, '\n');
 
         // Make sure we only run as many prompts as there are
         size_t n_prompts = allPrompts.size();
@@ -353,33 +336,6 @@ int main(int argc, char ** argv) {
         
     }
 
-    // Check if the patients vector is sorted by ID (in some way, doesn't matter how it is sorted)
-    // Also fill vector to tell us at what index each patient has their first note
-    std::vector<size_t> firstPatientPrompts;
-    firstPatientPrompts.push_back(0);
-    for (size_t i = 1; i < allPatients.size(); ++i) {
-        if (allPatients[i] == allPatients[i - 1]) {
-            continue;
-        }else{
-            firstPatientPrompts.push_back(i);
-        }
-        // Check if the current string appears again later
-        for (size_t j = i + 1; j < allPatients.size(); ++j) {
-            if (allPatients[j] == allPatients[i - 1]) {
-                throw std::runtime_error("Error: Patient ID file must be created so that repeated patient IDs are grouped together, not separated.");
-            }
-        }
-    }
-
-    size_t promptNumber = firstPatientPrompts[0];
-
-    // Get the unique patients
-    std::set<std::string> uniquePatients_set(allPatients.begin(), allPatients.end());
-    std::vector<std::string> uniquePatients_vec(uniquePatients_set.begin(), uniquePatients_set.end());
-
-    // Print the number of unique patients
-    printf("Number of unique patients: %lu\n", uniquePatients_set.size());
-
     fprintf(stderr, "\n\n");
     fflush(stderr);
 
@@ -403,7 +359,7 @@ int main(int argc, char ** argv) {
     outFile2 << "Output file format: {Y/N text} \\t {Yes Prob.} \\t {No Prob.} \\t {Full path report input (to make sure we have the right input mapped to the right output. \\n's and \\t's are escaped)}" << std::endl << std::endl;   
     outFile2 << "Model path: " << params.model << std::endl << std::endl;
     outFile2 << "Input file path: " << params.prompt_file << std::endl;
-    outFile2 << "Reading from line " << params.promptStartingNumber << " to " << n_seq+params.promptStartingNumber-1 << " (zero-based index)" << std::endl << std::endl;
+    outFile2 << "Reading from line " << params.promptStartingNumber << " to " << n_seq+params.promptStartingNumber << " (zero-based index)" << std::endl << std::endl;
     outFile2 << quoteAndEscape(promptFormat_example, true) << std::endl << std::endl << "Prompt format tokenized:" << std::endl; // Adding newline for separation in file
 
     // Iterate through the vector and write each element to the file
@@ -492,10 +448,6 @@ int main(int argc, char ** argv) {
         std::cerr << "Failed to open the output out file." << std::endl;
         return 1; // Return with error code
     }
-
-    // Define tmpResponses
-    std::vector<std::string> tmpResponses;
-    std::vector<std::string> consensusVec;
 
     while (true) {
         if (dump_kv_cache) {
@@ -683,87 +635,16 @@ int main(int argc, char ** argv) {
                         pos = (pos_eos < pos_eot) ? pos_eos : pos_eot;
                     }
                     printf("\nEOS/EOT position = %zu\n", pos);
-
-                    // // Extract logits (trying to get probability)
-                    // auto * logits  = llama_get_logits_ith(ctx, pos-1);
-                    // std::vector<llama_token_data> candidates;
-                    // candidates.reserve(n_vocab);
-
-                    // for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
-                    //     candidates.emplace_back(llama_token_data{ token_id, logits[token_id], 0.0f });
-                    // }
                     
 
                     if (pos != std::string::npos) {
                         client.response = client.response.substr(0, pos);
                     }
 
-                    // Add client response to the tmpVec if not unknown
-                    if(client.response != " Unknown"){
-                        tmpResponses.push_back(client.response);
-                    }
-                    
-                    // See if we have a consensus
-                    std::unordered_map<std::string, size_t> entry_counts;
-
-                    // Count the occurrences of each entry
-                    for (const auto& entry : tmpResponses) {
-                        ++entry_counts[extractDigits(entry)];
-                    }
-
-                    // Find the entry with the maximum count
-                    std::string consensus_entry;
-                    size_t max_count = 0;
-                    for (const auto& pair : entry_counts) {
-                        if (pair.second > max_count) {
-                            max_count = pair.second;
-                            consensus_entry = pair.first;
-                        }
-                    }
-
-                    size_t promptNumberOld = promptNumber;
-
-                    // Check if the maximum count entry meets requirements.
-                    if ((static_cast<double>(max_count) / tmpResponses.size() >= params.minConsensusFraction) & (tmpResponses.size() >= params.n_minNotes)) {
-                        
-                        std::printf("Consensus entry: %s\n", consensus_entry.c_str());         
-                        tmpResponses.clear();
-                        consensusVec.push_back(consensus_entry + "\tVotes\t" + uniquePatients_vec[patientNumber]);
-                        patientNumber += 1;
-                        if(patientNumber < uniquePatients_vec.size()){
-                            promptNumber = firstPatientPrompts[patientNumber];
-                        }
-
-                    }else if(contains(client.response, "Certain") & contains(client.response, "Exact")){
-                        
-                        std::printf("Consensus entry: %s\n", extractDigits(client.response).c_str());
-                        tmpResponses.clear();
-                        consensusVec.push_back(extractDigits(client.response) + "\tCertain & Exact\t" + uniquePatients_vec[patientNumber]);
-                        patientNumber += 1;
-                        if(patientNumber < uniquePatients_vec.size()){
-                            promptNumber = firstPatientPrompts[patientNumber];
-                        }
-
-                    }else if(std::find(firstPatientPrompts.begin(), firstPatientPrompts.end(), promptNumber) != firstPatientPrompts.end()){
-                        // If promptNumber is in firstPatient Prompts, wee've stumbled into a new patient
-                        std::printf("No consensus entry for this patient\n");
-                        consensusVec.push_back("No consensus\t" + uniquePatients_vec[patientNumber]);
-                        patientNumber += 1;
-                        tmpResponses.clear();
-                    }
-
-
                     // Copy the client response and the input
                     outFile3 << client.response << "\t";
 
                     outFile3 << quoteAndEscape(client.input, false) << std::endl;
-
-                    // Write N blank lines to the out file for the ones we skip
-                    size_t N_blank_lines = promptNumber - promptNumberOld;
-                    for (std::size_t i = 0; i < N_blank_lines; ++i) {
-                        outFile3 << "Not run\t" << quoteAndEscape(k_prompts[promptNumberOld + i], false) << std::endl;
-                        g_seq_id += 1;
-                    }
 
                     // delete only the generated part of the sequence, i.e. keep the system prompt in the cache
                     llama_kv_cache_seq_rm(ctx, client.id + 1, -1, -1);
@@ -771,11 +652,19 @@ int main(int argc, char ** argv) {
 
                     const auto t_main_end = ggml_time_us();
 
-                    LOG_TEE("Input:    \033[96m%s\n\033[0mResponse: \033[31m%s\033[0m\n\n",
-                            //::trim(system).c_str(),
+                    LOG_TEE("System:    %s\nInput:    \033[96m%s\n\033[0mResponse: \033[31m%s\033[0m\n\n",
+                            ::trim(system).c_str(),
                             //::trim(prompts[promptNumber]).c_str(),
                             ::trim(client.input).c_str(),
                             ::trim(client.response).c_str());
+
+                    // LOG_TEE("\033[31mClient %3d, seq %3d/%3d, prompt %4d t, response %4d t, time %5.2f s, speed %5.2f t/s, cache miss %d \033[0m \nInput:    %s\n\033[35mResponse: %s\033[0m\n\n",
+                    //         client.id, client.seq_id, n_seq, client.n_prompt, client.n_decoded,
+                    //         (t_main_end - client.t_start_prompt) / 1e6,
+                    //         (double) (client.n_prompt + client.n_decoded) / (t_main_end - client.t_start_prompt) * 1e6,
+                    //         n_cache_miss,
+                    //         ::trim(client.input).c_str(),
+                    //         ::trim(client.response).c_str());
 
                     n_total_prompt += client.n_prompt;
                     n_total_gen    += client.n_decoded;
@@ -791,26 +680,13 @@ int main(int argc, char ** argv) {
     // Close the file
     outFile3.close();
 
-    // Open consensus file to write to it
-    std::ofstream outFile4(consensusFile.c_str());
-    // Check if the file was opened successfully
-    if (!outFile4) {
-        std::cerr << "Failed to open the output out file." << std::endl;
-        return 1; // Return with error code
-    }
-
-    // Write each string from the vector to the file
-    for (const auto& str : consensusVec) {
-        outFile4 << str << "\n";
-    }
-    outFile4.close();
-
     // If in testing mode, compare answers to answer key
     int matchCount = 0;
     if(params.testing_mode){
 
         std::ifstream trueAnswerFile(params.answerKey);
         std::ifstream modelAnswerFile(outputFile);
+        
         
         std::string trueAnswerLine, modelAnswerLine;
 
@@ -835,7 +711,7 @@ int main(int argc, char ** argv) {
                 }
 
                 // Create a set for acceptable answers
-                std::set<std::string> acceptableAnswers;
+                std::unordered_set<std::string> acceptableAnswers;
                 while (getline(iss, acceptableAnswer, '\t')) {
                     acceptableAnswers.insert(acceptableAnswer);
                 }

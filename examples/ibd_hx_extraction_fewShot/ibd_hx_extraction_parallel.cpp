@@ -630,15 +630,6 @@ int main(int argc, char ** argv) {
                         pos = (pos_eos < pos_eot) ? pos_eos : pos_eot;
                     }
                     printf("\nEOS/EOT position = %zu\n", pos);
-
-                    // // Extract logits (trying to get probability)
-                    // auto * logits  = llama_get_logits_ith(ctx, pos-1);
-                    // std::vector<llama_token_data> candidates;
-                    // candidates.reserve(n_vocab);
-
-                    // for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
-                    //     candidates.emplace_back(llama_token_data{ token_id, logits[token_id], 0.0f });
-                    // }
                     
 
                     if (pos != std::string::npos) {
