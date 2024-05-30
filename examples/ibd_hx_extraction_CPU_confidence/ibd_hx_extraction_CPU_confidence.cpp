@@ -756,6 +756,8 @@ int main(int argc, char ** argv) {
                         patientNumber += 1;
                         if(patientNumber < uniquePatients_vec.size()){
                             promptNumber = firstPatientPrompts[patientNumber];
+                        }else{
+                            promptNumber = n_seq; // End it
                         }
 
                     }else if(contains(client.response, "Certain") & contains(client.response, "Exact")){
@@ -766,6 +768,8 @@ int main(int argc, char ** argv) {
                         patientNumber += 1;
                         if(patientNumber < uniquePatients_vec.size()){
                             promptNumber = firstPatientPrompts[patientNumber];
+                        }else{
+                            promptNumber = n_seq; // End it
                         }
 
                     }else if(std::find(firstPatientPrompts.begin(), firstPatientPrompts.end(), promptNumber) != firstPatientPrompts.end()){
