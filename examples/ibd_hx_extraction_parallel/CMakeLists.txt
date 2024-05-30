@@ -1,5 +1,5 @@
-set(TARGET ibd_hx_extraction_fewShot)
-add_executable(${TARGET} ibd_hx_extraction_fewShot.cpp)
+set(TARGET ibd_hx_extraction_parallel)
+add_executable(${TARGET} ibd_hx_extraction_parallel.cpp)
 install(TARGETS ${TARGET} RUNTIME)
 target_link_libraries(${TARGET} PRIVATE common llama ${CMAKE_THREAD_LIBS_INIT})
 target_compile_features(${TARGET} PRIVATE cxx_std_11)
