@@ -11,28 +11,12 @@
 #include <ctime>
 #include <iostream>
 #include <fstream>
-#include <set>
-#include <sstream>
-#include <unordered_set>
-#include <cctype>
 
 std::string generatePreSystemPrompt(const std::string& promptFormat);
 std::string generatePostSystemPrompt(const std::string& promptFormat);
 std::string generatePreAnswer(const std::string& promptFormat);
 std::string formatSystemPrompt(const std::string& systemPrompt, const std::string& promptFormat);
 std::string quoteAndEscape(const std::string& input, bool quote);
-bool contains(const std::string& str, const std::string& substring);
-std::string extractDigits(const std::string& str);
-
-// Struct which will serve as the value of a key-value pair in an unordered map.
-struct info {
-    std::string inputText;
-    std::string inputDate;
-    std::string fullPrompt;
-    std::string output;
-    double yesProb;
-    double noProb;
-};
 
 // trim whitespace from the beginning and end of a string
 static std::string trim(const std::string & str) {
@@ -51,21 +35,6 @@ static std::string trim(const std::string & str) {
 }
 
 std::vector<std::string> k_prompts;
-
-bool contains(const std::string& str, const std::string& substring) {
-    return str.find(substring) != std::string::npos;
-}
-
-std::string extractDigits(const std::string& str) {
-    std::string result;
-    for (char ch : str) {
-        if (std::isdigit(static_cast<unsigned char>(ch))) {
-            result += ch;
-        }
-    }
-    return result;
-}
-
 
 static std::string calYear_system = "The text provided is a collection of selected excerpts from an individual patient's medical notes. "
 "Determine the calendar year in which the patient was originally diagnosed with any of the following: "
@@ -209,21 +178,13 @@ int main(int argc, char ** argv) {
 
     gpt_params params;
 
-    if (gpt_params_parse(argc, argv, params) == false) {
+    if (!gpt_params_parse(argc, argv, params)) {
+        gpt_params_print_usage(argc, argv, params);
         return 1;
     }
 
     // Get the prompt Number we start at
     size_t promptNumber = params.promptStartingNumber;
-
-    if(params.testing_mode){
-        if(promptNumber != 0){
-            throw std::runtime_error("Error: Testing mode is not compatible with nonzero prompt number. Answer key and prompts will not match.");
-        }
-        if(params.n_parallel != 1){
-            throw std::runtime_error("Error: Testing mode is not compatible with multiple simultaneous requests. Answer key and input prompts may not match as client requests may change order.");
-        }
-    }
 
     // number of simultaneous "clients" to simulate
     const int32_t n_clients = params.n_parallel;
@@ -291,7 +252,7 @@ int main(int argc, char ** argv) {
 
         allPrompts = split_string(params.prompt, '\n');
 
-        // Make sure we only run as many prompts as there are
+        // Make sure we only run as many prompts as there are left with diff. starting number
         size_t n_prompts = allPrompts.size();
         if(n_seq + params.promptStartingNumber > n_prompts){
             n_seq -= params.promptStartingNumber;
@@ -342,7 +303,8 @@ int main(int argc, char ** argv) {
     outFile2 << "Input file path: " << params.prompt_file << std::endl;
     outFile2 << "Patient ID file path: " << params.patient_file << std::endl;
     outFile2 << "Reading from line " << params.promptStartingNumber << " to " << n_seq+params.promptStartingNumber << " (zero-based index)" << std::endl << std::endl;
-    outFile2 << quoteAndEscape(promptFormat_example, true) << std::endl << std::endl << "Prompt format tokenized:" << std::endl; // Adding newline for separation in file
+    outFile2 << "Prompt format example (no escaping):" << std::endl; 
+    outFile2 << promptFormat_example << std::endl << std::endl << "Prompt format tokenized:" << std::endl; // Adding newline for separation in file
 
     // Iterate through the vector and write each element to the file
     for (size_t i = 0; i < tokens_format.size(); ++i) {
@@ -359,11 +321,8 @@ int main(int argc, char ** argv) {
 
     std::vector<llama_token> tokens_system;
 
-    // Set system prompt (no formatting yet)
-    std::string system = calYear_system;
-
     // Write system prompt to the out file
-    outFile2 << "System prompt: " << quoteAndEscape(system, true) << std::endl << std::endl; // Adding newline for separation in file
+    outFile2 << "System prompt: " << quoteAndEscape(calYear_system, true) << std::endl << std::endl; // Adding newline for separation in file
 
     // Format system prompt
     std::string k_system = formatSystemPrompt(system, params.promptFormat);
@@ -387,8 +346,8 @@ int main(int argc, char ** argv) {
 
     const auto t_main_start = ggml_time_us();
 
-    LOG_TEE("%s: Simulating parallel requests from clients:\n", __func__);
-    LOG_TEE("%s: n_parallel = %d, n_sequences = %d, cont_batching = %d, system tokens = %d, prompt format =%s\n", __func__, n_clients, n_seq, cont_batching, n_tokens_system, params.promptFormat.c_str());
+    LOG_TEE("%s: Simulating parallel requests from %d patients:\n", __func__, n_seq);
+    LOG_TEE("%s: n_parallel (number of simultaneous requests) = %d, cont_batching = %d, system tokens = %d\n", __func__, n_clients, cont_batching, n_tokens_system);
     LOG_TEE("\n");
 
     {
@@ -405,7 +364,6 @@ int main(int argc, char ** argv) {
 
         // assign the system KV cache to all parallel sequences
         for (int32_t i = 1; i <= n_clients; ++i) {
-            // Copying the cache from client 0 to all n_clients clients (what are the last two args?)
             llama_kv_cache_seq_cp(ctx, 0, i, -1, -1);
         }
 
@@ -606,7 +564,7 @@ int main(int argc, char ** argv) {
                         pos = (pos_eos < pos_eot) ? pos_eos : pos_eot;
                     }
                     printf("\nEOS/EOT position = %zu\n", pos);
-                    
+
 
                     if (pos != std::string::npos) {
                         client.response = client.response.substr(0, pos);
@@ -641,66 +599,6 @@ int main(int argc, char ** argv) {
     // Close the file
     outFile3.close();
 
-    // If in testing mode, compare answers to answer key
-    int matchCount = 0;
-    if(params.testing_mode){
-
-        std::ifstream trueAnswerFile(params.answerKey);
-        std::ifstream modelAnswerFile(outputFile);
-        
-        
-        std::string trueAnswerLine, modelAnswerLine;
-
-        int lineNumber = 0;
-
-        // Check corresponding lines from both files
-        if (trueAnswerFile.is_open() && modelAnswerFile.is_open()) {
-            while (getline(trueAnswerFile, trueAnswerLine) && getline(modelAnswerFile, modelAnswerLine)) {
-                lineNumber++;
-                std::istringstream iss(trueAnswerLine);
-                std::string acceptableAnswer;
-                bool matchFound = false;
-
-                // Process the model answer line
-                std::istringstream modelISS(modelAnswerLine);
-                std::string firstModelAnswer;
-                if (getline(modelISS, firstModelAnswer, ',')) {  // Extract the first tab-separated entry
-                    // Remove leading space if present
-                    if (!firstModelAnswer.empty() && firstModelAnswer[0] == ' ') {
-                        firstModelAnswer.erase(0, 1);
-                    }
-                }
-
-                // Create a set for acceptable answers
-                std::unordered_set<std::string> acceptableAnswers;
-                while (getline(iss, acceptableAnswer, '\t')) {
-                    acceptableAnswers.insert(acceptableAnswer);
-                }
-
-                // Check if the model answer matches any acceptable answers
-                if (acceptableAnswers.find(firstModelAnswer) != acceptableAnswers.end()) {
-                    matchFound = true;
-                }
-
-                // Output the result for this line
-                if (matchFound) {
-                    matchCount++;
-                    //std::cout << "Line " << lineNumber << ": Match found." << std::endl;
-                } else {
-                    //std::cout << "Line " << lineNumber << ": No match found." << std::endl;
-                }
-            }
-            trueAnswerFile.close();
-            modelAnswerFile.close();
-
-            //std::cout << "Total matching lines: " << matchCount << std::endl;
-        } else {
-            std::cerr << "Unable to open one or both files" << std::endl;
-            return 1;
-        }
-        
-    }
-
     const auto t_main_end = ggml_time_us();
 
     print_date_time();
@@ -718,23 +616,6 @@ int main(int argc, char ** argv) {
     LOG_TEE("Cache misses:        %6d\n", n_cache_miss);
 
     LOG_TEE("\n");
-
-    if(params.testing_mode){
-        LOG_TEE("Accuracy:        %6d / %6d\n", matchCount, n_seq);
-    }
-
-    // Reopen the metadata file in append mode
-    std::ofstream metaFile(metadataFile, std::ios::app);  // Append mode
-
-    if (metaFile.is_open()) {
-        if(params.testing_mode){
-            metaFile << "Accuracy: " <<  matchCount << " / " << n_seq << std::endl;
-        }
-        metaFile << "Runtime: " << (t_main_end - t_main_start) / 1e6 << " seconds" << std::endl;
-        metaFile.close();
-    } else {
-        std::cerr << "Unable to open metadata file for appending." << std::endl;
-    }
 
     llama_print_timings(ctx);
 
