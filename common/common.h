@@ -60,12 +60,8 @@ struct gpt_params {
     int32_t n_threads_batch       = -1;    // number of threads to use for batch processing (-1 = use n_threads)
     int32_t n_threads_batch_draft = -1;
     int32_t n_predict             = -1;    // new tokens to predict
-<<<<<<< HEAD
     size_t n_minNotes            = 2;    // Number of notes per patient to consider at minimum
     int32_t n_ctx                 = 512;   // context size
-=======
-    int32_t n_ctx                 = 0;     // context size
->>>>>>> 7672adeec7a79ea271058c63106c142ba84f951a
     int32_t n_batch               = 2048;  // logical batch size for prompt processing (must be >=32 to use BLAS)
     int32_t n_ubatch              = 512;   // physical batch size for prompt processing (must be >=32 to use BLAS)
     int32_t n_keep                = 0;     // number of tokens to keep from initial prompt
