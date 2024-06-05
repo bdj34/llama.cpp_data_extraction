@@ -1,0 +1,48 @@
+
+# Cmake to see if this works (CPU)
+cd /Users/brianjohnson/VA_IBD/llama.cpp_IBD_hx
+make 
+
+# Llama3 8b calYear testing postAnswer & system prompt variation
+./ibd_hx_extraction_CPU_confidence \
+-m ~/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
+--sequences 103 --parallel 1 --cont-batching --n-predict 30 --batch-size 2048 --threads 4 --ctx-size 2048 \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile ../testing_data/IBD_hx_deID/to_tscc_patientNumber_ibd_hx_05312024.txt \
+--outDir /tscc/projects/ps-curtiuslab/brian/nlp/testing_ibd_hx_extraction_outDir \
+--answerType calYear \
+--grammar-file ./grammars/calYear_confidence_grammar.gbnf \
+--promptFormat llama3 \
+--file ../testing_data/IBD_hx_deID/to_tscc_prompts_ibd_hx_05312024.txt \
+--minConsensusNotes 3 --minConsensusFraction 0.7
+
+# Llama 3 70b
+./ibd_hx_extraction_CPU_confidence \
+-m /Users/brianjohnson/Downloads/Meta-Llama-3-70B-Instruct-Q4_K_M.gguf \
+--sequences 103 --parallel 1 --cont-batching --n-predict 30 --batch-size 2048 --ctx-size 2048 \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile ../testing_data/IBD_hx_deID/to_tscc_patientNumber_ibd_hx_05312024.txt \
+--outDir ../llm_ibd_outDir \
+--answerType calYear \
+--grammar-file ./grammars/calYear_confidence_grammar.gbnf \
+--promptFormat llama3 \
+--file ../testing_data/IBD_hx_deID/to_tscc_prompts_ibd_hx_05312024.txt \
+--minConsensusNotes 3 --minConsensusFraction 0.7
+
+
+# Phi3 medium
+./ibd_hx_extraction_CPU_confidence \
+-m /Users/brianjohnson/Downloads/Phi-3-medium-4k-instruct-fromHF-f16.gguf \
+--sequences 103 --parallel 1 --cont-batching --n-predict 30 --batch-size 2048 --ctx-size 2048 \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile ../testing_data/IBD_hx_deID/to_tscc_patientNumber_ibd_hx_05312024.txt \
+--outDir ../llm_ibd_outDir \
+--answerType calYear \
+--grammar-file ./grammars/calYear_confidence_grammar.gbnf \
+--promptFormat phi3 \
+--file ../testing_data/IBD_hx_deID/to_tscc_prompts_ibd_hx_05312024.txt \
+--minConsensusNotes 3 --minConsensusFraction 0.7
+
