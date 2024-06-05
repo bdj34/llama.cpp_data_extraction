@@ -106,22 +106,17 @@ struct gpt_params {
     struct llama_sampling_params sparams;
 
     std::string model                = ""; // model path
-<<<<<<< HEAD
     std::string promptFormat         = ""; // promptFormat to use for the ibd hx extraction
     std::string outDir               = ""; // out dir to write out txt files
     std::string systemPrompt         = ""; // systemPrompt set by user
     std::string answerKey            = ""; // Path to txt file to be fed into R to evaluate the answers
     std::string answerType           = "calYear"; // For IBD hx extraction, either calYear or duration. Default is calYear
     std::string model_draft          = "";  // draft model for speculative decoding
-=======
-    std::string model_draft          = ""; // draft model for speculative decoding
->>>>>>> 7672adeec7a79ea271058c63106c142ba84f951a
     std::string model_alias          = "unknown"; // model alias
     std::string model_url            = ""; // model url to download
     std::string hf_repo              = ""; // HF repo
     std::string hf_file              = ""; // HF file
     std::string prompt               = "";
-<<<<<<< HEAD
     std::string patients             = "";
     std::string prompt_file          = "";  // store the external prompt file name
     std::string patient_file          = "";  // store the external patient ID file name
@@ -130,13 +125,6 @@ struct gpt_params {
     std::string input_suffix         = "";  // string to suffix user inputs with
     std::vector<std::string> antiprompt; // string upon seeing which more user input is prompted
     std::string logdir               = "";  // directory in which to save YAML log files
-=======
-    std::string prompt_file          = ""; // store the external prompt file name
-    std::string path_prompt_cache    = ""; // path to file for saving/loading prompt eval state
-    std::string input_prefix         = ""; // string to prefix user inputs with
-    std::string input_suffix         = ""; // string to suffix user inputs with
-    std::string logdir               = ""; // directory in which to save YAML log files
->>>>>>> 7672adeec7a79ea271058c63106c142ba84f951a
     std::string lookup_cache_static  = ""; // path of static ngram cache file for lookup decoding
     std::string lookup_cache_dynamic = ""; // path of dynamic ngram cache file for lookup decoding
     std::string logits_file          = ""; // file for saving *all* logits
