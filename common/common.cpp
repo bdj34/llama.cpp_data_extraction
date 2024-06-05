@@ -1661,6 +1661,27 @@ bool gpt_params_find_arg(int argc, char ** argv, const std::string & arg, gpt_pa
 #define LLAMA_COMMON_ATTRIBUTE_FORMAT(...)
 #endif
 
+struct option_info {
+    LLAMA_COMMON_ATTRIBUTE_FORMAT(4, 5)
+    option_info(const std::string & tags, const char * args, const char * desc, ...) : tags(tags), args(args), desc(desc) {
+        va_list args_list;
+        va_start(args_list, desc);
+        char buffer[1024];
+        vsnprintf(buffer, sizeof(buffer), desc, args_list);
+        va_end(args_list);
+        this->desc = buffer;
+    }
+
+    option_info(const std::string & grp) : grp(grp) {}
+
+    std::string tags;
+    std::string args;
+    std::string desc;
+    std::string grp;
+};
+
+std::vector<option_info> options;
+
 void gpt_params_print_usage(int /*argc*/, char ** argv, const gpt_params & params) {
     const llama_sampling_params & sparams = params.sparams;
 
