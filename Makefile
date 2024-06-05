@@ -1,15 +1,10 @@
 # Define the default target now so that it is always the first target
 BUILD_TARGETS = \
 	main quantize quantize-stats perplexity imatrix embedding vdot q8dot train-text-from-scratch convert-llama2c-to-ggml \
-<<<<<<< HEAD
 	simple batched batched-bench save-load-state server gguf gguf-split eval-callback llama-bench libllava.a llava-cli baby-llama beam-search  \
 	retrieval speculative infill tokenize benchmark-matmult parallel ibd_hx_extraction_parallel ibd_hx_extraction_fewShot ibd_hx_extraction_CPU ibd_hx_extraction_CPU_confidence \
 	ibd_hx_concatNotes \
 	crc_extraction_parallel finetune export-lora lookahead lookup passkey gritlm tests/test-c.o
-=======
-	simple batched batched-bench save-load-state server gguf gguf-split eval-callback llama-bench libllava.a llava-cli baby-llama \
-	retrieval speculative infill tokenize benchmark-matmult parallel finetune export-lora lookahead lookup passkey gritlm tests/test-c.o
->>>>>>> 7672adeec7a79ea271058c63106c142ba84f951a
 
 # Binaries only useful for tests
 TEST_TARGETS = \
