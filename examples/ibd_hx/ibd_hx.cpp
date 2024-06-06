@@ -591,10 +591,10 @@ int main(int argc, char ** argv) {
                     }
 
                     // Copy the client response and the input
+                    outFile3 << client.response << "\t";
                     if(!client.ICN.empty()){
-                        outFile3 << client.ICN << "\t";
+                        outFile3 << client.ICN << std::endl;
                     }
-                    outFile3 << client.response << std::endl;
 
                     // delete only the generated part of the sequence, i.e. keep the system prompt in the cache
                     llama_kv_cache_seq_rm(ctx, client.id + 1, -1, -1);
