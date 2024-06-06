@@ -150,6 +150,8 @@ struct client {
     std::string prompt;
     std::string response;
 
+    std::string ICN;
+
     struct llama_sampling_context * ctx_sampling = nullptr;
 };
 
@@ -233,6 +235,7 @@ int main(int argc, char ** argv) {
     std::string outputFile = dirPath + "/output_concat_" + dateTimeOutFile + ".txt";
 
     std::vector<std::string> allPrompts;
+    std::vector<std::string> allPatients;
     // load the prompts from an external file if there are any
     if (params.prompt.empty()) {
         throw std::runtime_error("Error: No prompts given");
@@ -251,6 +254,7 @@ int main(int argc, char ** argv) {
         }
 
         allPrompts = split_string(params.prompt, '\n');
+        allPatients = split_string(params.patients, '\n');
 
 
 
@@ -297,7 +301,7 @@ int main(int argc, char ** argv) {
     outFile2 << "Output file format: {Year}, {Confidence}, {Resolution}, {Patient ID (where applicable)}" << std::endl << std::endl;   
     outFile2 << "Model path: " << params.model << std::endl << std::endl;
     outFile2 << "Input file path: " << params.prompt_file << std::endl;
-    outFile2 << "Patient ID file path: " << params.patient_file << std::endl;
+    outFile2 << "Patient ID file path (if applicable): " << params.patient_file << std::endl;
     outFile2 << "Reading from line " << params.promptStartingNumber << " to " << n_seq+params.promptStartingNumber << " (zero-based index)" << std::endl << std::endl;
     outFile2 << "Prompt format example (no escaping):" << std::endl; 
     outFile2 << promptFormat_example << std::endl << std::endl << "Prompt format tokenized:" << std::endl; // Adding newline for separation in file
@@ -418,6 +422,9 @@ int main(int argc, char ** argv) {
                     client.t_start_gen    = 0;
 
                     client.input    = k_prompts[promptNumber];
+                    if(!params.patient_file.empty()){
+                        client.ICN = allPatients[promptNumber];
+                    }
                     //printf("%zu\n", promptNumber);
                     promptNumber++;
                     client.prompt   = client.input;
@@ -442,8 +449,12 @@ int main(int argc, char ** argv) {
                     client.n_decoded = 0;
                     client.i_batch   = batch.n_tokens - 1;
 
-                    LOG_TEE("\033[31mClient %3d, seq %4d, started decoding ...\033[0m\n", client.id, client.seq_id);
-
+                    if(params.patient_file.empty()){
+                        LOG_TEE("\033[31mClient %3d, seq %4d, started decoding ...\033[0m\n", client.id, client.seq_id);
+                    }else{
+                        LOG_TEE("\033[31mClient %3d, Patient %s, seq %4d, started decoding ...\033[0m\n", client.id, client.ICN.c_str(), client.seq_id);
+                    }
+                    
                     g_seq_id += 1;
 
                     // insert new requests one-by-one
@@ -570,6 +581,9 @@ int main(int argc, char ** argv) {
                     }
 
                     // Copy the client response and the input
+                    if(!client.ICN.empty()){
+                        outFile3 << client.ICN << "\t";
+                    }
                     outFile3 << client.response << std::endl;
 
                     // delete only the generated part of the sequence, i.e. keep the system prompt in the cache

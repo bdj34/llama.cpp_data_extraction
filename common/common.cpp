@@ -457,6 +457,25 @@ bool gpt_params_find_arg(int argc, char ** argv, const std::string & arg, gpt_pa
         }
         return true;
     }
+    if (arg == "--patientFile") {
+        if (++i >= argc) {
+            invalid_param = true;
+            return true;
+        }
+        std::ifstream file(argv[i]);
+        if (!file) {
+            fprintf(stderr, "error: failed to open file '%s'\n", argv[i]);
+            invalid_param = true;
+            return true;
+        }
+        // store the external file name in params
+        params.patient_file = argv[i];
+        std::copy(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>(), back_inserter(params.patients));
+        if (!params.patients.empty() && params.patients.back() == '\n') {
+            params.patients.pop_back();
+        }
+        return true;
+    }
     if (arg == "--in-file") {
         if (++i >= argc) {
             invalid_param = true;
