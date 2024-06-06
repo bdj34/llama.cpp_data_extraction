@@ -17,14 +17,14 @@ make
 --file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06042024.txt
 
 # Llama 3 70b
-./ibd_hx_concatNotes \
+./ibd_hx \
 -m /Users/brianjohnson/Downloads/Meta-Llama-3-70B-Instruct-Q4_K_M.gguf \
 --sequences 38 --parallel 1 --cont-batching --n-predict 30 --batch-size 20000 --threads 4 --ctx-size 20000 \
 --n-gpu-layers 99 \
 --testing-mode \
+--no-escape \
 --answerKey /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_answerKey_06042024.txt \
 --temp 0 \
---patientFile ../testing_data/IBD_hx_deID/ \
 --testing-mode \
 --outDir ../llm_ibd_outDir \
 --grammar-file ./grammars/calYear_concat.gbnf \
