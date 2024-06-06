@@ -163,7 +163,7 @@ struct gpt_params {
     bool prompt_cache_ro   = false; // open the prompt cache read-only and do not update it
 
     bool embedding         = false; // get only sentence embedding
-    bool escape            = true;  // escape "\n", "\r", "\t", "\'", "\"", and "\\"
+    bool escape            = false;  // escape "\n", "\r", "\t", "\'", "\"", and "\\"
     bool multiline_input   = false; // reverse the usage of `\`
     bool simple_io         = false; // improves compatibility with subprocesses and limited consoles
     bool cont_batching     = true;  // insert new sequences for decoding on-the-fly
