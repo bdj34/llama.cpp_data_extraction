@@ -471,42 +471,7 @@ bool gpt_params_find_arg(int argc, char ** argv, const std::string & arg, gpt_pa
         params.in_files.push_back(argv[i]);
         return true;
     }
-    if (arg == "--patientFile") {
-        if (++i >= argc) {
-            invalid_param = true;
-            return true;
-        }
-        std::ifstream patientFile(argv[i]);
-        if (!patientFile) {
-            fprintf(stderr, "error: failed to open patientFile '%s'\n", argv[i]);
-            invalid_param = true;
-            return true;
-        }
-        // store the external patientFile name in params
-        params.patient_file = argv[i];
-        std::copy(std::istreambuf_iterator<char>(patientFile), std::istreambuf_iterator<char>(), back_inserter(params.patients));
-        if (!params.patients.empty() && params.patients.back() == '\n') {
-            params.patients.pop_back();
-        }
-        return true;
-    }
-    if (arg == "--minConsensusNotes") {
-        if (++i >= argc) {
-            invalid_param = true;
-            return true;
-        }
-        params.n_minNotes = std::stoi(argv[i]);
-        return true;
-    }
-    if (arg == "--minConsensusFraction") {
-        if (++i >= argc) {
-            invalid_param = true;
-            return true;
-        }
-        params.minConsensusFraction = std::atof(argv[i]);
-        return true;
-    }
-    if (arg == "-n" || arg == "--n-predict") {
+    if (arg == "-n" || arg == "--predict" || arg == "--n-predict") {
         if (++i >= argc) {
             invalid_param = true;
             return true;

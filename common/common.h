@@ -124,6 +124,7 @@ struct gpt_params {
     std::string rpc_servers          = ""; // comma separated list of RPC servers
 
     std::vector<std::string> in_files;   // all input files
+    std::vector<std::string> antiprompt; // strings upon which more user input is prompted (a.k.a. reverse prompts)
     std::vector<llama_model_kv_override> kv_overrides;
 
     // TODO: avoid tuple, use struct
