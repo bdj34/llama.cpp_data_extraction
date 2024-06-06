@@ -1,7 +1,7 @@
 # Define the default target now so that it is always the first target
 BUILD_TARGETS = \
 	main quantize quantize-stats perplexity imatrix embedding vdot q8dot train-text-from-scratch convert-llama2c-to-ggml \
-	simple batched batched-bench save-load-state server gguf gguf-split eval-callback llama-bench libllava.a llava-cli baby-llama beam-search  \
+	simple batched batched-bench save-load-state server gguf gguf-split eval-callback llama-bench libllava.a llava-cli baby-llama  \
 	retrieval speculative infill tokenize benchmark-matmult parallel ibd_hx_extraction_parallel ibd_hx_extraction_fewShot ibd_hx_extraction_CPU ibd_hx_extraction_CPU_confidence \
 	ibd_hx_concatNotes ibd_hx \
 	crc_extraction_parallel finetune export-lora lookahead lookup passkey gritlm tests/test-c.o

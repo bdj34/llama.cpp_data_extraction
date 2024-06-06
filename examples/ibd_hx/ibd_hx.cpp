@@ -204,7 +204,7 @@ int main(int argc, char ** argv) {
     std::time_t now = std::time(nullptr);
     std::tm* now_tm = std::localtime(&now);
     // Buffer to hold the date-time format
-    char dateTimeBuffer[30];  // Ensure the buffer is large enough for the format
+    char dateTimeBuffer[60];  // Ensure the buffer is large enough for the format
     // Format the date and time with strftime
     strftime(dateTimeBuffer, sizeof(dateTimeBuffer), "%Y-%m-%d_%H-%M-%S", now_tm);
     // Convert to string for use in filenames or other outputs
@@ -252,11 +252,7 @@ int main(int argc, char ** argv) {
 
         allPrompts = split_string(params.prompt, '\n');
 
-        // Make sure we only run as many prompts as there are left with diff. starting number
-        size_t n_prompts = allPrompts.size();
-        if(n_seq + params.promptStartingNumber > n_prompts){
-            n_seq -= params.promptStartingNumber;
-        }
+
 
         // Print the prompts and write to outfile (only those equal to or after starting index)
         std::string tmpPrompt;
@@ -325,14 +321,14 @@ int main(int argc, char ** argv) {
     outFile2 << "System prompt: " << quoteAndEscape(calYear_system, true) << std::endl << std::endl; // Adding newline for separation in file
 
     // Format system prompt
-    std::string k_system = formatSystemPrompt(system, params.promptFormat);
+    std::string k_system = formatSystemPrompt(calYear_system, params.promptFormat);
 
     // Print the string
     printf("System prompt: %s\n", k_system.c_str());
     tokens_system = ::llama_tokenize(ctx, k_system, true);
     const int32_t n_tokens_system = tokens_system.size();
 
-    llama_seq_id g_seq_id = 0;
+    llama_seq_id g_seq_id = params.promptStartingNumber;
 
     // the max batch size is as large as the context to handle cases where we get very long input prompt from multiple
     // users. regardless of the size, the main loop will chunk the batch into a maximum of params.n_batch tokens at a time
@@ -422,6 +418,7 @@ int main(int argc, char ** argv) {
                     client.t_start_gen    = 0;
 
                     client.input    = k_prompts[promptNumber];
+                    //printf("%zu\n", promptNumber);
                     promptNumber++;
                     client.prompt   = client.input;
                     client.response = "";
@@ -471,6 +468,7 @@ int main(int argc, char ** argv) {
             //    i -= n_batch;
             //    continue;
             //}
+            //printf("%d\n", i);
 
             const int32_t n_tokens = std::min(n_batch, (int32_t) (batch.n_tokens - i));
 
@@ -580,7 +578,7 @@ int main(int argc, char ** argv) {
                     const auto t_main_end = ggml_time_us();
 
                     LOG_TEE("System:    %s\nInput:    \033[96m%s\n\033[0mResponse: \033[31m%s\033[0m\n\n",
-                            ::trim(system).c_str(),
+                            ::trim(calYear_system).c_str(),
                             //::trim(prompts[promptNumber]).c_str(),
                             ::trim(client.input).c_str(),
                             ::trim(client.response).c_str());

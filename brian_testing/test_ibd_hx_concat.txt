@@ -4,19 +4,35 @@ cd /Users/brianjohnson/VA_IBD/llama.cpp_IBD_hx
 make 
 
 # Llama3 8b calYear testing postAnswer & system prompt variation
-./ibd_hx_concatNotes \
+./ibd_hx \
 -m ~/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
 --sequences 38 --parallel 1 --cont-batching --n-predict 30 --batch-size 2048 --threads 4 --ctx-size 2048 \
+--no-escape \
 --n-gpu-layers 99 \
 --temp 0 \
---patientFile ../testing_data/IBD_hx_deID/ \
 --outDir ../llm_ibd_outDir \
 --grammar-file ./grammars/calYear_concat.gbnf \
 --promptFormat llama3 \
 --file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06042024.txt \
---testing-mode \
---answerKey /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_answerKey_06042024.txt \
---promptStartingNumber 0 
+--promptStartingNumber 20
+
+# Test parallel 
+./parallel \
+-m /Users/brianjohnson/Downloads/Mistral-7B-Instruct-v0.2_F16_brianConverted.gguf \
+--sequences 38 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --ctx-size 20000 \
+--n-gpu-layers 99 \
+--no-escape \
+--temp 0 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06042024.txt
+
+./ibd_hx \
+-m /Users/brianjohnson/Downloads/Mistral-7B-Instruct-v0.2_F16_brianConverted.gguf \
+--sequences 38 --parallel 4 --cont-batching --n-predict 300 --batch-size 2048 --ctx-size 20000 \
+--n-gpu-layers 99 \
+--no-escape \
+--outDir ../llm_ibd_outDir \
+--promptFormat mistral \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06042024.txt 
 
 # Llama 3 70b
 ./ibd_hx_concatNotes \
@@ -64,17 +80,16 @@ make
 --promptStartingNumber 0
 
 # 7b Mistral
-./ibd_hx_concatNotes \
--m /Users/brianjohnson/Downloads/mixtral-8x7b-v0.1.Q4_K_M.gguf \
---sequences 38 --parallel 4 --cont-batching --n-predict 30 --batch-size 2048 --ctx-size 20000 \
+./ibd_hx \
+-m /Users/brianjohnson/Downloads/Mistral-7B-Instruct-v0.2_F16_brianConverted.gguf \
+--sequences 38 --parallel 4 --cont-batching --n-predict 300 --batch-size 2048 --ctx-size 20000 \
 --n-gpu-layers 99 \
---temp 0 \
+--no-escape \
 --outDir ../llm_ibd_outDir \
---grammar-file ./grammars/calYear_concat.gbnf \
 --promptFormat mistral \
 --file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06042024.txt \
---testing-mode \
---answerKey /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_answerKey_06042024.txt \
+
+--grammar-file ./grammars/calYear_concat.gbnf \
 --promptStartingNumber 0 
 
 # 8x7B Mixtral
