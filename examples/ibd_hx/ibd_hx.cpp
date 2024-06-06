@@ -522,13 +522,10 @@ int main(int argc, char ** argv) {
                     client.t_start_gen = ggml_time_us();
                 }
 
-                const std::string token_str = llama_token_to_piece(ctx, id);
+                std::string token_str = llama_token_to_piece(ctx, id);
 
                 client.response += token_str;
                 client.sampled = id;
-
-                //printf("client %d, seq %d, token %d, pos %d, batch %d: %s\n",
-                //        client.id, client.seq_id, id, client.n_decoded, client.i_batch, token_str.c_str());
 
                 // Brian edit: force model to stop on eos OR eot
                 // Also make it so n_decoded  and not n_decoded + n_prompt is >= n_predict.
@@ -549,14 +546,18 @@ int main(int argc, char ** argv) {
                     
                     // Brian edit: basic reverse prompt identifying the EOT or EOS tokens
                     const std::string eos_str = llama_token_to_piece(ctx, llama_token_eos(model));
-                    const std::string eot_str = llama_token_to_piece(ctx, llama_token_eot(model));
-                    printf("\nEOT string = '%s'\n", eot_str.c_str());
                     printf("\nEOS string = '%s'\n", eos_str.c_str());
+
+                    int32_t eot_token = llama_token_eot(model);
+                    printf("EOT token: %d\n", llama_token_eot(model));
+
                     printf("Client response (before chopping) = '%s'\n", client.response.c_str());
                     size_t pos;
-                    if (eot_str.empty()) {
+                    if (eot_token == -1) {
                         pos = client.response.find(eos_str);
                     } else{
+                        const std::string eot_str = llama_token_to_piece(ctx, llama_token_eot(model));
+                        printf("\nEOT string = '%s'\n", eot_str.c_str());
                         const size_t pos_eos = client.response.find(eos_str);
                         const size_t pos_eot = client.response.find(eot_str);
                         pos = (pos_eos < pos_eot) ? pos_eos : pos_eot;
@@ -588,7 +589,7 @@ int main(int argc, char ** argv) {
 
                     client.seq_id = -1;
                 }
-
+                
                 client.i_batch = -1;
             }
         }

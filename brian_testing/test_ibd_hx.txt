@@ -1,0 +1,21 @@
+# Cmake to see if this works (CPU)
+cd /Users/brianjohnson/VA_IBD/llama.cpp_IBD_hx
+git checkout brian-features
+make 
+
+# Llama3 8b calYear testing postAnswer & system prompt variation
+./ibd_hx \
+-m ~/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
+--sequences 38 --parallel 4 --cont-batching --n-predict 30 --batch-size 2048 --threads 4 --ctx-size 20000 \
+--no-escape \
+--n-gpu-layers 99 \
+--temp 0 \
+--outDir ../llm_ibd_outDir \
+--grammar-file ./grammars/calYear_concat.gbnf \
+--promptFormat llama3 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06042024.txt \
+--promptStartingNumber 20
+
+
+
+
