@@ -45,7 +45,8 @@ static std::string calYear_system = "The text provided is a collection of select
 "Be conservative and do not guess, as we can always search more notes from this patient. "
 "In addition to the your answer, also provide your confidence in the diagnosis year, either 'Low', 'Medium', 'High' or 'Certain' (only if the exact year of diagnosis is 100% certain). "
 "Also, provide resolution of the answer, either 'Approximate' (if the excerpts convey uncertainty or approximate the year) or 'Exact' (if the exact year is known). "
-"Format your answer like so: 'Answer: X, Confidence: Y, Resolution: Z' or 'Answer: Unknown'.";
+"Format your answer like so: 'Answer: X, Confidence: Y, Resolution: Z' or 'Answer: Unknown'. "
+"Then, provide your reasoning.";
 
 std::string generatePreSystemPrompt(const std::string& promptFormat) {
     if (promptFormat == "mistral") {

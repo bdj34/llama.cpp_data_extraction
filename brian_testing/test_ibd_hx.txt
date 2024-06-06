@@ -34,5 +34,51 @@ make
 --promptFormat llama3 \
 --file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06042024.txt
 
+# Phi-3 Medium 
+./ibd_hx_concatNotes \
+-m /Users/brianjohnson/Downloads/Phi-3-medium-4k-instruct-fromHF-f16.gguf \
+--sequences 38 --parallel 1 --cont-batching --n-predict 30 --batch-size 2048 --ctx-size 20000 \
+--n-gpu-layers 99 \
+--no-escape \
+--answerKey /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_answerKey_06042024.txt \
+--testing-mode \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir \
+--grammar-file ./grammars/calYear_concat.gbnf \
+--promptFormat phi3 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06042024.txt
+
+
+# 7b Mistral
+./ibd_hx \
+-m /Users/brianjohnson/Downloads/Mistral-7B-Instruct-v0.2_F16_brianConverted.gguf \
+--sequences 38 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --ctx-size 20000 \
+--n-gpu-layers 99 \
+--no-escape \
+--answerKey /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_answerKey_06042024.txt \
+--testing-mode \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir \
+--grammar-file ./grammars/calYear_concat.gbnf \
+--promptFormat mistral \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06042024.txt
+
+
+# 8x7B Mixtral
+./ibd_hx \
+-m /Users/brianjohnson/Downloads/mixtral-8x7b-v0.1.Q4_K_M.gguf \
+--sequences 38 --parallel 1 --cont-batching --n-predict 30 --batch-size 2048 --threads 4 --ctx-size 20000 \
+--n-gpu-layers 99 \
+--no-escape \
+--answerKey /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_answerKey_06042024.txt \
+--testing-mode \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir \
+--grammar-file ./grammars/calYear_concat.gbnf \
+--promptFormat mistral \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06042024.txt
 
 
