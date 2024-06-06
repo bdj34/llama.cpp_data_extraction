@@ -116,7 +116,6 @@ struct gpt_params {
     std::string path_prompt_cache    = "";  // path to file for saving/loading prompt eval state
     std::string input_prefix         = "";  // string to prefix user inputs with
     std::string input_suffix         = "";  // string to suffix user inputs with
-    std::vector<std::string> antiprompt; // string upon seeing which more user input is prompted
     std::string logdir               = "";  // directory in which to save YAML log files
     std::string lookup_cache_static  = ""; // path of static ngram cache file for lookup decoding
     std::string lookup_cache_dynamic = ""; // path of dynamic ngram cache file for lookup decoding
