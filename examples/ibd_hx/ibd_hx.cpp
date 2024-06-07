@@ -12,6 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <unordered_set>
+#include <regex>
 
 std::string generatePreSystemPrompt(const std::string& promptFormat);
 std::string generatePostSystemPrompt(const std::string& promptFormat);
@@ -37,16 +38,18 @@ static std::string trim(const std::string & str) {
 
 std::vector<std::string> k_prompts;
 
-static std::string calYear_system = "The text provided is a collection of selected excerpts from an individual patient's medical notes. "
+std::string calYear_systemOld = "The excerpts below are from one individual patient's medical record. "
 "Determine the calendar year in which the patient was originally diagnosed with any of the following: "
 "Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease affecting the colon. "
-"We are not interested in when their last colonoscopy was or when they had a colectomy, but their *original* diagnosis date. "
-"If the calendar year of original diagnosis cannot be confidently determined, always consider the year 'Unknown'. "
-"Be conservative and do not guess, as we can always search more notes from this patient. "
-"In addition to the your answer, also provide your confidence in the diagnosis year, either 'Low', 'Medium', 'High' or 'Certain' (only if the exact year of diagnosis is 100% certain). "
-"Also, provide resolution of the answer, either 'Approximate' (if the excerpts convey uncertainty or approximate the year) or 'Exact' (if the exact year is known). "
-"Format your answer like so: 'Answer: X, Confidence: Y, Resolution: Z' or 'Answer: Unknown'. "
-"Then, provide your reasoning.";
+"We are only interested in their *original* diagnosis date. "
+"Also provide your confidence in the diagnosis year, either 'Unknown', 'Low', 'High' or 'Certain'. "
+"It is important that if the original diagnosis year cannot be confidently determined, you respond 'Year: Unknown, Confidence: Unknown'.";
+
+std::string calYear_system = "The excerpts below are from one individual patient's medical record. "
+"Read the excerpts and then follow the instructions.";
+//"Also, provide resolution of the answer, either 'Approximate' (if the excerpts convey uncertainty or approximate the year) or 'Exact' (if the exact year is known). "
+//"Format your answer to match the following examples: 'Answer: Unknown' or 'Answer: X, Confidence: Y, Resolution: Z'.";
+
 
 std::string generatePreSystemPrompt(const std::string& promptFormat) {
     if (promptFormat == "mistral") {
@@ -76,17 +79,26 @@ std::string generatePostSystemPrompt(const std::string& promptFormat) {
 
 std::string generatePreAnswer(const std::string& promptFormat) {
 
-    std::string question = "To the nearest calendar year, when was the patient originally diagnosed with any of the following: "
-    "Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease? "
-    "Be conservative, responding 'Unknown' if the exact year of original diagnosis cannot be easily determined from the notes.";
+    std::string question = "### Instruction\n"
+    "To the nearest calendar year, when was the patient originally diagnosed with any of the following: "
+    "Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease affecting the colon? "
+    "Format your answer to match the following examples: 'Year of original diagnosis: X, Confidence: Y'. "
+    "Be conservative when stating your confidence.";
+
+    question = "### Instruction\nBased on the excerpts provided above, determine the calendar year in which the patient was originally diagnosed with any of the following: "
+    "Inflammatory Bowel Disease (IBD), colitis, proctitis, Ulcerative Colitis (UC) or Crohn's Disease affecting the colon. "
+    "We are only interested in their *original* diagnosis year. "
+    "Also provide your confidence in the diagnosis year, either 'Unknown', 'Low', 'Medium', 'High' or 'Certain'. Be conservative when stating confidence. " //Comment the second sentence out here for llama3 70B
+    "If the original diagnosis year cannot be confidently determined, respond 'Unknown'. "
+    "Format your answer to match the following example: 'Year of original diagnosis (YYYY): YYYY, Confidence: X'.";
     //"Respond 'No relevant diagnosis' if there's no evidence of colitis in this patient's excerpts.";
 
     if (promptFormat == "mistral") {
-        return "\n" + question + " [/INST] Answer:";
+        return "\n\n" + question + " [/INST] Year of original diagnosis (YYYY):";
     } else if (promptFormat == "llama3") {
-        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nAnswer:";
+        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nYear of original diagnosis (YYYY):";
     } else if (promptFormat == "phi3") {
-        return "\n" + question + "<|end|>\n <|assistant|> Answer:";
+        return "\n" + question + "<|end|>\n <|assistant|> Year of original diagnosis (YYYY):";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
     }
@@ -544,7 +556,7 @@ int main(int argc, char ** argv) {
                     client.t_start_gen = ggml_time_us();
                 }
 
-                std::string token_str = llama_token_to_piece(ctx, id);
+                const std::string token_str = llama_token_to_piece(ctx, id);
 
                 client.response += token_str;
                 client.sampled = id;
@@ -646,11 +658,40 @@ int main(int argc, char ** argv) {
                 // Process the model answer line
                 std::istringstream modelISS(modelAnswerLine);
                 std::string firstModelAnswer;
-                if (getline(modelISS, firstModelAnswer, ',')) {  // Extract the first tab-separated entry
+                if (getline(modelISS, firstModelAnswer)) {  // Extract the first comma-separated entry
                     // Remove leading space if present
                     if (!firstModelAnswer.empty() && firstModelAnswer[0] == ' ') {
                         firstModelAnswer.erase(0, 1);
                     }
+
+                    // Use regex to find the first set of digits
+                    // std::regex pattern(R"((\d+)|Unknown)");
+                    // std::smatch match;
+                    // if (std::regex_search(firstModelAnswer, match, pattern)) {
+                    //     firstModelAnswer = match.str(0);
+                    // } else {
+                    //     firstModelAnswer = "Invalid"; // Handle the case where no digits are found
+                    // }
+
+                    // Check if "Unknown" is present
+                    std::regex pattern(R"(Unknown)");
+                    std::smatch match;
+                    if (std::regex_search(firstModelAnswer, match, pattern)) {
+                        // "Unknown" is present, use it
+                        firstModelAnswer = "Unknown";
+                    } else {
+                        // Use regex to find the first set of digits
+                        std::regex pattern(R"(\d+)");
+                        std::smatch match;
+                        if (std::regex_search(firstModelAnswer, match, pattern)) {
+                            firstModelAnswer = match.str(0);
+                        } else {
+                            firstModelAnswer = "Invalid"; // Handle the case where no digits are found
+                        }
+                    }
+
+                    
+                    //printf("%s\n", firstModelAnswer.c_str());
                 }
 
                 // Create a set for acceptable answers

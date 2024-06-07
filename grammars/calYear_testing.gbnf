@@ -1,0 +1,11 @@
+root ::= calYear
+
+calYear ::=  " " (year|"Unknown") ", Confidence: " confidence
+
+year ::=  " " firstDigit digit digit digit
+
+firstDigit ::= "1" | "2"
+digit ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+
+confidence ::= ("Unknown" | "Certain" | "High" | "Low" | "Medium")
+resolution ::= ("Exact" | "Approximate")

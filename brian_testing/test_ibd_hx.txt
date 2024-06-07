@@ -13,10 +13,10 @@ make
 --testing-mode \
 --temp 0 \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
---outDir ../llm_ibd_outDir \
---grammar-file ./grammars/calYear_concat.gbnf \
+--outDir ../llm_ibd_outDir/llama8 \
+--grammar-file ./grammars/calYear_testing.gbnf \
 --promptFormat llama3 \
---file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06042024.txt
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
 
 # Llama 3 70b
 ./ibd_hx \
@@ -29,13 +29,13 @@ make
 --testing-mode \
 --temp 0 \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
---outDir ../llm_ibd_outDir \
---grammar-file ./grammars/calYear_concat.gbnf \
+--outDir ../llm_ibd_outDir/llama70 \
+--grammar-file ./grammars/calYear_testing.gbnf \
 --promptFormat llama3 \
---file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06042024.txt
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
 
 # Phi-3 Medium 
-./ibd_hx_concatNotes \
+./ibd_hx \
 -m /Users/brianjohnson/Downloads/Phi-3-medium-4k-instruct-fromHF-f16.gguf \
 --sequences 38 --parallel 1 --cont-batching --n-predict 30 --batch-size 2048 --ctx-size 20000 \
 --n-gpu-layers 99 \
@@ -44,10 +44,10 @@ make
 --testing-mode \
 --temp 0 \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
---outDir ../llm_ibd_outDir \
---grammar-file ./grammars/calYear_concat.gbnf \
+--outDir ../llm_ibd_outDir/phiMed \
+--grammar-file ./grammars/calYear_testing.gbnf \
 --promptFormat phi3 \
---file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06042024.txt
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
 
 
 # 7b Mistral
@@ -60,10 +60,10 @@ make
 --testing-mode \
 --temp 0 \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
---outDir ../llm_ibd_outDir \
---grammar-file ./grammars/calYear_concat.gbnf \
+--outDir ../llm_ibd_outDir/mistral7 \
+--grammar-file ./grammars/calYear_testing.gbnf \
 --promptFormat mistral \
---file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06042024.txt
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024.txt
 
 
 # 8x7B Mixtral
@@ -76,9 +76,9 @@ make
 --testing-mode \
 --temp 0 \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
---outDir ../llm_ibd_outDir \
---grammar-file ./grammars/calYear_concat.gbnf \
---promptFormat mistral \
---file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06042024.txt
+--outDir ../llm_ibd_outDir/mixtral8x7 \
+--grammar-file ./grammars/calYear_testing.gbnf \
+--promptFormat llama3 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024.txt
 
 
