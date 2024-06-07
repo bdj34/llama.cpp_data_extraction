@@ -1,0 +1,107 @@
+# Run CPU job and build CPU
+cd ~/VA_IBD/llama.cpp
+make
+
+# Mistral 7b F16
+./crc_extraction_parallel \
+-m ~/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
+--sequences 16 --parallel 4 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+--temp 0 --color \
+--promptFormat llama3 \
+--promptStartingNumber 0 \
+--grammar-file ./grammars/yesNo_grammar.gbnf \
+--outDir ../testing_CRC_extraction_outDir \
+--file ../testing_data/pathMaybe.txt
+
+# Mixtral 8x7b 
+/tscc/projects/ps-curtiuslab/brian/nlp/llama.cpp_04242024_git/build_CPU_tmp/bin/crc_extraction_parallel \
+-m /tscc/projects/ps-curtiuslab/brian/nlp/models_gguf/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf \
+--n-gpu-layers 0 --sequences 16 --parallel 4 --cont-batching --n-predict 300 --batch-size 2048 --threads 4 --ctx-size 20000 \
+--temp 0 --color \
+--promptFormat mistral \
+--grammar-file /tscc/projects/ps-curtiuslab/brian/nlp/grammars/yesNo_grammar.gbnf \
+--outDir /tscc/projects/ps-curtiuslab/brian/nlp/testing_CRC_extraction_outDir \
+--file /tscc/projects/ps-curtiuslab/brian/nlp/testing_data/pathPos.txt
+
+--grammar-file /tscc/projects/ps-curtiuslab/brian/nlp/grammars/yesNo_grammar.gbnf \
+
+# Llama3 8b F16
+/tscc/projects/ps-curtiuslab/brian/nlp/llama.cpp_04242024_git/build_CPU_tmp/bin/crc_extraction_parallel \
+-m /tscc/projects/ps-curtiuslab/brian/nlp/models_gguf/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
+--n-gpu-layers 0 --sequences 16 --parallel 4 --cont-batching --n-predict 300 --batch-size 2048 --threads 4 --ctx-size 20000 \
+--temp 0 --color \
+--promptFormat llama3 \
+--grammar-file /tscc/projects/ps-curtiuslab/brian/nlp/grammars/yesNo_grammar.gbnf \
+--outDir /tscc/projects/ps-curtiuslab/brian/nlp/testing_CRC_extraction_outDir \
+--file /tscc/projects/ps-curtiuslab/brian/nlp/testing_data/pathPos.txt
+
+--grammar-file /tscc/projects/ps-curtiuslab/brian/nlp/grammars/yesNo_grammar.gbnf \
+
+# Phi3 Medium 14b F16
+/tscc/projects/ps-curtiuslab/brian/nlp/llama.cpp_04242024_git/build_CPU_tmp/bin/crc_extraction_parallel \
+-m /tscc/projects/ps-curtiuslab/brian/nlp/models_gguf/Phi-3-medium-4k-instruct-fromHF-f16.gguf \
+--sequences 16 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --threads 4 --ctx-size 2048 \
+--temp 0 --color \
+--promptFormat phi3 \
+--grammar-file /tscc/projects/ps-curtiuslab/brian/nlp/grammars/yesNo_grammar.gbnf \
+--outDir /tscc/projects/ps-curtiuslab/brian/nlp/testing_CRC_extraction_outDir \
+--file /tscc/projects/ps-curtiuslab/brian/nlp/testing_data/pathMaybe.txt
+
+
+############ GPU #########################
+# Test on GPU with Llama3 8b and Mistral 7b
+srun --account=htl111 --partition=hotel-gpu --qos=hotel-gpu --mem=2G --nodes=1 --tasks-per-node=1 -c 1 -G 2 --time=00:40:00 --pty bash
+
+module load shared
+module load gpu
+module load cuda12.0/toolkit
+
+cd /tscc/projects/ps-curtiuslab/brian/nlp/llama.cpp_04242024_git
+mkdir build_GPU
+cd build_GPU 
+cmake .. -DLLAMA_CUDA=ON
+cmake --build . --config Release
+
+# Mistral 7b F16
+/tscc/projects/ps-curtiuslab/brian/nlp/llama.cpp_04242024_git/build_GPU/bin/crc_extraction_parallel \
+-m /tscc/projects/ps-curtiuslab/brian/nlp/models_gguf/Mistral-7B-Instruct-v0.2_F16_brianConverted.gguf \
+--n-gpu-layers 99 --sequences 16 --parallel 16 --cont-batching --n-predict 300 --batch-size 20000 --ctx-size 20000 \
+--temp 0 --color \
+--promptFormat llama3 \
+--grammar-file /tscc/projects/ps-curtiuslab/brian/nlp/grammars/yesNo_grammar.gbnf \
+--outDir /tscc/projects/ps-curtiuslab/brian/nlp/testing_CRC_extraction_outDir \
+--file /tscc/projects/ps-curtiuslab/brian/nlp/testing_data/pathMaybe.txt
+
+
+# Llama3 8b F16
+/tscc/projects/ps-curtiuslab/brian/nlp/llama.cpp_04242024_git/build_GPU/bin/crc_extraction_parallel \
+-m /tscc/projects/ps-curtiuslab/brian/nlp/models_gguf/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
+--n-gpu-layers 99 --sequences 16 --parallel 16 --cont-batching --n-predict 300 --batch-size 20000 --ctx-size 20000 \
+--temp 0 --color \
+--promptFormat llama3 \
+--grammar-file /tscc/projects/ps-curtiuslab/brian/nlp/grammars/yesNo_grammar.gbnf \
+--outDir /tscc/projects/ps-curtiuslab/brian/nlp/testing_CRC_extraction_outDir \
+--file /tscc/projects/ps-curtiuslab/brian/nlp/testing_data/pathMaybe.txt
+
+# Phi-3 F16
+/tscc/projects/ps-curtiuslab/brian/nlp/llama.cpp_04242024_git/build_GPU/bin/crc_extraction_parallel \
+-m /tscc/projects/ps-curtiuslab/brian/nlp/models_gguf/Phi-3-mini-4k-instruct-fromHF-f16.gguf \
+--n-gpu-layers 99 --sequences 16 --parallel 16 --cont-batching --n-predict 300 --batch-size 20000 --ctx-size 20000 \
+--temp 0 --color \
+--promptFormat phi3 \
+--grammar-file /tscc/projects/ps-curtiuslab/brian/nlp/grammars/yesNo_grammar.gbnf \
+--outDir /tscc/projects/ps-curtiuslab/brian/nlp/testing_CRC_extraction_outDir \
+--file /tscc/projects/ps-curtiuslab/brian/nlp/testing_data/pathMaybe.txt
+
+
+
+
+
+# Let Llama3 8b F16 explain (fixes it!)
+/tscc/projects/ps-curtiuslab/brian/nlp/llama.cpp_04242024_git/build_GPU/bin/crc_extraction_parallel \
+-m /tscc/projects/ps-curtiuslab/brian/nlp/models_gguf/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
+--n-gpu-layers 99 --sequences 16 --parallel 16 --cont-batching --n-predict 300 --batch-size 20000 --ctx-size 20000 \
+--temp 0 --color \
+--promptFormat llama3 \
+--outDir /tscc/projects/ps-curtiuslab/brian/nlp/testing_CRC_extraction_outDir \
+--file /tscc/projects/ps-curtiuslab/brian/nlp/testing_data/pathMaybe.txt

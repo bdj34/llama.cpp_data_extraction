@@ -63,7 +63,7 @@ make
 --outDir ../llm_ibd_outDir/mistral7 \
 --grammar-file ./grammars/calYear_testing.gbnf \
 --promptFormat mistral \
---file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024.txt
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
 
 
 # 8x7B Mixtral
@@ -79,6 +79,6 @@ make
 --outDir ../llm_ibd_outDir/mixtral8x7 \
 --grammar-file ./grammars/calYear_testing.gbnf \
 --promptFormat llama3 \
---file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024.txt
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
 
 

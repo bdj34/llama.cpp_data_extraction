@@ -1,6 +1,6 @@
 root ::= calYear
 
-calYear ::=  " " (year|"Unknown") ", Confidence: " confidence
+calYear ::=  (year|" Unknown") ", Confidence: " confidence
 
 year ::=  " " firstDigit digit digit digit
 
