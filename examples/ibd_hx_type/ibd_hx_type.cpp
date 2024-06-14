@@ -76,7 +76,8 @@ std::string generatePreAnswer(const std::string& promptFormat) {
     std::string question = "Examine the provided medical notes to extract information regarding the year of colitis diagnosis "
     "and the specific type of colitis, if colitis has been diagnosed. If there is no mention of colitis, clearly state 'No colitis' "
     "in your response. Use the information directly stated in the notes without making any diagnostic judgments. Identify "
-    "the type of colitis diagnosed, such as Ulcerative Colitis (UC), Crohn's Colitis, Ischemic Colitis, Infectious Colitis, "
+    "the type of colitis diagnosed, such as Ulcerative Colitis (UC), Ulcerative Proctitis, Ulcerative Pancolitis, "
+    "Crohn's Colitis, Ischemic Colitis, Infectious Colitis, "
     "Microscopic Colitis, Drug-induced Colitis, etc., or specify if the "
     "notes do not mention colitis. Extract the year the diagnosis was made, if available. Your responses should be based "
     "solely on the information provided, without inferring or assuming details not explicitly stated. "
@@ -88,7 +89,7 @@ std::string generatePreAnswer(const std::string& promptFormat) {
     "Format your answer as follows:\n"
     "Year of original diagnosis (YYYY): [Year or 'Unknown'], Confidence in year: [Confidence or 'Unknown']\n"
     "Type of Colitis: [Type or 'No colitis'], Confidence in type: [Confidence or 'Unknown']\n"
-    "Evidence from Notes: [Direct quotes or summaries from the notes that support your findings]"
+    "Evidence from Notes: [Direct quotes or summaries from the notes that support your findings]";
 
     if (promptFormat == "mistral") {
         return "\n\n" + question + " [/INST] Year of original diagnosis (YYYY):";
