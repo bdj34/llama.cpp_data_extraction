@@ -19,7 +19,9 @@ There are 2 modes of operation:
 ./batched-bench -m ./models/llama-7b/ggml-model-q8_0.gguf -c 16384 -b 2048 -ub 512 -ngl 99 -pps
 
 # custom set of batches
-./batched-bench -m ./models/llama-7b/ggml-model-q8_0.gguf -c 2048 -b 512 -ub 512 -ngl 999 -npp 128,256,512 -ntg 128,256 -npl 1,2,4,8,16,32
+./batched-bench -m ~/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf -c 100000 -b 512 -ub 512 -ngl 999 -npp 124 -ntg 124 -npl 32
+
+./batched-bench -m ~/Downloads/Meta-Llama-3-8B-Instruct-Q4_K_M.gguf -c 100000 -b 512 -ub 512 -ngl 999 -npp 124 -ntg 124 -npl 32
 ```
 
 ## Sample results
