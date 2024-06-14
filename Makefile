@@ -42,6 +42,7 @@ BUILD_TARGETS = \
 	ibd_hx_extraction_fewShot \
 	ibd_hx_concatNotes \
 	ibd_hx \
+	ibd_hx_type \
 	crc_extraction_parallel \
 	tests/test-c.o
 
