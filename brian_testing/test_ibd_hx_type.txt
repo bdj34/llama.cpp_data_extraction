@@ -15,3 +15,42 @@ make
 --grammar-file ./grammars/ibd_hx_type.gbnf \
 --promptFormat llama3 \
 --file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+# Llama-3-70B
+./ibd_hx_type \
+-m /Users/brianjohnson/Downloads/Meta-Llama-3-70B-Instruct-Q4_K_M.gguf \
+--sequences 38 --parallel 1 --cont-batching --n-predict 30 --batch-size 2048 --threads 4 --ctx-size 20000 \
+--no-escape \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/llama8 \
+--grammar-file ./grammars/ibd_hx_type.gbnf \
+--promptFormat llama3 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+7b Mistral
+./ibd_hx_type \
+-m /Users/brianjohnson/Downloads/Mistral-7B-Instruct-v0.2_F16_brianConverted.gguf \
+--sequences 38 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --ctx-size 20000 \
+--n-gpu-layers 99 \
+--no-escape \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/mistral7 \
+--grammar-file ./grammars/ibd_hx_type.gbnf \
+--promptFormat mistral \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+# Mixtral 8x7b
+./ibd_hx_type \
+-m /Users/brianjohnson/Downloads/mixtral-8x7b-v0.1.Q4_K_M.gguf \
+--sequences 38 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --ctx-size 20000 \
+--n-gpu-layers 99 \
+--no-escape \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/mistral7 \
+--grammar-file ./grammars/ibd_hx_type.gbnf \
+--promptFormat mistral \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt

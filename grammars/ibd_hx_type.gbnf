@@ -4,11 +4,13 @@ yearline ::= " " year ", Confidence in Year: " confidence "\n"
 year ::= fourdigityear | "Unknown"
 
 typeline ::= "Type of Colitis: " colitistype ", Confidence in Type: " confidence "\n"
-colitistype ::= "Ulcerative Colitis" | "Ulcerative Proctitis" | "Ulcerative Pancolitis" | "Crohn's Colitis" | "Ischemic Colitis" | "Infectious Colitis" | 
-                 "Microscopic Colitis" | "Drug-induced Colitis" | "Chemical Colitis" | "Diversion Colitis" | "No colitis"
+colitistype ::= "IBD colitis" | "Ulcerative Colitis" | "Ulcerative Proctitis" | "Crohn's Disease without mention of colitis" |
+                "Ulcerative Pancolitis" | "Crohn's Colitis" | "Ischemic Colitis" | "Infectious Colitis" | 
+                 "Microscopic Colitis" | "Drug-induced Colitis" | "Chemical Colitis" | "Diversion Colitis" | "Unspecified Colitis" | "C. difficile colitis" | "No colitis"
 
 confidence ::= "Unknown" | "Low" | "Medium" | "High" | "Certain"
 
-fourdigityear ::= digit digit digit digit
+fourdigityear ::= firstdigit digit digit digit
+firstdigit ::= "1" | "2"
 digit ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 
