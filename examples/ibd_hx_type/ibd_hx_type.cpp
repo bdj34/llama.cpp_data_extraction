@@ -19,6 +19,7 @@ std::string generatePostSystemPrompt(const std::string& promptFormat);
 std::string generatePreAnswer(const std::string& promptFormat);
 std::string formatSystemPrompt(const std::string& systemPrompt, const std::string& promptFormat);
 std::string quoteAndEscape(const std::string& input, bool quote);
+std::string escapeNewLines(const std::string& input);
 
 // trim whitespace from the beginning and end of a string
 static std::string trim(const std::string & str) {
@@ -88,20 +89,20 @@ std::string generatePreAnswer(const std::string& promptFormat) {
     "Also provide your confidence in the year and type of diagnosis.\n"
     "Key Points to Look For:\n"
     "Year of Diagnosis: Determine the original year of diagnosis. "
-    "We are only interested in the *original* diagnosis year. Be conservative and respond 'Unknown' when appropriate.\n"
+    "We are only interested in the *original* diagnosis year. Be conservative and respond 'Unknown' when the exact year of diagnosis is unclear.\n"
     "Type of Colitis: Note the specific type diagnosed as per the notes.\n"
     "Absence of Mention: Clearly state if there is no mention of any type of colitis.\n"
     "Format your answer as follows:\n"
-    "Year of Original Diagnosis (YYYY): ['Unknown' or Year], Confidence in Year: [Confidence or 'Unknown']\t"
-    "Type of Colitis: [Type or 'No colitis'], Confidence in Type: [Confidence or 'Unknown']\t"
-    "Evidence from Notes: [Direct quotes or summaries from the notes that support your findings]";
+    "Selected Evidence from Notes: [Direct quotes or summaries from the notes and your reasoning]\n"
+    "Year of Original Diagnosis (YYYY): ['Unknown' or Year], Confidence in Year: [Confidence]\n"
+    "Type of Colitis: [Type or 'No colitis'], Confidence in Type: [Confidence]";
 
     if (promptFormat == "mistral") {
-        return "\n\n" + question + " [/INST] Year of Original Diagnosis (YYYY):";
+        return "\n\n" + question + " [/INST] Selected Evidence from Notes:";
     } else if (promptFormat == "llama3") {
-        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nYear of Original Diagnosis (YYYY):";
+        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nSelected Evidence from Notes:";
     } else if (promptFormat == "phi3") {
-        return "\n" + question + "<|end|>\n <|assistant|> Year of Original Diagnosis (YYYY):";
+        return "\n" + question + "<|end|>\n <|assistant|> Selected Evidence from Notes:";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
     }
@@ -138,6 +139,22 @@ std::string quoteAndEscape(const std::string& input, bool quote) {
     }
     if(quote){
         output += "\"";  // End with a closing quote
+    }
+    return output;
+}
+
+std::string escapeNewLines(const std::string& input) {
+
+    std::string output;
+
+    for (char ch : input) {
+        switch (ch) {
+            case '\n':
+                output += "\\n";   // Escape newlines
+                break;
+            default:
+                output += ch;
+        }
     }
     return output;
 }
@@ -562,6 +579,8 @@ int main(int argc, char ** argv) {
                 const std::string token_str = llama_token_to_piece(ctx, id);
 
                 client.response += token_str;
+                //printf("%s", token_str.c_str());
+
                 client.sampled = id;
 
                 // Brian edit: force model to stop on eos OR eot
@@ -607,7 +626,7 @@ int main(int argc, char ** argv) {
                     }
 
                     // Copy the client response and the input
-                    outFile3 << client.response << "\t";
+                    outFile3 << escapeNewLines(client.response) << "\t";
                     if(!client.ICN.empty()){
                         outFile3 << client.ICN << std::endl;
                     }
