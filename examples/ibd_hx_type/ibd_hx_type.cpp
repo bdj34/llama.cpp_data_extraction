@@ -73,7 +73,7 @@ std::string generatePostSystemPrompt(const std::string& promptFormat) {
 
 std::string generatePreAnswer(const std::string& promptFormat) {
 
-    std::string question = "Examine the provided medical notes to extract information regarding the year of colitis diagnosis "
+    std::string question = "### Instructions\nExamine the provided medical notes to extract information regarding the year of colitis diagnosis "
     "and the specific type of colitis, if colitis has been diagnosed. If there is no mention of colitis, clearly state 'No colitis' "
     "in your response. Use the information directly stated in the notes without making any diagnostic judgments. Identify "
     "the type of colitis diagnosed, such as Ulcerative Colitis (UC), Ulcerative Proctitis, Ulcerative Pancolitis, "
@@ -83,24 +83,25 @@ std::string generatePreAnswer(const std::string& promptFormat) {
     "If the notes mention Crohn's disease without specific mention of colitis, respond 'Crohn's Disease without mention of colitis'. "
     "If the diagnosis is undecided between either Crohn's colitis or Ulcerative colitis, respond 'IBD colitis'. "
     "If colitis is identified, but the type is unknown, respond 'Unspecified Colitis'. "
-    "Extract the year the diagnosis was made, if available. Your responses should be based "
-    "solely on the information provided, without inferring or assuming details not explicitly stated. "
-    "Also provide your confidence in the year and type of diagnosis. "
+    "Determine the year the diagnosis was made, if available. Your responses should be based "
+    "solely on the information provided, without assuming details not explicitly stated. "
+    "Also provide your confidence in the year and type of diagnosis.\n"
     "Key Points to Look For:\n"
-    "Year of Diagnosis: Extract the exact year if mentioned.\n"
+    "Year of Diagnosis: Determine the original year of diagnosis. "
+    "We are only interested in the *original* diagnosis year. Be conservative and respond 'Unknown' when appropriate.\n"
     "Type of Colitis: Note the specific type diagnosed as per the notes.\n"
     "Absence of Mention: Clearly state if there is no mention of any type of colitis.\n"
     "Format your answer as follows:\n"
-    "Year of original diagnosis (YYYY): [Year or 'Unknown'], Confidence in year: [Confidence or 'Unknown']\n"
-    "Type of Colitis: [Type or 'No colitis'], Confidence in type: [Confidence or 'Unknown']\n"
+    "Year of Original Diagnosis (YYYY): ['Unknown' or Year], Confidence in Year: [Confidence or 'Unknown']\t"
+    "Type of Colitis: [Type or 'No colitis'], Confidence in Type: [Confidence or 'Unknown']\t"
     "Evidence from Notes: [Direct quotes or summaries from the notes that support your findings]";
 
     if (promptFormat == "mistral") {
-        return "\n\n" + question + " [/INST] Year of original diagnosis (YYYY):";
+        return "\n\n" + question + " [/INST] Year of Original Diagnosis (YYYY):";
     } else if (promptFormat == "llama3") {
-        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nYear of original diagnosis (YYYY):";
+        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nYear of Original Diagnosis (YYYY):";
     } else if (promptFormat == "phi3") {
-        return "\n" + question + "<|end|>\n <|assistant|> Year of original diagnosis (YYYY):";
+        return "\n" + question + "<|end|>\n <|assistant|> Year of Original Diagnosis (YYYY):";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
     }
@@ -660,11 +661,13 @@ int main(int argc, char ** argv) {
                 // Process the model answer line
                 std::istringstream modelISS(modelAnswerLine);
                 std::string firstModelAnswer;
-                if (getline(modelISS, firstModelAnswer)) {  // Extract the first comma-separated entry
+                if (getline(modelISS, firstModelAnswer, '\t')) {  // Extract the first tab-separated entry
                     // Remove leading space if present
                     if (!firstModelAnswer.empty() && firstModelAnswer[0] == ' ') {
                         firstModelAnswer.erase(0, 1);
                     }
+
+                    // printf("%s\n", firstModelAnswer.c_str());
 
                     // Use regex to find the first set of digits
                     // std::regex pattern(R"((\d+)|Unknown)");

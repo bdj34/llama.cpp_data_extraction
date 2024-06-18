@@ -1,9 +1,9 @@
 root ::= yearline typeline
 
-yearline ::= " " year ", Confidence in Year: " confidence "\n"
+yearline ::= " " year ", Confidence in Year: " confidence "\t"
 year ::= fourdigityear | "Unknown"
 
-typeline ::= "Type of Colitis: " colitistype ", Confidence in Type: " confidence "\n"
+typeline ::= "Type of Colitis: " colitistype ", Confidence in Type: " confidence
 colitistype ::= "IBD colitis" | "Ulcerative Colitis" | "Ulcerative Proctitis" | "Crohn's Disease without mention of colitis" |
                 "Ulcerative Pancolitis" | "Crohn's Colitis" | "Ischemic Colitis" | "Infectious Colitis" | 
                  "Microscopic Colitis" | "Drug-induced Colitis" | "Chemical Colitis" | "Diversion Colitis" | "Unspecified Colitis" | "C. difficile colitis" | "No colitis"
