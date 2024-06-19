@@ -45,15 +45,13 @@ make
 --promptFormat phi3 \
 --file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
 
-7b Mistral
+# 7b Mistral
 ./ibd_hx_type \
 -m /Users/brianjohnson/Downloads/Mistral-7B-Instruct-v0.2_F16_brianConverted.gguf \
 --sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 20000 \
 --n-gpu-layers 99 \
 --no-escape \
 --temp 0 \
---answerKey /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_answerKey_06042024.txt \
---testing-mode \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
 --outDir ../llm_ibd_outDir/mistral7 \
 --grammar-file ./grammars/ibd_hx_type.gbnf \
@@ -67,8 +65,6 @@ make
 --n-gpu-layers 99 \
 --no-escape \
 --temp 0 \
---answerKey /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_answerKey_06042024.txt \
---testing-mode \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
 --outDir ../llm_ibd_outDir/mixtral8x7 \
 --grammar-file ./grammars/ibd_hx_type.gbnf \
