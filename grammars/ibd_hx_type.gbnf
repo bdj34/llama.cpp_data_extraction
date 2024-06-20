@@ -1,7 +1,7 @@
 root ::= untilNewline yearline "\t" typeline
 
 yearline ::= "Year of Original Diagnosis (YYYY): " year ", Confidence in Year: " confidence 
-year ::= fourdigityear | "Unknown"
+year ::= fourdigityear | "Unknown" | "'Unknown'"
 
 typeline ::= "Type of Colitis: " colitistype ", Confidence in Type: " confidence
 colitistype ::= "IBD colitis" | "Ulcerative Colitis" | "Ulcerative Proctitis" | "Crohn's Disease without mention of colitis" |
@@ -17,5 +17,5 @@ digit ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 
 multiLineComment ::= "\"" ( [^*] | ("*" [^/]) )* "\""
 untilTab ::= [^\t]* "\t"
-untilNewline ::= " " [^\n^\t]{4,2000} "\n"
+untilNewline ::= " " [^\n^\t]{4,1000} "\n"
 untilNewlineLimit ::= [^\n^\t]{0, 500} "\n"

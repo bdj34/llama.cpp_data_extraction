@@ -20,6 +20,8 @@ std::string generatePreAnswer(const std::string& promptFormat);
 std::string formatSystemPrompt(const std::string& systemPrompt, const std::string& promptFormat);
 std::string quoteAndEscape(const std::string& input, bool quote);
 std::string escapeNewLines(const std::string& input);
+std::string getLastLine(const std::string& str);
+std::string getFirstLine(const std::string& str);
 
 // trim whitespace from the beginning and end of a string
 static std::string trim(const std::string & str) {
@@ -39,9 +41,22 @@ static std::string trim(const std::string & str) {
 
 std::vector<std::string> k_prompts;
 
-std::string calYear_system = "The excerpts below are from one individual patient's medical record. "
-"You are an expert medical chart reviewer creating a structured dataset from medical notes. "
-"Read the excerpts and then follow the instructions.";
+std::string calYear_system = "You are an expert medical chart reviewer creating a structured dataset from medical notes. "
+"The excerpts below are from one individual patient's medical record. "
+"Examine the provided medical notes to extract information regarding the year of colitis diagnosis "
+"and the specific type of colitis, if colitis has been diagnosed. If there is no mention of colitis, clearly state 'No colitis' "
+"in your response. Use the information directly stated in the notes without making any diagnostic judgments. Identify "
+"the type of colitis diagnosed, such as Ulcerative Colitis (UC), Ulcerative Proctitis, Ulcerative Pancolitis, "
+"Crohn's Colitis, Ischemic Colitis, Infectious Colitis, C. difficile Colitis, "
+"Microscopic Colitis, Drug-induced Colitis, etc., or specify if the "
+"notes do not mention colitis. "
+"If the notes mention Crohn's disease without specific mention of colitis, respond 'Crohn's Disease without mention of colitis'. "
+"If the diagnosis is undecided between either Crohn's colitis or Ulcerative colitis, respond 'IBD colitis'. "
+"If colitis is identified, but the type is unknown, respond 'Unspecified Colitis'. "
+"Determine the original year the diagnosis was made, if available. If the year of original diagnosis is not clear, respond 'Unknown'. "
+"Your responses should be based solely on the information provided, without assuming details not explicitly stated. "
+"Also provide your confidence (Low, Medium, High, or Certain) in the year and type of diagnosis. "
+"Now, read the excerpts and follow the instructions below, keeping the previous points in mind.";
 //"Also, provide resolution of the answer, either 'Approximate' (if the excerpts convey uncertainty or approximate the year) or 'Exact' (if the exact year is known). "
 //"Format your answer to match the following examples: 'Answer: Unknown' or 'Answer: X, Confidence: Y, Resolution: Z'.";
 
@@ -74,28 +89,15 @@ std::string generatePostSystemPrompt(const std::string& promptFormat) {
 
 std::string generatePreAnswer(const std::string& promptFormat) {
 
-    std::string question = "### Instructions\nExamine the provided medical notes to extract information regarding the year of colitis diagnosis "
-    "and the specific type of colitis, if colitis has been diagnosed. If there is no mention of colitis, clearly state 'No colitis' "
-    "in your response. Use the information directly stated in the notes without making any diagnostic judgments. Identify "
-    "the type of colitis diagnosed, such as Ulcerative Colitis (UC), Ulcerative Proctitis, Ulcerative Pancolitis, "
-    "Crohn's Colitis, Ischemic Colitis, Infectious Colitis, C. difficile Colitis, "
-    "Microscopic Colitis, Drug-induced Colitis, etc., or specify if the "
-    "notes do not mention colitis. "
-    "If the notes mention Crohn's disease without specific mention of colitis, respond 'Crohn's Disease without mention of colitis'. "
-    "If the diagnosis is undecided between either Crohn's colitis or Ulcerative colitis, respond 'IBD colitis'. "
-    "If colitis is identified, but the type is unknown, respond 'Unspecified Colitis'. "
-    "Determine the year the diagnosis was made, if available. Your responses should be based "
-    "solely on the information provided, without assuming details not explicitly stated. "
-    "Also provide your confidence in the year and type of diagnosis.\n"
-    "Key Points to Look For:\n"
-    "Year of Diagnosis: Determine the original year of diagnosis. "
-    "We are only interested in the *original* diagnosis year. Be conservative and respond 'Unknown' when the exact year of diagnosis is unclear.\n"
+    std::string question = "### Instructions\n"
+    "Year of Original Diagnosis: Determine the original year of diagnosis. "
+    "We are only interested in the *original* diagnosis year. Be conservative and respond 'Unknown' when the exact year of the original diagnosis is unclear.\n"
     "Type of Colitis: Note the specific type diagnosed as per the notes.\n"
     "Absence of Mention: Clearly state if there is no mention of any type of colitis.\n"
     "Format your answer as follows:\n"
-    "Selected Evidence from Notes: [Direct quotes or summaries from the notes and your reasoning]\n"
-    "Year of Original Diagnosis (YYYY): ['Unknown' or Year], Confidence in Year: [Confidence]\n"
-    "Type of Colitis: [Type or 'No colitis'], Confidence in Type: [Confidence]";
+    "Selected Evidence from Notes: {Direct quotes or summaries from the notes and your reasoning}\n"
+    "Year of Original Diagnosis (YYYY): {'Unknown' or Year}, Confidence in Year: {Confidence}\n"
+    "Type of Colitis: {Type or 'No colitis'}, Confidence in Type: {Confidence}";
 
     if (promptFormat == "mistral") {
         return "\n\n" + question + " [/INST] Selected Evidence from Notes:";
@@ -157,6 +159,36 @@ std::string escapeNewLines(const std::string& input) {
         }
     }
     return output;
+}
+
+std::string getLastLine(const std::string& str) {
+    std::regex lineRegex("(.*?)(\n|$)");
+    std::smatch match;
+    std::string lastLine;
+    
+    // Initialize an iterator to search through all regex matches
+    auto begin = std::sregex_iterator(str.begin(), str.end(), lineRegex);
+    auto end = std::sregex_iterator();
+
+    // Iterate through all matches to find the last non-empty line
+    for (auto it = begin; it != end; ++it) {
+        if (!it->str(1).empty()) {  // Ensure the captured line is not empty
+            lastLine = it->str(1);
+        }
+    }
+
+    return lastLine;
+}
+
+std::string getFirstLine(const std::string& str) {
+    std::regex lineRegex("^.*?(?:\n|$)");
+    std::smatch match;
+    
+    if (std::regex_search(str, match, lineRegex)) {
+        return match[0].str();
+    }
+
+    return ""; // Return empty string if no match found or input string is empty
 }
 
 
@@ -608,25 +640,31 @@ int main(int argc, char ** argv) {
                     printf("EOT token: %d\n", llama_token_eot(model));
 
                     printf("Client response (before chopping) = '%s'\n", client.response.c_str());
+
+                    std::string lastLine = getLastLine(client.response);
+                    std::string firstLine = getFirstLine(client.response);
+
                     size_t pos;
                     if (eot_token == -1) {
-                        pos = client.response.find(eos_str);
+                        pos = lastLine.find(eos_str);
                     } else{
                         const std::string eot_str = llama_token_to_piece(ctx, llama_token_eot(model));
                         printf("\nEOT string = '%s'\n", eot_str.c_str());
-                        const size_t pos_eos = client.response.find(eos_str);
-                        const size_t pos_eot = client.response.find(eot_str);
+                        const size_t pos_eos = lastLine.find(eos_str);
+                        const size_t pos_eot = lastLine.find(eot_str);
                         pos = (pos_eos < pos_eot) ? pos_eos : pos_eot;
+                        //pos = pos_eos;
                     }
                     printf("\nEOS/EOT position = %zu\n", pos);
 
-
                     if (pos != std::string::npos) {
-                        client.response = client.response.substr(0, pos);
+                        lastLine = lastLine.substr(0, pos);
                     }
 
+                    printf("\nlastLine = '%s'\n", lastLine.c_str());
+
                     // Copy the client response and the input
-                    outFile3 << escapeNewLines(client.response) << "\t";
+                    outFile3 << escapeNewLines(firstLine) << escapeNewLines(lastLine) << "\t";
                     if(!client.ICN.empty()){
                         outFile3 << client.ICN << std::endl;
                     }
