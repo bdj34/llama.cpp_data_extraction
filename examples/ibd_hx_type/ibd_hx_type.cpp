@@ -50,7 +50,7 @@ std::string calYear_system = "You are an expert medical chart reviewer creating 
 "Crohn's Colitis, Ischemic Colitis, Infectious Colitis, C. difficile Colitis, "
 "Microscopic Colitis, Drug-induced Colitis, etc., or specify if the "
 "notes do not mention colitis. "
-"If the notes mention Crohn's disease without specific mention of colitis, respond 'Crohn's Disease without mention of colitis'. "
+"If the notes mention Crohn's disease that does not affect the colon, respond 'Crohn's Disease without colitis'. "
 "If the diagnosis is undecided between either Crohn's colitis or Ulcerative colitis, respond 'IBD colitis'. "
 "If colitis is identified, but the type is unknown, respond 'Unspecified Colitis'. "
 "Determine the original year the diagnosis was made, if available. If the year of original diagnosis is not clear, respond 'Unknown'. "
@@ -67,7 +67,7 @@ std::string generatePreSystemPrompt(const std::string& promptFormat) {
     } else if (promptFormat == "llama3") {
         return "<|start_header_id|>system<|end_header_id|>\n\n";
     } else if (promptFormat == "phi3") {
-        return "<user>\n";
+        return "<|user|>\n";
     //} else if (promptFormat == "phi3") {
     //    return "<system>\n";
     } else {
@@ -95,16 +95,17 @@ std::string generatePreAnswer(const std::string& promptFormat) {
     "Type of Colitis: Note the specific type diagnosed as per the notes.\n"
     "Absence of Mention: Clearly state if there is no mention of any type of colitis.\n"
     "Format your answer as follows:\n"
-    "Selected Evidence from Notes: {Direct quotes or summaries from the notes and your reasoning}\n"
-    "Year of Original Diagnosis (YYYY): {'Unknown' or Year}, Confidence in Year: {Confidence}\n"
+    "Reasoning and Evidence from Notes about *Original* Year of Diagnosis: {Direct quotes or summaries from the notes and your reasoning}\n"
+    "Year of *Original Diagnosis* (YYYY): {'Unknown' or Year}, Confidence in Year: {Confidence}\n"
+    "Reasoning and Evidence from Notes about Type of Colitis: {Direct quotes or summaries from the notes and your reasoning}\n"
     "Type of Colitis: {Type or 'No colitis'}, Confidence in Type: {Confidence}";
 
     if (promptFormat == "mistral") {
-        return "\n\n" + question + " [/INST] Selected Evidence from Notes:";
+        return "\n\n" + question + " [/INST] Reasoning and Evidence from Notes about *Original* Year of Diagnosis:";
     } else if (promptFormat == "llama3") {
-        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nSelected Evidence from Notes:";
+        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nReasoning and Evidence from Notes about *Original* Year of Diagnosis:";
     } else if (promptFormat == "phi3") {
-        return "\n" + question + "<|end|>\n <|assistant|> Selected Evidence from Notes:";
+        return "\n" + question + "<|end|>\n<|assistant|>\nReasoning and Evidence from Notes about *Original* Year of Diagnosis:";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
     }
@@ -641,30 +642,39 @@ int main(int argc, char ** argv) {
 
                     printf("Client response (before chopping) = '%s'\n", client.response.c_str());
 
-                    std::string lastLine = getLastLine(client.response);
-                    std::string firstLine = getFirstLine(client.response);
+                    //std::string lastLine = getLastLine(client.response);
+                    //std::string firstLine = getFirstLine(client.response);
 
                     size_t pos;
                     if (eot_token == -1) {
-                        pos = lastLine.find(eos_str);
+                        pos = client.response.rfind(eos_str);
                     } else{
                         const std::string eot_str = llama_token_to_piece(ctx, llama_token_eot(model));
                         printf("\nEOT string = '%s'\n", eot_str.c_str());
-                        const size_t pos_eos = lastLine.find(eos_str);
-                        const size_t pos_eot = lastLine.find(eot_str);
-                        pos = (pos_eos < pos_eot) ? pos_eos : pos_eot;
+                        const size_t pos_eos = client.response.rfind(eos_str);
+                        const size_t pos_eot = client.response.rfind(eot_str);
+                        if (pos_eos == std::string::npos && pos_eot == std::string::npos) {
+                            pos = std::string::npos;
+                        } else if (pos_eos == std::string::npos) {
+                            pos = pos_eot;
+                        } else if (pos_eot == std::string::npos) {
+                            pos = pos_eos;
+                        } else {
+                            pos = (pos_eos > pos_eot) ? pos_eos : pos_eot;
+                        }
+                        //pos = (pos_eos > pos_eot) ? pos_eos : pos_eot;
                         //pos = pos_eos;
                     }
                     printf("\nEOS/EOT position = %zu\n", pos);
 
                     if (pos != std::string::npos) {
-                        lastLine = lastLine.substr(0, pos);
+                        client.response = client.response.substr(0, pos);
                     }
 
-                    printf("\nlastLine = '%s'\n", lastLine.c_str());
+                    //printf("\nlastLine = '%s'\n", lastLine.c_str());
 
                     // Copy the client response and the input
-                    outFile3 << escapeNewLines(firstLine) << escapeNewLines(lastLine) << "\t";
+                    outFile3 << escapeNewLines(client.response) << "\t";
                     if(!client.ICN.empty()){
                         outFile3 << client.ICN << std::endl;
                     }
