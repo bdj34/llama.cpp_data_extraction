@@ -1,12 +1,13 @@
-root ::= untilNewline yearline "\nReasoning and Evidence from Notes about Type of Colitis:" untilNewline typeline
+root ::= untilNewline yearline "\nReasoning and Evidence from Notes about Diagnosis Type:" untilNewline typeline
 
 yearline ::= "Year of *Original Diagnosis* (YYYY): " year ", Confidence in Year: " confidence 
 year ::= fourdigityear | "Unknown" | "'Unknown'"
 
-typeline ::= "Type of Colitis: " colitistype ", Confidence in Type: " confidence
-colitistype ::= "IBD colitis" | "Ulcerative Colitis" | "Ulcerative Proctitis" | "Crohn's Disease without colitis" |
-                "Ulcerative Pancolitis" | "Crohn's Colitis" | "Ischemic Colitis" | "Infectious Colitis" | 
-                 "Microscopic Colitis" | "Drug-induced Colitis" | "Chemical Colitis" | "Diversion Colitis" | "Unspecified Colitis" | "C. difficile colitis" | "No colitis"
+typeline ::= "Diagnosis Type: " colitistype ", Confidence in Type: " confidence
+colitistype ::= "IBD Colitis" | "Ulcerative Colitis" | "Ulcerative Proctitis" | "Crohn's Disease not affecting the colon" |
+                "Ulcerative Pancolitis" | "Crohn's Disease affecting the colon" | "Ischemic Colitis" | "Infectious Colitis" | 
+                "Crohn's Disease with unknown colonic involvement" |
+                 "Microscopic Colitis" | "Drug-induced Colitis" | "Chemical Colitis" | "Diversion Colitis" | "Unspecified Colitis" | "C. difficile Colitis" | "No Colitis"
 
 confidence ::= "Low" | "Medium" | "High" | "Certain"
 
