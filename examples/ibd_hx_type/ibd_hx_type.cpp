@@ -44,24 +44,22 @@ std::vector<std::string> k_prompts;
 std::string calYear_system = "You are an expert medical chart reviewer creating a structured dataset from medical notes. "
 "The excerpts below are from one individual patient's medical record. "
 "Examine the provided medical notes to extract information regarding the year of colitis diagnosis "
-"and the specific type of colitis, if colitis has been diagnosed. If there is no mention of colitis, clearly state 'No Colitis' "
+"and the specific type of colitis, if colitis has been diagnosed. If there is no mention of colitis, clearly state 'No colitis' "
 "in your response. Use the information directly stated in the notes without making any diagnostic judgments. Identify "
 "the type of colitis diagnosed, such as Ulcerative Colitis (UC), Ulcerative Proctitis, Ulcerative Pancolitis, "
-"Crohn's Disease affecting the colon, Ischemic Colitis, Infectious Colitis, C. difficile Colitis, "
+"Crohn's Disease, Ischemic Colitis, Infectious Colitis, C. difficile Colitis, "
 "Microscopic Colitis, Drug-induced Colitis, etc., or specify if the "
 "notes do not mention colitis. "
 "Crohn's Disease may affect the colon, but can be found anywhere from the mouth to the anus. "
-"We are looking for confirmation that the Crohn's Disease diagnoses are affecting the colon. "
-"If the notes mention Crohn's Disease that does not affect the colon, respond 'Crohn's Disease not affecting the colon'. "
-"If it is unclear whether the Crohn's Disease affects the colon, respond 'Crohn's Disease with unknown colonic involvement'. "
-"If the diagnosis is undecided between either Crohn's Disease or Ulcerative colitis, respond 'IBD Colitis'. "
+"If the notes diagnose Crohn's Disease that *does not affect the colon*, respond 'Crohn's Disease without colonic involvement'. "
+"If the notes diagnose Crohn's Disease that *does affect the colon*, respond 'Crohn's Disease with colonic involvement'. "
+"If it is *unclear* whether the Crohn's Disease affects the colon, respond 'Crohn's Disease with unknown colonic involvement'. "
+"If the diagnosis is undecided between Crohn's Disease and Ulcerative colitis, respond 'IBD colitis'. "
 "If colitis is identified, but the type is unknown, respond 'Unspecified Colitis'. "
 "Determine the original year the diagnosis was made, if available. If the year of original diagnosis is not clear, respond 'Unknown'. "
 "Your responses should be based solely on the information provided, without assuming details not explicitly stated. "
-"Also provide your confidence (Low, Medium, High, or Certain) in the year and type of diagnosis. "
+"Also provide your confidence (Low, Medium, High, Certain) in the year and type of diagnosis. "
 "Now, read the excerpts and follow the instructions below, keeping the previous points in mind.";
-//"Also, provide resolution of the answer, either 'Approximate' (if the excerpts convey uncertainty or approximate the year) or 'Exact' (if the exact year is known). "
-//"Format your answer to match the following examples: 'Answer: Unknown' or 'Answer: X, Confidence: Y, Resolution: Z'.";
 
 
 std::string generatePreSystemPrompt(const std::string& promptFormat) {
@@ -95,11 +93,11 @@ std::string generatePreAnswer(const std::string& promptFormat) {
     std::string question = "### Instructions\n"
     "Year of Original Diagnosis: Determine the original year of diagnosis. "
     "We are only interested in the *original* diagnosis year. Be conservative and respond 'Unknown' when the exact year of the original diagnosis is unclear.\n"
-    "Diagnosis Type: Note the specific type diagnosed as per the notes. If Crohn's Disease, note if there is colonic involvement.\n"
+    "Diagnosis Type: Note the diagnosis as per the notes.\n"
     "Format your answer as follows:\n"
     "Reasoning and Evidence from Notes about *Original* Year of Diagnosis: {Direct quotes or summaries from the notes and your reasoning}\n"
     "Year of *Original Diagnosis* (YYYY): {'Unknown' or Year}, Confidence in Year: {Confidence}\n"
-    "Reasoning and Evidence from Notes about Diagnosis Type: {Direct quotes or summaries from the notes and your reasoning. If the diagnosis is Crohn's, what indicates that there is or is not colonic involvement}\n"
+    "Reasoning and Evidence from Notes about Diagnosis Type: {Direct quotes or summaries from the notes and your reasoning}\n"
     "Diagnosis Type: {Type}, Confidence in Type: {Confidence}";
 
     if (promptFormat == "mistral") {
