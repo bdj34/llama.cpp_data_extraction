@@ -69,3 +69,30 @@ make
 --grammar-file ./grammars/ibd_hx_type.gbnf \
 --promptFormat mistral \
 --file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+
+# Phi-3-3.8B (testing inference speed for CPU)
+./ibd_hx_type \
+-m /Users/brianjohnson/Downloads/Phi-3-mini-4k-instruct-fp16.gguf \
+--sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 20000 \
+--n-gpu-layers 0 --threads 4 \
+--no-escape \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/phiMini \
+--grammar-file ./grammars/ibd_hx_type.gbnf \
+--promptFormat phi3 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+# Phi-3-3.8B Q4 (testing inference speed for CPU)
+./ibd_hx_type \
+-m /Users/brianjohnson/Downloads/Phi-3-mini-4k-instruct-q4.gguf \
+--sequences 38 --parallel 10 --cont-batching --batch-size 2048 --ctx-size 20000 \
+--n-gpu-layers 0 --threads 4 \
+--no-escape \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/phiMini \
+--grammar-file ./grammars/ibd_hx_type.gbnf \
+--promptFormat phi3 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
