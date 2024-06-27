@@ -43,7 +43,6 @@ BUILD_TARGETS = \
 	ibd_hx_extraction_fewShot \
 	ibd_hx_concatNotes \
 	ibd_hx \
-	ibd_hx_type \
 	crc_extraction_parallel \
 	tests/test-c.o
 
@@ -1255,9 +1254,9 @@ ibd_hx: examples/ibd_hx/ibd_hx.cpp ggml.o llama.o $(COMMON_DEPS) $(OBJS)
 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
 
-ibd_hx_type: examples/ibd_hx_type/ibd_hx_type.cpp ggml.o llama.o $(COMMON_DEPS) $(OBJS)
-	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
-	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
+# ibd_hx_type: examples/ibd_hx_type/ibd_hx_type.cpp ggml.o llama.o $(COMMON_DEPS) $(OBJS)
+# 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
+# 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
 
 ibd_hx_extraction_parallel: examples/ibd_hx_extraction_parallel/ibd_hx_extraction_parallel.cpp ggml.o llama.o $(COMMON_DEPS) $(OBJS)
 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
