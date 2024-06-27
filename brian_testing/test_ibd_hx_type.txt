@@ -3,6 +3,20 @@ cd /Users/brianjohnson/VA_IBD/llama.cpp
 git checkout brian-features
 make 
 
+./ibd_hx_type \
+-m ~/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
+--sequences 38 --parallel 16 --cont-batching --batch-size 2048 --ctx-size 20000 \
+--no-escape \
+-n 2000 \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/llama8 \
+--grammar-file ./grammars/ibd_hx_type.gbnf \
+--promptFormat llama3 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+
 # Llama3 8b calYear testing postAnswer & system prompt variation
 ./ibd_hx_type \
 -m ~/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
