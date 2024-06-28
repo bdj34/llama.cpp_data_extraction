@@ -109,7 +109,7 @@ std::string generatePreAnswer(const std::string& promptFormat) {
     } else if (promptFormat == "phi3") {
         return "\n" + question + "<|end|>\n<|assistant|>\nReasoning and Evidence from Notes about *Original* Year of Diagnosis:";
     } else if (promptFormat == "gemma2") {
-        return "\n" + question + "<end_of_turn>\n<start_of_turn>model\nReasoning and Evidence from Notes about *Original* Year of Diagnosis:";
+        return "\n" + question + "<end_of_turn>\n<start_of_turn>model";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
     }

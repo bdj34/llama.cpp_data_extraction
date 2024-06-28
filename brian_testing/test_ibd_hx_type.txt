@@ -3,6 +3,35 @@ cd /Users/brianjohnson/VA_IBD/llama.cpp
 git checkout brian-features
 make 
 
+# Gemma 9B
+./ibd_hx_type \
+-m ~/Downloads/gemma-2-9b-it-Q8_0_L.gguf \
+--sequences 38 --parallel 16 --cont-batching --batch-size 2048 --ctx-size 20000 \
+--no-escape \
+-n 2000 \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/gemma9 \
+--grammar-file ./grammars/ibd_hx_type.gbnf \
+--promptFormat gemma2 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+# Gemma 27B
+./ibd_hx_type \
+-m ~/Downloads/gemma-2-27b-it-Q8_0_L.gguf \
+--sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 2000 \
+--no-escape \
+-n 200 \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/gemma27 \
+--promptFormat gemma2 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+--grammar-file ./grammars/ibd_hx_type.gbnf \
+
 ./ibd_hx_type \
 -m ~/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
 --sequences 38 --parallel 16 --cont-batching --batch-size 2048 --ctx-size 20000 \
@@ -27,6 +56,20 @@ make
 --temp 0 \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
 --outDir ../llm_ibd_outDir/llama8 \
+--grammar-file ./grammars/ibd_hx_type.gbnf \
+--promptFormat llama3 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+# Llama 3 SPPO
+./ibd_hx_type \
+-m ~/Downloads/Llama-3-Instruct-8B-SPPO-Iter3-Q8_0_L.gguf \
+--sequences 38 --parallel 16 --cont-batching --batch-size 2048 --ctx-size 20000 \
+--no-escape \
+-n 2000 \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/llama8_sppo \
 --grammar-file ./grammars/ibd_hx_type.gbnf \
 --promptFormat llama3 \
 --file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
