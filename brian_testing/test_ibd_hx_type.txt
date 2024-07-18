@@ -117,6 +117,20 @@ Llama 3 8B
 --promptFormat llama3 \
 --file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
 
+# Llama-3-70B Q3
+./ibd_hx_type \
+-m /Users/brianjohnson/Downloads/Meta-Llama-3-70B-Instruct-IQ3_XXS.gguf \
+--sequences 38 --parallel 16 --cont-batching --batch-size 2048 --ctx-size 20000 \
+-n 2000 \
+--no-escape \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/llama70_Q3 \
+--grammar-file ./grammars/ibd_hx_type.gbnf \
+--promptFormat llama3 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
 # Phi-3-14B
 ./ibd_hx_type \
 -m /Users/brianjohnson/Downloads/Phi-3-medium-4k-instruct-fromHF-f16.gguf \
@@ -152,6 +166,19 @@ Llama 3 8B
 --temp 0 \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
 --outDir ../llm_ibd_outDir/mixtral8x7 \
+--grammar-file ./grammars/ibd_hx_type.gbnf \
+--promptFormat mistral \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+# Mathstral 7B
+./ibd_hx_type \
+-m /Users/brianjohnson/Downloads/mathstral-7B-v0.1.Q8_0.gguf \
+--sequences 38 --parallel 16 --cont-batching --batch-size 2048 --ctx-size 20000 \
+--n-gpu-layers 99 \
+--no-escape \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/mathstral7 \
 --grammar-file ./grammars/ibd_hx_type.gbnf \
 --promptFormat mistral \
 --file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
