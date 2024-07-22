@@ -6,7 +6,7 @@ year ::= fourdigityear | "Unknown" | "'Unknown'"
 typeline ::= "Diagnosis Type: " colitistype ", Confidence in Type: " confidence
 colitistype ::= "IBD Colitis" | "Ulcerative Colitis" | "Ulcerative Proctitis" |
                 "Ulcerative Pancolitis" | "Ischemic Colitis" | "Infectious Colitis" | 
-                "Crohn's Disease" |
+                "Crohn's Disease" | "Collagenous Colitis" | "Lymphocytic Colitis" |
                  "Microscopic Colitis" | "Drug-induced Colitis" | "Chemical Colitis" | "Diversion Colitis" | "Unspecified Colitis" |
                 "C. difficile Colitis" | "No Colitis"
 
