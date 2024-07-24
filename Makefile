@@ -882,6 +882,9 @@ OBJ_GGML += \
 
 OBJ_LLAMA = \
 	src/llama.o \
+	src/llama-vocab.o \
+	src/llama-grammar.o \
+	src/llama-sampling.o \
 	src/unicode.o \
 	src/unicode-data.o
 
@@ -1061,6 +1064,10 @@ src/unicode-data.o: \
 
 src/llama.o: \
 	src/llama.cpp \
+	src/llama-impl.h \
+	src/llama-vocab.h \
+	src/llama-grammar.h \
+	src/llama-sampling.h \
 	src/unicode.h \
 	include/llama.h \
 	ggml/include/ggml-cuda.h \
@@ -1068,6 +1075,29 @@ src/llama.o: \
 	ggml/include/ggml.h \
 	ggml/include/ggml-alloc.h \
 	ggml/include/ggml-backend.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+src/llama-vocab.o: \
+	src/llama-vocab.cpp \
+	src/llama-vocab.h \
+	src/llama-impl.h \
+	include/llama.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+src/llama-grammar.o: \
+	src/llama-grammar.cpp \
+	src/llama-grammar.h \
+	src/llama-impl.h \
+	src/llama-vocab.h \
+	src/llama-sampling.h \
+	include/llama.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+src/llama-sampling.o: \
+	src/llama-sampling.cpp \
+	src/llama-sampling.h \
+	src/llama-impl.h \
+	include/llama.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(LIB_LLAMA): \
@@ -1298,7 +1328,7 @@ llama-finetune: examples/finetune/finetune.cpp \
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
 
 llama-export-lora: examples/export-lora/export-lora.cpp \
-	$(OBJ_GGML) common/log.h
+	$(OBJ_ALL)
 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
 
@@ -1475,7 +1505,7 @@ run-benchmark-matmult: llama-benchmark-matmult
 .PHONY: run-benchmark-matmult swift
 
 tests/test-llama-grammar: tests/test-llama-grammar.cpp \
-	$(OBJ_GGML) $(OBJ_COMMON) src/unicode.o src/unicode-data.o
+	$(OBJ_ALL)
 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
 
