@@ -56,7 +56,8 @@ std::string calYear_system = "You are an expert medical chart reviewer creating 
 // "If it is *unclear* whether the Crohn's Disease affects the colon, respond 'Crohn's Disease with unknown colonic involvement'. "
 "If the diagnosis is undecided between Crohn's Disease and Ulcerative Colitis, respond 'IBD colitis'. "
 "If colitis is identified, but the type is unknown, respond 'Unspecified Colitis'. "
-"Determine the original year the diagnosis was made, if available. If the year of original diagnosis is not clear, respond 'Unknown'. "
+"Determine the original year the diagnosis was made, if available. Provide evidence from a minimum of two distinct excerpts to determine the diagnosis year. "
+"If the year of original diagnosis is not clear, respond 'Unknown'. "
 "Your responses should be based solely on the information provided, without assuming details not explicitly stated. "
 "Also provide your confidence (Low, Medium, High, Certain) in the year and type of diagnosis. "
 "Now, read the excerpts and follow the instructions below, keeping the previous points in mind.";
@@ -103,13 +104,13 @@ std::string generatePreAnswer(const std::string& promptFormat) {
     "Diagnosis Type: {Type}, Confidence in Type: {Confidence}";
 
     if (promptFormat == "mistral") {
-        return "\n\n" + question + " [/INST] Reasoning and Evidence from Notes about *Original* Year of Diagnosis:";
+        return "\n\n" + question + " [/INST] Reasoning and Evidence from Notes about *Original* Year of Diagnosis (Evidence from a minimum of 2 excerpts, if possible):";
     } else if (promptFormat == "llama3") {
-        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nReasoning and Evidence from Notes about *Original* Year of Diagnosis:";
+        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nReasoning and Evidence from Notes about *Original* Year of Diagnosis (Evidence from a minimum of 2 excerpts, if possible):";
     } else if (promptFormat == "phi3") {
-        return "\n" + question + "<|end|>\n<|assistant|>\nReasoning and Evidence from Notes about *Original* Year of Diagnosis:";
+        return "\n" + question + "<|end|>\n<|assistant|>\nReasoning and Evidence from Notes about *Original* Year of Diagnosis (Evidence from a minimum of 2 excerpts, if possible):";
     } else if (promptFormat == "gemma2") {
-        return "\n" + question + "<end_of_turn>\n<start_of_turn>model\nReasoning and Evidence from Notes about *Original* Year of Diagnosis:";
+        return "\n" + question + "<end_of_turn>\n<start_of_turn>model\nReasoning and Evidence from Notes about *Original* Year of Diagnosis (Evidence from a minimum of 2 excerpts):";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: gemma2, phi3, llama3, mistral.");
     }
