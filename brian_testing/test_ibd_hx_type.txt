@@ -89,13 +89,13 @@ Llama 3 8B
 --file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
 
 
-Llama 3.1 8B 
+# Llama 3.1 8B 
 ./ibd_hx_type \
 -m ~/Downloads/models_gguf/Meta-Llama-3.1-8B-Instruct-F16.gguf \
 --sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 8192 \
 --no-escape \
 -n 2000 \
---n-gpu-layers 99 \
+--n-gpu-layers 0 \
 --temp 0 \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
 --outDir ../llm_ibd_outDir/llama8 \
@@ -119,8 +119,8 @@ Llama 3.1 8B
 
 # Llama-3-70B
 ./ibd_hx_type \
--m /Users/brianjohnson/Downloads/Meta-Llama-3-70B-Instruct-Q4_K_M.gguf \
---sequences 38 --parallel 16 --cont-batching --batch-size 2048 --ctx-size 20000 \
+-m /Users/brianjohnson/Downloads/Meta-Llama-3.1-70B-Instruct-Q4_K_M.gguf \
+--sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 8192 \
 -n 2000 \
 --no-escape \
 --n-gpu-layers 99 \
@@ -171,6 +171,19 @@ Llama 3.1 8B
 --promptFormat mistral \
 --file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
 
+# Mistral Large Q3
+./ibd_hx_type \
+-m /Users/brianjohnson/Downloads/Mistral-Large-Instruct-2407.Q3_K-00001-of-00003.gguf \
+--sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 8192 \
+--n-gpu-layers 99 \
+--no-escape \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/mistral_large \
+--grammar-file ./grammars/ibd_hx_type.gbnf \
+--promptFormat mistral \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
 # Mixtral 8x7b
 ./ibd_hx_type \
 -m /Users/brianjohnson/Downloads/mixtral-8x7b-v0.1.Q4_K_M.gguf \
@@ -200,8 +213,8 @@ Llama 3.1 8B
 
 # Mistral Nemo
 ./ibd_hx_type \
--m /Users/brianjohnson/Downloads/Mistral-Nemo-Instruct-2407.Q8_0.gguf \
---sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 20000 \
+-m /Users/brianjohnson/Downloads/Mistral-Nemo-Instruct-2407-Q8_0.gguf \
+--sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 8192 \
 --n-gpu-layers 99 \
 --no-escape \
 --temp 0 \

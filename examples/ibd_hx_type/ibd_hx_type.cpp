@@ -104,11 +104,11 @@ std::string generatePreAnswer(const std::string& promptFormat) {
     "Diagnosis Type: {Type}, Confidence in Type: {Confidence}";
 
     if (promptFormat == "mistral") {
-        return "\n\n" + question + " [/INST] Reasoning and Evidence from Notes about *Original* Year of Diagnosis (Evidence from a minimum of 2 excerpts, if possible):";
+        return "\n\n" + question + " [/INST] Reasoning and Evidence from Notes about *Original* Year of Diagnosis (Evidence from a minimum of 2 excerpts):";
     } else if (promptFormat == "llama3") {
-        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nReasoning and Evidence from Notes about *Original* Year of Diagnosis (Evidence from a minimum of 2 excerpts, if possible):";
+        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nReasoning and Evidence from Notes about *Original* Year of Diagnosis (Evidence from a minimum of 2 excerpts):";
     } else if (promptFormat == "phi3") {
-        return "\n" + question + "<|end|>\n<|assistant|>\nReasoning and Evidence from Notes about *Original* Year of Diagnosis (Evidence from a minimum of 2 excerpts, if possible):";
+        return "\n" + question + "<|end|>\n<|assistant|>\nReasoning and Evidence from Notes about *Original* Year of Diagnosis (Evidence from a minimum of 2 excerpts):";
     } else if (promptFormat == "gemma2") {
         return "\n" + question + "<end_of_turn>\n<start_of_turn>model\nReasoning and Evidence from Notes about *Original* Year of Diagnosis (Evidence from a minimum of 2 excerpts):";
     } else {
