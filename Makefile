@@ -43,6 +43,7 @@ BUILD_TARGETS = \
 	ibd_hx_concatNotes \
 	ibd_hx \
 	ibd_hx_type \
+	crohns \
 	crc_extraction_parallel \
 	tests/test-c.o
 
@@ -1393,6 +1394,11 @@ ibd_hx: examples/ibd_hx/ibd_hx.cpp \
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
 
 ibd_hx_type: examples/ibd_hx_type/ibd_hx_type.cpp  \
+	$(OBJ_ALL)
+	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
+	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
+
+crohns: examples/crohns/crohns.cpp  \
 	$(OBJ_ALL)
 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)

@@ -1,0 +1,7 @@
+root ::= untilNewline yesNoLine
+
+yesNoLine ::= "Answer: " ("Yes" | "No" | "Insufficient information") ". Confidence: " confidence
+
+confidence ::= "Low" | "Medium" | "High" | "Certain"
+
+untilNewline ::= " " [^\n^\t^{^<]{20,1000} "\n"
