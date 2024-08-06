@@ -10,25 +10,18 @@
 #include <vector>
 #include <ctime>
 #include <iostream>
-#include <regex> 
 #include <fstream>
+#include <unordered_set>
+#include <regex>
 
 std::string generatePreSystemPrompt(const std::string& promptFormat);
 std::string generatePostSystemPrompt(const std::string& promptFormat);
 std::string generatePreAnswer(const std::string& promptFormat);
 std::string formatSystemPrompt(const std::string& systemPrompt, const std::string& promptFormat);
-std::string createResponsePrompt(const std::string& systemPrompt, const std::string& modelThoughts, const std::string& promptFormat);
-static std::vector<float> softmax(const std::vector<float>& logits);
 std::string quoteAndEscape(const std::string& input, bool quote);
-
-// Struct which will serve as the value of a key-value pair in an unordered map.
-struct info {
-    std::string inputText;
-    std::string inputDate;
-    std::string output;
-    double yesProb;
-    double noProb;
-};
+std::string escapeNewLines(const std::string& input);
+std::string getLastLine(const std::string& str);
+std::string getFirstLine(const std::string& str);
 
 // trim whitespace from the beginning and end of a string
 static std::string trim(const std::string & str) {
@@ -46,15 +39,23 @@ static std::string trim(const std::string & str) {
     return str.substr(start, end - start);
 }
 
-static std::vector<std::string> k_prompts;
+std::vector<std::string> k_prompts;
 
-static std::string default_system =
-"The text provided is a pathology report, with samples originating from the colon or rectum unless specified otherwise. "
-"We are interested in identifying whether invasive adenocarcinoma (stage greater than or equal to 1) is present in *any* colon or rectal sample. "
-"Without definite invasion identified, conditions such as 'high-grade dysplasia', 'in-situ [adeno]carcinoma', or 'intramucosal [adeno]carcinoma' are not typically classified as invasive adenocarcinoma. "
-"If the sample is classified as having adenocarcinoma without further specification, this typically implies invasive adenocarcinoma. "
-"Answer yes or no to the following question, matching the format 'Answer: Yes' or 'Answer: No'. Then, explain your reasoning. "
-"Does the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?";
+std::string calYear_system = "Examine the provided medical notes to extract information regarding the year and type of colitis diagnosis. "
+"If there is no mention of colitis, answer 'No colitis'. "
+"Use the information directly stated in the notes. Identify "
+"the type of colitis diagnosed, such as Ulcerative Colitis (UC), Ulcerative Proctitis, "
+"Crohn's Disease, Ischemic Colitis, Infectious Colitis, C. difficile Colitis, "
+"Microscopic Colitis, Drug-induced Colitis, etc., or specify if the "
+"notes do not mention colitis. "
+"If the diagnosis is undecided between Crohn's Disease and Ulcerative Colitis, answer 'IBD colitis'. "
+"If colitis is identified, but the type is unknown, respond 'Unspecified Colitis'. "
+"Determine the original year the diagnosis was made, if available. Provide evidence from a minimum of two distinct excerpts to determine the diagnosis year. "
+"If the year of original diagnosis is not clear, respond 'Unknown'. "
+"Your responses should be based solely on the information provided, without assuming details not explicitly stated. "
+"Provide your confidence (low, medium, high, certain) in the year and type of diagnosis. "
+"Determine whether the diagnosis has been confirmed by pathology or endoscopy. ";
+
 
 std::string generatePreSystemPrompt(const std::string& promptFormat) {
     if (promptFormat == "mistral") {
@@ -72,107 +73,46 @@ std::string generatePreSystemPrompt(const std::string& promptFormat) {
 
 std::string generatePostSystemPrompt(const std::string& promptFormat) {
     if (promptFormat == "mistral") {
-        return "\n<<<\nPathology report: ";
+        return "\n";
     } else if (promptFormat == "llama3") {
-        return "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n<<<\nPathology report: ";
+        return "<|eot_id|>\n<|start_header_id|>user<|end_header_id|>\n\n";
     } else if (promptFormat == "phi3") {
-        return "\n<<<\nPathology report: ";
+        return "\n";
     } else if (promptFormat == "gemma2") {
-        return "\n<<<\nPathology report: ";
+        return "\n";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: gemma2, phi3, llama3, mistral.");
     }
 }
 
 std::string generatePreAnswer(const std::string& promptFormat) {
+
+    std::string question = "### Instructions\n"
+    "Provide as much reasoning and evidence as needed to support your answers. Format your response as follows:\n"
+    "Reasoning and evidence from notes about *original* year of diagnosis: {Direct quotes or summaries from the notes and your reasoning}\n"
+    "Year of *original* Diagnosis (YYYY): {'Unknown' or Year}, Confidence in Year: {Confidence}\n"
+    "Reasoning and evidence from notes about diagnosis type: {Direct quotes or summaries from the notes and your reasoning}\n"
+    "Diagnosis type: {Type}, Confidence in type: {Confidence}\n"
+    "Pathology or endoscopy confirmed: {Yes or No}";
+
     if (promptFormat == "mistral") {
-        return "\n>>>\n\nDoes the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample? [/INST] Answer:";
+        return "\n\n" + question + " [/INST] Reasoning and evidence from notes about *original* year of diagnosis:";
     } else if (promptFormat == "llama3") {
-        return "\n>>>\n\nDoes the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nAnswer:";
+        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nReasoning and evidence from notes about *original* year of diagnosis:";
     } else if (promptFormat == "phi3") {
-        return "\n>>>\n\nDoes the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?<|end|>\n <|assistant|> Answer:";
+        return "\n" + question + "<|end|>\n<|assistant|>\nReasoning and evidence from notes about *original* year of diagnosis:";
     } else if (promptFormat == "gemma2") {
-        return "\n>>>\n\nDoes the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?<end_of_turn>\n<start_of_turn>model\nAnswer:";
+        return "\n" + question + "<end_of_turn>\n<start_of_turn>model\nReasoning and evidence from notes about *original* year of diagnosis:";
     } else {
-        throw std::runtime_error("Error: prompt format not recognized. Recognized options are: phi3, llama3, mistral.");
+        throw std::runtime_error("Error: prompt format not recognized. Recognized options are: gemma2, phi3, llama3, mistral.");
     }
 }
 
 std::string formatSystemPrompt(const std::string& systemPrompt, const std::string& promptFormat) {
-    std::string preSystem = generatePreSystemPrompt(promptFormat);
+    std::string prePrompt = generatePreSystemPrompt(promptFormat);
     std::string postSystem = generatePostSystemPrompt(promptFormat);
-    //std::string preAnswer = generatePreAnswer(promptFormat);
     
-    return preSystem + systemPrompt + postSystem;
-}
-
-struct client {
-    ~client() {
-        if (ctx_sampling) {
-            llama_sampling_free(ctx_sampling);
-        }
-    }
-
-    int32_t id = 0;
-
-    llama_seq_id seq_id = -1;
-
-    llama_token sampled;
-
-    int64_t t_start_prompt;
-    int64_t t_start_gen;
-
-    int32_t n_prompt  = 0;
-    int32_t n_decoded = 0;
-    int32_t i_batch   = -1;
-
-    std::string input;
-    std::string prompt;
-    std::string response;
-
-    struct llama_sampling_context * ctx_sampling = nullptr;
-};
-
-static void print_date_time() {
-    std::time_t current_time = std::time(nullptr);
-    std::tm* local_time = std::localtime(&current_time);
-    char buffer[80];
-    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", local_time);
-
-    printf("\n\033[35mrun parameters as at %s\033[0m\n", buffer);
-}
-
-// Define a split string function to ...
-static std::vector<std::string> split_string(const std::string& input, char delimiter) {
-    std::vector<std::string> tokens;
-    std::istringstream stream(input);
-    std::string token;
-    while (std::getline(stream, token, delimiter)) {
-        tokens.push_back(token);
-    }
-    return tokens;
-}
-
-
-// Define softmax function from examples/perplexity
-static std::vector<float> softmax(const std::vector<float>& logits) {
-    std::vector<float> probs(logits.size());
-    float max_logit = logits[0];
-    for (float v : logits) {
-        max_logit = std::max(max_logit, v);
-    }
-    double sum_exp = 0.0;
-    for (size_t i = 0; i < logits.size(); i++) {
-        // Subtract the maximum logit value from the current logit value for numerical stability
-        const float logit = logits[i] - max_logit;
-        const float exp_logit = expf(logit);
-        sum_exp += exp_logit;
-        probs[i] = exp_logit;
-    }
-    for (size_t i = 0; i < probs.size(); i++) {
-        probs[i] /= sum_exp;
-    }
-    return probs;
+    return prePrompt + systemPrompt + postSystem;
 }
 
 // Function to escape quotes, newlines, and tabs, and optionally enclosethe string in quotes
@@ -203,12 +143,109 @@ std::string quoteAndEscape(const std::string& input, bool quote) {
     return output;
 }
 
+std::string escapeNewLines(const std::string& input) {
+
+    std::string output;
+
+    for (char ch : input) {
+        switch (ch) {
+            case '\n':
+                output += "\\n";   // Escape newlines
+                break;
+            default:
+                output += ch;
+        }
+    }
+    return output;
+}
+
+std::string getLastLine(const std::string& str) {
+    std::regex lineRegex("(.*?)(\n|$)");
+    std::smatch match;
+    std::string lastLine;
+    
+    // Initialize an iterator to search through all regex matches
+    auto begin = std::sregex_iterator(str.begin(), str.end(), lineRegex);
+    auto end = std::sregex_iterator();
+
+    // Iterate through all matches to find the last non-empty line
+    for (auto it = begin; it != end; ++it) {
+        if (!it->str(1).empty()) {  // Ensure the captured line is not empty
+            lastLine = it->str(1);
+        }
+    }
+
+    return lastLine;
+}
+
+std::string getFirstLine(const std::string& str) {
+    std::regex lineRegex("^.*?(?:\n|$)");
+    std::smatch match;
+    
+    if (std::regex_search(str, match, lineRegex)) {
+        return match[0].str();
+    }
+
+    return ""; // Return empty string if no match found or input string is empty
+}
+
+
+struct client {
+    ~client() {
+        if (ctx_sampling) {
+            llama_sampling_free(ctx_sampling);
+        }
+    }
+
+    int32_t id = 0;
+
+    llama_seq_id seq_id = -1;
+
+    llama_token sampled;
+
+    int64_t t_start_prompt;
+    int64_t t_start_gen;
+
+    int32_t n_prompt  = 0;
+    int32_t n_decoded = 0;
+    int32_t i_batch   = -1;
+
+    std::string input;
+    std::string prompt;
+    std::string response;
+
+    std::string ICN;
+
+    struct llama_sampling_context * ctx_sampling = nullptr;
+};
+
+static void print_date_time() {
+    std::time_t current_time = std::time(nullptr);
+    std::tm* local_time = std::localtime(&current_time);
+    char buffer[80];
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", local_time);
+
+    printf("\n\033[35mrun parameters as at %s\033[0m\n", buffer);
+}
+
+// Define a split string function to ...
+static std::vector<std::string> split_string(const std::string& input, char delimiter) {
+    std::vector<std::string> tokens;
+    std::istringstream stream(input);
+    std::string token;
+    while (std::getline(stream, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
 int main(int argc, char ** argv) {
     srand(1234);
 
     gpt_params params;
 
-    if (gpt_params_parse(argc, argv, params) == false) {
+    if (!gpt_params_parse(argc, argv, params)) {
+        gpt_params_print_usage(argc, argv, params);
         return 1;
     }
 
@@ -233,7 +270,7 @@ int main(int argc, char ** argv) {
     std::time_t now = std::time(nullptr);
     std::tm* now_tm = std::localtime(&now);
     // Buffer to hold the date-time format
-    char dateTimeBuffer[30];  // Ensure the buffer is large enough for the format
+    char dateTimeBuffer[60];  // Ensure the buffer is large enough for the format
     // Format the date and time with strftime
     strftime(dateTimeBuffer, sizeof(dateTimeBuffer), "%Y-%m-%d_%H-%M-%S", now_tm);
     // Convert to string for use in filenames or other outputs
@@ -259,9 +296,10 @@ int main(int argc, char ** argv) {
     std::string dirPath = params.outDir;
     std::string inputFile = dirPath + "/inputTextNoFormatting_" + dateTimeOutFile + ".txt";
     std::string metadataFile = dirPath + "/metadata_" + dateTimeOutFile + ".txt";
-    std::string outputFile = dirPath + "/outputYN_withProbs_" + dateTimeOutFile + ".txt";
+    std::string outputFile = dirPath + "/output_concat_" + dateTimeOutFile + ".txt";
 
     std::vector<std::string> allPrompts;
+    std::vector<std::string> allPatients;
     // load the prompts from an external file if there are any
     if (params.prompt.empty()) {
         throw std::runtime_error("Error: No prompts given");
@@ -269,7 +307,6 @@ int main(int argc, char ** argv) {
         // Output each line of the input params.prompts vector and copy to k_prompts
         size_t index = 0;
         printf("\n\033[32mNow printing the external prompt file starting with line %zu from %s\033[0m\n\n", params.promptStartingNumber, params.prompt_file.c_str());
-
 
         // Create and open a text file
         std::ofstream outFile1(inputFile.c_str());
@@ -281,12 +318,9 @@ int main(int argc, char ** argv) {
         }
 
         allPrompts = split_string(params.prompt, '\n');
+        allPatients = split_string(params.patients, '\n');
 
-        // Make sure we only run as many prompts as there are
-        size_t n_prompts = allPrompts.size();
-        if(n_seq + params.promptStartingNumber > n_prompts){
-            n_seq -= params.promptStartingNumber;
-        }
+
 
         // Print the prompts and write to outfile (only those equal to or after starting index)
         std::string tmpPrompt;
@@ -306,7 +340,6 @@ int main(int argc, char ** argv) {
 
         // Close the file
         outFile1.close();
-        
     }
 
     fprintf(stderr, "\n\n");
@@ -329,11 +362,13 @@ int main(int argc, char ** argv) {
     }
 
     // Write each prompt to the out file
-    outFile2 << "Output file format: {Y/N text} \\t {Yes Prob.} \\t {No Prob.} \\t {Full path report input (to make sure we have the right input mapped to the right output. \\n's and \\t's are escaped)}" << std::endl << std::endl;   
+    outFile2 << "Output file format: {Year}, {Confidence}, {Resolution}, {Patient ID (where applicable)}" << std::endl << std::endl;   
     outFile2 << "Model path: " << params.model << std::endl << std::endl;
     outFile2 << "Input file path: " << params.prompt_file << std::endl;
+    outFile2 << "Patient ID file path (if applicable): " << params.patient_file << std::endl;
     outFile2 << "Reading from line " << params.promptStartingNumber << " to " << n_seq+params.promptStartingNumber << " (zero-based index)" << std::endl << std::endl;
-    outFile2 << quoteAndEscape(promptFormat_example, true) << std::endl << std::endl << "Prompt format tokenized:" << std::endl; // Adding newline for separation in file
+    outFile2 << "Prompt format example (no escaping):" << std::endl; 
+    outFile2 << promptFormat_example << std::endl << std::endl << "Prompt format tokenized:" << std::endl; // Adding newline for separation in file
 
     // Iterate through the vector and write each element to the file
     for (size_t i = 0; i < tokens_format.size(); ++i) {
@@ -345,29 +380,23 @@ int main(int argc, char ** argv) {
     for (size_t i = 0; i < clients.size(); ++i) {
         auto & client = clients[i];
         client.id = i;
-        //// Modify to selectively use grammar. Probably don't want it here but want it later.
         client.ctx_sampling = llama_sampling_init(params.sparams);
     }
 
     std::vector<llama_token> tokens_system;
-    std::string system = default_system;
-    if(!params.systemPrompt.empty()){
-        system = params.systemPrompt;
-    }
 
     // Write system prompt to the out file
-    outFile2 << "System prompt: " << quoteAndEscape(system, true) << std::endl << std::endl; // Adding newline for separation in file
+    outFile2 << "System prompt: " << quoteAndEscape(calYear_system, true) << std::endl << std::endl; // Adding newline for separation in file
 
-    // Close the file
-    outFile2.close();
+    // Format system prompt
+    std::string k_system = formatSystemPrompt(calYear_system, params.promptFormat);
 
-    std::string k_system = formatSystemPrompt(system, params.promptFormat);
     // Print the string
     printf("System prompt: %s\n", k_system.c_str());
     tokens_system = ::llama_tokenize(ctx, k_system, true);
     const int32_t n_tokens_system = tokens_system.size();
 
-    llama_seq_id g_seq_id = 0;
+    llama_seq_id g_seq_id = params.promptStartingNumber;
 
     // the max batch size is as large as the context to handle cases where we get very long input prompt from multiple
     // users. regardless of the size, the main loop will chunk the batch into a maximum of params.n_batch tokens at a time
@@ -381,8 +410,8 @@ int main(int argc, char ** argv) {
 
     const auto t_main_start = ggml_time_us();
 
-    LOG_TEE("%s: Simulating parallel requests from clients:\n", __func__);
-    LOG_TEE("%s: n_parallel = %d, n_sequences = %d, cont_batching = %d, system tokens = %d, prompt format =%s\n", __func__, n_clients, n_seq, cont_batching, n_tokens_system, params.promptFormat.c_str());
+    LOG_TEE("%s: Simulating parallel requests from %d patients:\n", __func__, n_seq);
+    LOG_TEE("%s: n_parallel (number of simultaneous requests) = %d, cont_batching = %d, system tokens = %d\n", __func__, n_clients, cont_batching, n_tokens_system);
     LOG_TEE("\n");
 
     {
@@ -399,7 +428,6 @@ int main(int argc, char ** argv) {
 
         // assign the system KV cache to all parallel sequences
         for (int32_t i = 1; i <= n_clients; ++i) {
-            // Copying the cache from client 0 to all n_clients clients (what are the last two args?)
             llama_kv_cache_seq_cp(ctx, 0, i, -1, -1);
         }
 
@@ -458,6 +486,10 @@ int main(int argc, char ** argv) {
                     client.t_start_gen    = 0;
 
                     client.input    = k_prompts[promptNumber];
+                    if(!params.patient_file.empty()){
+                        client.ICN = allPatients[promptNumber];
+                    }
+                    //printf("%zu\n", promptNumber);
                     promptNumber++;
                     client.prompt   = client.input;
                     client.response = "";
@@ -481,8 +513,12 @@ int main(int argc, char ** argv) {
                     client.n_decoded = 0;
                     client.i_batch   = batch.n_tokens - 1;
 
-                    LOG_TEE("\033[31mClient %3d, seq %4d, started decoding ...\033[0m\n", client.id, client.seq_id);
-
+                    if(params.patient_file.empty()){
+                        LOG_TEE("\033[31mClient %3d, seq %4d, started decoding ...\033[0m\n", client.id, client.seq_id);
+                    }else{
+                        LOG_TEE("\033[31mClient %3d, Patient %s, seq %4d, started decoding ...\033[0m\n", client.id, client.ICN.c_str(), client.seq_id);
+                    }
+                    
                     g_seq_id += 1;
 
                     // insert new requests one-by-one
@@ -501,6 +537,13 @@ int main(int argc, char ** argv) {
         int32_t n_batch = params.n_batch;
 
         for (int32_t i = 0; i < (int32_t) batch.n_tokens; i += n_batch) {
+            // experiment: process in powers of 2
+            //if (i + n_batch > (int32_t) batch.n_tokens && n_batch > 32) {
+            //    n_batch /= 2;
+            //    i -= n_batch;
+            //    continue;
+            //}
+            //printf("%d\n", i);
 
             const int32_t n_tokens = std::min(n_batch, (int32_t) (batch.n_tokens - i));
 
@@ -557,103 +600,91 @@ int main(int argc, char ** argv) {
                 const std::string token_str = llama_token_to_piece(ctx, id);
 
                 client.response += token_str;
+                //printf("%s", token_str.c_str());
+
                 client.sampled = id;
-                
-                if(client.response == " Yes" || client.response == " No"){
-                    // Extract logits (trying to get probability)
-                    auto   n_vocab = llama_n_vocab(model);
-                    auto * logits_ptr  = llama_get_logits_ith(ctx, client.i_batch);
 
-                    std::vector<float> logits;
-                    logits.reserve(n_vocab);
+                // Brian edit: force model to stop on eos OR eot
+                // Also make it so n_decoded  and not n_decoded + n_prompt is >= n_predict.
+                //auto findStop = std::find(params.antiprompt.begin(), params.antiprompt.end(), client.response);
 
-                    for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
-                        logits.emplace_back(logits_ptr[token_id]);
+                bool foundStop = false;
+                for (const auto& item : params.antiprompt) {
+                    if (client.response.find(item) != std::string::npos) {
+                        foundStop = true;
+                        break;
                     }
+                }
 
-                    // Apply softmax to the extracted logits to get probabilities
-                    std::vector<float> probabilities = softmax(logits);
-
-                    // Copy the client response
-                    outFile3 << client.response << "\t";
-                    float yesProb = -1.0;
-                    float noProb = -1.0;
-
-                    for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
-                        std::string token_str = llama_token_to_piece(ctx, token_id);
-                        if(token_str == " Yes") {
-                            // Set yes probability
-                            yesProb = probabilities[token_id]; 
-                            //printf("Token ID: %d Token str: '%s' Logits: %.6f Probability: %.8f\n", token_id, token_str.c_str(), logits[token_id], probabilities[token_id]);
-                        }else if (token_str == " No"){
-                            // Set no probability
-                            noProb = probabilities[token_id];
-                            //printf("Token ID: %d Token str: '%s' Logits: %.6f Probability: %.8f\n", token_id, token_str.c_str(), logits[token_id], probabilities[token_id]);
-                        }
-                    }
-                    // Write yes and no probs to file.
-                    outFile3 << yesProb << "\t";
-                    outFile3 << noProb << "\t";
-                    outFile3 << quoteAndEscape(client.input, false) << std::endl;
-
-                //// IMPORTANT NOTE: FOR STREAMLINING CRC YES-NO CLASSIFICATION, WE STOP AFTER " YES" OR " NO", WHICH ARE THE ONLY
-                //// OPTIONS ALLOWED BY THE GRAMMAR. THIS IS NOT FELXIBLE, BUT WILL SAVE US 1 TOKEN OF GENERATION FOR EVERY INPUT, 
-                //// SPEEDING US UP IN A SIGNIFICANT WAY, ESPECIALLY WITH CPU ONLY. ALL COMMENTED OUT CODE BELOW THIS SHOULD BE KEPT
-                //// IN CASE WE WANT TO REVERT FOR ANY REASON (FOR EXAMPLE, IF WE WANT THE MODEL TO PRODUCE THOUGHTS, THEN RESPOND.)
-                //}
-
-                // bool foundStop = false;
-                // for (const auto& item : params.antiprompt) {
-                //     //printf("\nantiPrompt vec item = %s\n", item.c_str());
-                //     if (client.response.find(item) != std::string::npos) {
-                //     //if (client.response.find('\n') != std::string::npos) {
-                //         foundStop = true;
-                //         break;
-                //     }
-                // }
-
-                // if (client.n_decoded > 2 &&
-                //         (llama_token_is_eog(model, id) || 
-                //         foundStop ||
-                //          (params.n_predict > 0 && client.n_decoded >= params.n_predict))) {
+                if (client.n_decoded > 2 &&
+                        (llama_token_is_eog(model, id) || 
+                        foundStop ||
+                         (params.n_predict > 0 && client.n_decoded >= params.n_predict))) {
                     
                     // Brian edit: basic reverse prompt identifying the EOT or EOS tokens
-                    // const std::string eos_str = llama_token_to_piece(ctx, llama_token_eos(model));
-                    // const std::string eot_str = llama_token_to_piece(ctx, llama_token_eot(model));
-                    // printf("\nEOT string = '%s'\n", eot_str.c_str());
-                    // printf("\nEOS string = '%s'\n", eos_str.c_str());
-                    // printf("Client response (before chopping) = '%s'\n", client.response.c_str());
-                    // size_t pos;
-                    // if (eot_str.empty()) {
-                    //     pos = client.response.find(eos_str);
-                    // } else{
-                    //     const size_t pos_eos = client.response.find(eos_str);
-                    //     const size_t pos_eot = client.response.find(eot_str);
-                    //     pos = (pos_eos < pos_eot) ? pos_eos : pos_eot;
-                    // }
-                    // printf("\nEOS/EOT position = %zu\n", pos);
+                    const std::string eos_str = llama_token_to_piece(ctx, llama_token_eos(model));
+                    printf("\nEOS string = '%s'\n", eos_str.c_str());
 
-                    // if (pos != std::string::npos) {
-                    //     client.response = client.response.substr(0, pos);
-                    // }
+                    int32_t eot_token = llama_token_eot(model);
+                    printf("EOT token: %d\n", llama_token_eot(model));
+
+                    printf("Client response (before chopping) = '%s'\n", client.response.c_str());
+
+                    //std::string lastLine = getLastLine(client.response);
+                    //std::string firstLine = getFirstLine(client.response);
+
+                    size_t pos;
+                    if (eot_token == -1) {
+                        pos = client.response.rfind(eos_str);
+                    } else{
+                        const std::string eot_str = llama_token_to_piece(ctx, llama_token_eot(model));
+                        printf("\nEOT string = '%s'\n", eot_str.c_str());
+                        const size_t pos_eos = client.response.rfind(eos_str);
+                        const size_t pos_eot = client.response.rfind(eot_str);
+                        if (pos_eos == std::string::npos && pos_eot == std::string::npos) {
+                            pos = std::string::npos;
+                        } else if (pos_eos == std::string::npos) {
+                            pos = pos_eot;
+                        } else if (pos_eot == std::string::npos) {
+                            pos = pos_eos;
+                        } else {
+                            pos = (pos_eos > pos_eot) ? pos_eos : pos_eot;
+                        }
+                        //pos = (pos_eos > pos_eot) ? pos_eos : pos_eot;
+                        //pos = pos_eos;
+                    }
+                    printf("\nEOS/EOT position = %zu\n", pos);
+
+                    if (pos != std::string::npos) {
+                        client.response = client.response.substr(0, pos);
+                    }
+
+                    //printf("\nlastLine = '%s'\n", lastLine.c_str());
+
+                    // Copy the client response and the input
+                    outFile3 << escapeNewLines(client.response) << "\t";
+                    if(!client.ICN.empty()){
+                        outFile3 << client.ICN << std::endl;
+                    }
 
                     // delete only the generated part of the sequence, i.e. keep the system prompt in the cache
                     llama_kv_cache_seq_rm(ctx, client.id + 1, -1, -1);
                     llama_kv_cache_seq_cp(ctx, 0, client.id + 1, -1, -1);
 
-                    LOG_TEE("Runtime (prompt + gen):    %5.2f seconds.\nInput:    \033[96m%s\n\033[0mResponse: \033[31m%s\033[0m\n\n",
-                            (ggml_time_us() - client.t_start_prompt) / 1e6f,
-                            //::trim(system).c_str(),
+                    const auto t_main_end = ggml_time_us();
+
+                    LOG_TEE("System:    %s\nInput:    \033[96m%s\n\033[0mResponse: \033[31m%s\033[0m\n\n",
+                            ::trim(calYear_system).c_str(),
+                            //::trim(prompts[promptNumber]).c_str(),
                             ::trim(client.input).c_str(),
-                            ::trim(client.response).c_str()
-                            );
+                            ::trim(client.response).c_str());
 
                     n_total_prompt += client.n_prompt;
                     n_total_gen    += client.n_decoded;
 
                     client.seq_id = -1;
                 }
-
+                
                 client.i_batch = -1;
             }
         }
@@ -661,6 +692,97 @@ int main(int argc, char ** argv) {
 
     // Close the file
     outFile3.close();
+
+    // If in testing mode, compare answers to answer key
+    int matchCount = 0;
+    if(params.testing_mode){
+
+        std::ifstream trueAnswerFile(params.answerKey);
+        std::ifstream modelAnswerFile(outputFile);
+        
+        
+        std::string trueAnswerLine, modelAnswerLine;
+
+        int lineNumber = 0;
+
+        // Check corresponding lines from both files
+        if (trueAnswerFile.is_open() && modelAnswerFile.is_open()) {
+            while (getline(trueAnswerFile, trueAnswerLine) && getline(modelAnswerFile, modelAnswerLine)) {
+                lineNumber++;
+                std::istringstream iss(trueAnswerLine);
+                std::string acceptableAnswer;
+                bool matchFound = false;
+
+                // Process the model answer line
+                std::istringstream modelISS(modelAnswerLine);
+                std::string firstModelAnswer;
+                if (getline(modelISS, firstModelAnswer, '\t')) {  // Extract the first tab-separated entry
+                    // Remove leading space if present
+                    if (!firstModelAnswer.empty() && firstModelAnswer[0] == ' ') {
+                        firstModelAnswer.erase(0, 1);
+                    }
+
+                    // printf("%s\n", firstModelAnswer.c_str());
+
+                    // Use regex to find the first set of digits
+                    // std::regex pattern(R"((\d+)|Unknown)");
+                    // std::smatch match;
+                    // if (std::regex_search(firstModelAnswer, match, pattern)) {
+                    //     firstModelAnswer = match.str(0);
+                    // } else {
+                    //     firstModelAnswer = "Invalid"; // Handle the case where no digits are found
+                    // }
+
+                    // Check if "Unknown" is present
+                    std::regex pattern(R"(Unknown)");
+                    std::smatch match;
+                    if (std::regex_search(firstModelAnswer, match, pattern)) {
+                        // "Unknown" is present, use it
+                        firstModelAnswer = "Unknown";
+                    } else {
+                        // Use regex to find the first set of digits
+                        std::regex pattern(R"(\d+)");
+                        std::smatch match;
+                        if (std::regex_search(firstModelAnswer, match, pattern)) {
+                            firstModelAnswer = match.str(0);
+                        } else {
+                            firstModelAnswer = "Invalid"; // Handle the case where no digits are found
+                        }
+                    }
+
+                    
+                    //printf("%s\n", firstModelAnswer.c_str());
+                }
+
+                // Create a set for acceptable answers
+                std::unordered_set<std::string> acceptableAnswers;
+                while (getline(iss, acceptableAnswer, '\t')) {
+                    acceptableAnswers.insert(acceptableAnswer);
+                }
+
+                // Check if the model answer matches any acceptable answers
+                if (acceptableAnswers.find(firstModelAnswer) != acceptableAnswers.end()) {
+                    matchFound = true;
+                }
+
+                // Output the result for this line
+                if (matchFound) {
+                    matchCount++;
+                    //std::cout << "Line " << lineNumber << ": Match found." << std::endl;
+                } else {
+                    //std::cout << "Line " << lineNumber << ": No match found." << std::endl;
+                }
+            }
+            trueAnswerFile.close();
+            modelAnswerFile.close();
+
+            //std::cout << "Total matching lines: " << matchCount << std::endl;
+        } else {
+            std::cerr << "Unable to open one or both files" << std::endl;
+            return 1;
+        }
+        
+    }
 
     const auto t_main_end = ggml_time_us();
 
@@ -680,10 +802,17 @@ int main(int argc, char ** argv) {
 
     LOG_TEE("\n");
 
+    if(params.testing_mode){
+        LOG_TEE("Accuracy:        %6d / %6d\n", matchCount, n_seq);
+    }
+
     // Reopen the metadata file in append mode
     std::ofstream metaFile(metadataFile, std::ios::app);  // Append mode
 
     if (metaFile.is_open()) {
+        if(params.testing_mode){
+            metaFile << "Accuracy: " <<  matchCount << " / " << n_seq << std::endl;
+        }
         metaFile << "Runtime: " << (t_main_end - t_main_start) / 1e6 << " seconds" << std::endl;
         metaFile.close();
     } else {
