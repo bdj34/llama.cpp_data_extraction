@@ -303,11 +303,31 @@ int main(int argc, char ** argv) {
     llama_backend_init();
     llama_numa_init(params.numa);
 
-    llama_model * model = NULL;
-    llama_context * ctx = NULL;
+        // initialize the model 
 
-    // load the target model
-    std::tie(model, ctx) = llama_init_from_gpt_params(params);
+    llama_model_params model_params = llama_model_params_from_gpt_params(params);
+
+    llama_model * model = llama_load_model_from_file(params.model.c_str(), model_params);
+
+    if (model == NULL) {
+        fprintf(stderr , "%s: error: unable to load model\n" , __func__);
+        return 1;
+    }
+    //llama_model * model = NULL;
+    //llama_context * ctx = NULL;
+
+    // initialize the context
+
+    llama_context_params ctx_params = llama_context_params_from_gpt_params(params);
+
+    llama_context * ctx = llama_new_context_with_model(model, ctx_params);
+
+    if (ctx == NULL) {
+        fprintf(stderr , "%s: error: failed to create the llama_context\n" , __func__);
+        return 1;
+    }
+
+    const int n_ctx = llama_n_ctx(ctx);
 
     // Set file names
     std::string dirPath = params.outDir;
@@ -361,8 +381,6 @@ int main(int argc, char ** argv) {
 
     fprintf(stderr, "\n\n");
     fflush(stderr);
-
-    const int n_ctx = llama_n_ctx(ctx);
 
     // Write format to the metadataFile
     std::string promptFormat_example = formatSystemPrompt("{System prompt here}", params.promptFormat) + "{Input text here}" + generatePreAnswer(params.promptFormat);

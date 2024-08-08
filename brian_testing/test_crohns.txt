@@ -1,7 +1,7 @@
 # Gemma 9B SPPO
 ./crohns \
 -m ~/Downloads/models_gguf/gemma2-9B_SPPO_f16.gguf \
---sequences 2 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
+--sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
 --no-escape \
 -n 2000 \
 --n-gpu-layers 99 \
@@ -10,12 +10,12 @@
 --outDir ../llm_ibd_outDir/crohns_gemma9_SPPO \
 --grammar-file ./grammars/crohns.gbnf \
 --promptFormat gemma2 \
---file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_crohns.txt
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
 
-# Llama 3 - 70B
+# Llama 3.1 - 70B
 ./crohns \
 -m /Users/brianjohnson/Downloads/Meta-Llama-3.1-70B-Instruct-Q4_K_M.gguf \
---sequences 2 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
+--sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
 --no-escape \
 -n 2000 \
 --n-gpu-layers 99 \
@@ -24,4 +24,91 @@
 --outDir ../llm_ibd_outDir/crohns_llama70 \
 --grammar-file ./grammars/crohns.gbnf \
 --promptFormat llama3 \
---file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_crohns.txt
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+# Llama 3 - 70B
+./crohns \
+-m /Users/brianjohnson/Downloads/Meta-Llama-3-70B-Instruct-Q4_K_M.gguf \
+--sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
+--no-escape \
+-n 2000 \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/crohns_llama70 \
+--grammar-file ./grammars/crohns.gbnf \
+--promptFormat llama3 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+# Llama 3.1 - 8B
+./crohns \
+-m /Users/brianjohnson/Downloads/models_gguf/Meta-Llama-3.1-8B-Instruct-F16.gguf \
+--sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
+--no-escape \
+-n 2000 \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/crohns_llama8 \
+--grammar-file ./grammars/crohns.gbnf \
+--promptFormat llama3 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+# Llama 3 - 8B
+./crohns \
+-m /Users/brianjohnson/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
+--sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
+--no-escape \
+-n 2000 \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/crohns_llama8 \
+--grammar-file ./grammars/crohns.gbnf \
+--promptFormat llama3 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+# Mistral 7B 
+./crohns \
+-m /Users/brianjohnson/Downloads/Mistral-7B-Instruct-v0.2_F16_brianConverted.gguf \
+--sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
+--no-escape \
+-n 2000 \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/crohns_nemo \
+--grammar-file ./grammars/crohns_oneSentence.gbnf \
+--promptFormat mistral \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+# Mistral Nemo
+./crohns \
+-m /Users/brianjohnson/Downloads/Mistral-Nemo-Instruct-2407-Q8_0.gguf \
+--sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
+--no-escape \
+-n 2000 \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/crohns_nemo \
+--grammar-file ./grammars/crohns_oneSentence.gbnf \
+--promptFormat mistral \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+
+# Mixtral
+./crohns \
+-m /Users/brianjohnson/Downloads/mixtral-8x7b-v0.1.Q4_K_M.gguf \
+--sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
+--no-escape \
+-n 2000 \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/crohns_mixtral \
+--grammar-file ./grammars/crohns.gbnf \
+--promptFormat mistral \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+

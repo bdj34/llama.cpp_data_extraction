@@ -41,13 +41,25 @@ static std::string trim(const std::string & str) {
 
 std::vector<std::string> k_prompts;
 
-std::string calYear_system = "You are provided with snippets of medical notes for a patient diagnosed with Crohn's disease."
-" Your task is to determine whether the Crohn's disease affects the colon. First, provide your reasoning using evidence from the notes."
-" Then, answer 'Yes' if there is evidence of colonic involvement, or 'No' if there is no evidence of colonic involvement."
-" If the information is insufficient, answer 'Insufficient information'. Also, provide your confidence in the answer (low, medium, high, certain)."
+std::string calYear_system = "You are provided with snippets of medical notes for a patient who may have Crohn's colitis."
+" Your task is to determine whether they have Crohn's disease which affects the colon."
+" You are not a clinician. Do not make diagnostic judgments. Only extract information on diagnoses reported in the note."
+" First, provide a one sentence summary from the notes about the diagnosis."//and/or direct quotes from the notes about the diagnosis."
+" Then, answer Yes if there is evidence of Crohn's disease causing colitis or affecting the colon (Crohn's colitis), or No if there is no evidence of Crohn's colitis."
+" If the patient has Crohn's disease but there is no evidence that it affects their colon, answer No - Crohn's without colitis."
+" If the diagnosis is undecided between Crohn's Disease and Ulcerative Colitis (UC), answer Undecided between UC and Crohn's."
+" If the diagnosis is Ulcerative Colitis or Ulcerative Proctitis, answer No - UC."
+" If the diagnosis is neither UC nor Crohn's, answer No."
+" If the information is insufficient, answer Insufficient information or Unknown."
+" Provide your confidence in the answer (low, medium, high, certain)."
+" Also, indicate whether the diagnosis has been confirmed by colonoscopy, endoscopy or pathology."
+" Finally, indicate if the exact date of diagnosis is stated in the notes."
 " Format your answer as follows:\n"
-"Reasoning and Evidence from Notes: {Direct quotes or summaries from the notes and your reasoning}\n"
-"Answer: {Yes, No, or Insufficient information}. Confidence: {Low, Medium, High, or Certain}";
+//"Reasoning and Evidence from Notes: {Direct quotes and/or one sentence summary from the notes}\n"
+"Summary from notes: {One sentence summary from the notes}\n"
+"Answer: {Your answer}. Confidence: {Low, Medium, High, or Certain}\n"
+"Pathology or endoscopy confirmed: {Yes or No}\n"
+"Exact diagnosis date stated: {Yes or No}";
 
 
 std::string generatePreSystemPrompt(const std::string& promptFormat) {
@@ -80,16 +92,16 @@ std::string generatePostSystemPrompt(const std::string& promptFormat) {
 
 std::string generatePreAnswer(const std::string& promptFormat) {
 
-    std::string question = "Question: Does the patient have Crohn's disease affecting the colon?";
+    std::string question = "Question: Does the patient have Crohn's colitis?";
 
     if (promptFormat == "mistral") {
-        return "\n\n" + question + " [/INST] Reasoning and Evidence from Notes:";
+        return "\n\n" + question + " [/INST] Summary from notes:";
     } else if (promptFormat == "llama3") {
-        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nReasoning and Evidence from Notes:";
+        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nSummary from notes:";
     } else if (promptFormat == "phi3") {
-        return "\n" + question + "<|end|>\n<|assistant|>\nReasoning and Evidence from Notes:";
+        return "\n" + question + "<|end|>\n<|assistant|>\nSummary from notes:";
     } else if (promptFormat == "gemma2") {
-        return "\n" + question + "<end_of_turn>\n<start_of_turn>model\nReasoning and Evidence from Notes:";
+        return "\n" + question + "<end_of_turn>\n<start_of_turn>model\nSummary from notes:";
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: gemma2, phi3, llama3, mistral.");
     }
@@ -282,11 +294,31 @@ int main(int argc, char ** argv) {
     llama_backend_init();
     llama_numa_init(params.numa);
 
-    llama_model * model = NULL;
-    llama_context * ctx = NULL;
+    // initialize the model 
 
-    // load the target model
-    std::tie(model, ctx) = llama_init_from_gpt_params(params);
+    llama_model_params model_params = llama_model_params_from_gpt_params(params);
+
+    llama_model * model = llama_load_model_from_file(params.model.c_str(), model_params);
+
+    if (model == NULL) {
+        fprintf(stderr , "%s: error: unable to load model\n" , __func__);
+        return 1;
+    }
+    //llama_model * model = NULL;
+    //llama_context * ctx = NULL;
+
+    // initialize the context
+
+    llama_context_params ctx_params = llama_context_params_from_gpt_params(params);
+
+    llama_context * ctx = llama_new_context_with_model(model, ctx_params);
+
+    if (ctx == NULL) {
+        fprintf(stderr , "%s: error: failed to create the llama_context\n" , __func__);
+        return 1;
+    }
+
+    const int n_ctx = llama_n_ctx(ctx);
 
     // Set file names
     std::string dirPath = params.outDir;
@@ -340,8 +372,6 @@ int main(int argc, char ** argv) {
 
     fprintf(stderr, "\n\n");
     fflush(stderr);
-
-    const int n_ctx = llama_n_ctx(ctx);
 
     // Write format to the metadataFile
     std::string promptFormat_example = formatSystemPrompt("{System prompt here}", params.promptFormat) + "{Input text here}" + generatePreAnswer(params.promptFormat);

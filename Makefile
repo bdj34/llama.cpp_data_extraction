@@ -38,10 +38,6 @@ BUILD_TARGETS = \
 	llama-tokenize \
 	llama-vdot \
 	llama-cvector-generator \
-	ibd_hx_extraction_parallel \
-	ibd_hx_extraction_fewShot \
-	ibd_hx_concatNotes \
-	ibd_hx \
 	ibd_hx_type \
 	ibd_hx_type_v2 \
 	crohns \
@@ -1389,11 +1385,6 @@ llama-lookup-create: examples/lookup/lookup-create.cpp \
 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
 
-ibd_hx: examples/ibd_hx/ibd_hx.cpp \
-	$(OBJ_ALL)
-	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
-	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
-
 ibd_hx_type: examples/ibd_hx_type/ibd_hx_type.cpp  \
 	$(OBJ_ALL)
 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
@@ -1405,21 +1396,6 @@ ibd_hx_type_v2: examples/ibd_hx_type_v2/ibd_hx_type_v2.cpp  \
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
 
 crohns: examples/crohns/crohns.cpp  \
-	$(OBJ_ALL)
-	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
-	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
-
-ibd_hx_extraction_parallel: examples/ibd_hx_extraction_parallel/ibd_hx_extraction_parallel.cpp  \
-	$(OBJ_ALL)
-	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
-	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
-
-ibd_hx_concatNotes: examples/ibd_hx_concatNotes/ibd_hx_concatNotes.cpp  \
-	$(OBJ_ALL)
-	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
-	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
-
-ibd_hx_extraction_fewShot: examples/ibd_hx_extraction_fewShot/ibd_hx_extraction_fewShot.cpp \
 	$(OBJ_ALL)
 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
