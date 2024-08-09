@@ -39,6 +39,19 @@ static std::string trim(const std::string & str) {
     return str.substr(start, end - start);
 }
 
+std::string convertEscapedNewlines(const std::string& input) {
+    std::string output = input;
+    size_t pos = 0;
+    
+    // Find and replace all occurrences of "\\n" with "\n"
+    while ((pos = output.find("\\n", pos)) != std::string::npos) {
+        output.replace(pos, 2, "\n");
+        pos += 1; // Move past the newly inserted '\n' to avoid infinite loop
+    }
+    
+    return output;
+}
+
 std::vector<std::string> k_prompts;
 
 std::string calYear_system = "You are provided with snippets of medical notes for a patient who may have Crohn's colitis."
@@ -511,7 +524,7 @@ int main(int argc, char ** argv) {
                     client.t_start_prompt = ggml_time_us();
                     client.t_start_gen    = 0;
 
-                    client.input    = k_prompts[promptNumber];
+                    client.input    = convertEscapedNewlines(k_prompts[promptNumber]);
                     if(!params.patient_file.empty()){
                         client.ICN = allPatients[promptNumber];
                     }
@@ -702,7 +715,7 @@ int main(int argc, char ** argv) {
                     LOG_TEE("System:    %s\nInput:    \033[96m%s\n\033[0mResponse: \033[31m%s\033[0m\n\n",
                             ::trim(calYear_system).c_str(),
                             //::trim(prompts[promptNumber]).c_str(),
-                            ::trim(client.input).c_str(),
+                            ::trim(escapeNewLines(client.input)).c_str(),
                             ::trim(client.response).c_str());
 
                     n_total_prompt += client.n_prompt;

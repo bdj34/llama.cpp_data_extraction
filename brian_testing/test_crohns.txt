@@ -3,6 +3,7 @@
 -m ~/Downloads/models_gguf/gemma2-9B_SPPO_f16.gguf \
 --sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
 --no-escape \
+--threads 4 \
 -n 2000 \
 --n-gpu-layers 99 \
 --temp 0 \
