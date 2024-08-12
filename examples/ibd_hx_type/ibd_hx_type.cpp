@@ -728,97 +728,6 @@ int main(int argc, char ** argv) {
     // Close the file
     outFile3.close();
 
-    // If in testing mode, compare answers to answer key
-    int matchCount = 0;
-    if(params.testing_mode){
-
-        std::ifstream trueAnswerFile(params.answerKey);
-        std::ifstream modelAnswerFile(outputFile);
-        
-        
-        std::string trueAnswerLine, modelAnswerLine;
-
-        int lineNumber = 0;
-
-        // Check corresponding lines from both files
-        if (trueAnswerFile.is_open() && modelAnswerFile.is_open()) {
-            while (getline(trueAnswerFile, trueAnswerLine) && getline(modelAnswerFile, modelAnswerLine)) {
-                lineNumber++;
-                std::istringstream iss(trueAnswerLine);
-                std::string acceptableAnswer;
-                bool matchFound = false;
-
-                // Process the model answer line
-                std::istringstream modelISS(modelAnswerLine);
-                std::string firstModelAnswer;
-                if (getline(modelISS, firstModelAnswer, '\t')) {  // Extract the first tab-separated entry
-                    // Remove leading space if present
-                    if (!firstModelAnswer.empty() && firstModelAnswer[0] == ' ') {
-                        firstModelAnswer.erase(0, 1);
-                    }
-
-                    // printf("%s\n", firstModelAnswer.c_str());
-
-                    // Use regex to find the first set of digits
-                    // std::regex pattern(R"((\d+)|Unknown)");
-                    // std::smatch match;
-                    // if (std::regex_search(firstModelAnswer, match, pattern)) {
-                    //     firstModelAnswer = match.str(0);
-                    // } else {
-                    //     firstModelAnswer = "Invalid"; // Handle the case where no digits are found
-                    // }
-
-                    // Check if "Unknown" is present
-                    std::regex pattern(R"(Unknown)");
-                    std::smatch match;
-                    if (std::regex_search(firstModelAnswer, match, pattern)) {
-                        // "Unknown" is present, use it
-                        firstModelAnswer = "Unknown";
-                    } else {
-                        // Use regex to find the first set of digits
-                        std::regex pattern(R"(\d+)");
-                        std::smatch match;
-                        if (std::regex_search(firstModelAnswer, match, pattern)) {
-                            firstModelAnswer = match.str(0);
-                        } else {
-                            firstModelAnswer = "Invalid"; // Handle the case where no digits are found
-                        }
-                    }
-
-                    
-                    //printf("%s\n", firstModelAnswer.c_str());
-                }
-
-                // Create a set for acceptable answers
-                std::unordered_set<std::string> acceptableAnswers;
-                while (getline(iss, acceptableAnswer, '\t')) {
-                    acceptableAnswers.insert(acceptableAnswer);
-                }
-
-                // Check if the model answer matches any acceptable answers
-                if (acceptableAnswers.find(firstModelAnswer) != acceptableAnswers.end()) {
-                    matchFound = true;
-                }
-
-                // Output the result for this line
-                if (matchFound) {
-                    matchCount++;
-                    //std::cout << "Line " << lineNumber << ": Match found." << std::endl;
-                } else {
-                    //std::cout << "Line " << lineNumber << ": No match found." << std::endl;
-                }
-            }
-            trueAnswerFile.close();
-            modelAnswerFile.close();
-
-            //std::cout << "Total matching lines: " << matchCount << std::endl;
-        } else {
-            std::cerr << "Unable to open one or both files" << std::endl;
-            return 1;
-        }
-        
-    }
-
     const auto t_main_end = ggml_time_us();
 
     print_date_time();
@@ -836,23 +745,6 @@ int main(int argc, char ** argv) {
     LOG_TEE("Cache misses:        %6d\n", n_cache_miss);
 
     LOG_TEE("\n");
-
-    if(params.testing_mode){
-        LOG_TEE("Accuracy:        %6d / %6d\n", matchCount, n_seq);
-    }
-
-    // Reopen the metadata file in append mode
-    std::ofstream metaFile(metadataFile, std::ios::app);  // Append mode
-
-    if (metaFile.is_open()) {
-        if(params.testing_mode){
-            metaFile << "Accuracy: " <<  matchCount << " / " << n_seq << std::endl;
-        }
-        metaFile << "Runtime: " << (t_main_end - t_main_start) / 1e6 << " seconds" << std::endl;
-        metaFile.close();
-    } else {
-        std::cerr << "Unable to open metadata file for appending." << std::endl;
-    }
 
     llama_print_timings(ctx);
 

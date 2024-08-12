@@ -1,6 +1,6 @@
 root ::= yesNo "\nExplanation: " untilNewline
 
-untilNewline ::= " " [^\n^\t^{^<]{10,400} "\n"
+untilNewline ::= " " [^\n^\t^{^<]{10,1000}
 
 yesNo ::= (" Yes" | " No")
 

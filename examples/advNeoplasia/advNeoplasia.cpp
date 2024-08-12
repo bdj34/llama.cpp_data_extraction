@@ -21,6 +21,7 @@ std::string createResponsePrompt(const std::string& systemPrompt, const std::str
 static std::vector<float> softmax(const std::vector<float>& logits);
 std::string escapeNewLines(const std::string& input);
 std::string quoteAndEscape(const std::string& input, bool quote);
+std::string convertEscapedNewlines(const std::string& input);
 
 // Struct which will serve as the value of a key-value pair in an unordered map.
 struct info {
@@ -400,9 +401,6 @@ int main(int argc, char ** argv) {
 
     std::vector<llama_token> tokens_system;
     std::string system = default_system;
-    if(!params.systemPrompt.empty()){
-        system = params.systemPrompt;
-    }
 
     // Write system prompt to the out file
     outFile2 << "System prompt: " << quoteAndEscape(system, true) << std::endl << std::endl; // Adding newline for separation in file
@@ -608,7 +606,7 @@ int main(int argc, char ** argv) {
                 client.response += token_str;
                 client.sampled = id;
                 
-                if (client.n_decoded > 2 &&
+                if (client.n_decoded > 0 &&
                         (llama_token_is_eog(model, id) || 
                          (params.n_predict > 0 && client.n_decoded >= params.n_predict))) {
                     

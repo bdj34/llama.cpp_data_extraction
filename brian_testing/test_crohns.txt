@@ -1,4 +1,20 @@
 # Gemma 9B SPPO
+./all_extraction \
+-m ~/Downloads/models_gguf/gemma2-9B_SPPO_f16.gguf \
+--extractionType crohns \
+--sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
+--no-escape \
+--threads 4 \
+-n 2000 \
+--n-gpu-layers 99 \
+--temp 0 \
+--promptStartingNumber 10 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/crohns_gemma9_SPPO \
+--grammar-file ./grammars/crohns.gbnf \
+--promptFormat gemma2 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
 ./crohns \
 -m ~/Downloads/models_gguf/gemma2-9B_SPPO_f16.gguf \
 --sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \

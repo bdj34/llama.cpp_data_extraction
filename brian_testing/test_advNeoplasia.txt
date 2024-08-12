@@ -3,13 +3,15 @@ cd ~/VA_IBD/llama.cpp
 make
 
 # Gemma2-9B
-./advNeoplasia \
+./all_extraction \
 -m ~/Downloads/models_gguf/gemma2-9B_SPPO_f16.gguf \
+--extractionType advNeo \
 --sequences 16 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
 --temp 0 \
 --promptFormat gemma2 \
 --promptStartingNumber 0 \
 --grammar-file ./grammars/yesNo_grammar.gbnf  \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
 --outDir ../testing_advNeo_outDir \
 --file ../testing_data/pathNeg.txt
 
@@ -25,8 +27,9 @@ make
 --file ../testing_data/pathPos.txt
 
 # Llama 3 8B
-./advNeoplasia \
+./all_extraction \
 -m /Users/brianjohnson/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
+--extractionType advNeo \
 --sequences 16 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
 --no-escape \
 -n 2000 \
@@ -34,9 +37,10 @@ make
 --temp 0 \
 --promptFormat llama3 \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
---grammar-file ./grammars/yesNo_grammar.gbnf \
+--grammar-file ./grammars/yesNo_explain.gbnf \
 --outDir ../testing_CRC_extraction_outDir \
---file ../testing_data/pathPos.txt
+--promptStartingNumber 14 \
+--file ../testing_data/pathNeg.txt
 
 # Llama 3.1 8B
 ./advNeoplasia \

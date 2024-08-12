@@ -1,71 +1,73 @@
 # Define the default target now so that it is always the first target
 BUILD_TARGETS = \
 	libllava.a \
-	llama-baby-llama \
-	llama-batched \
-	llama-batched-bench \
-	llama-bench \
-	llama-benchmark-matmult \
-	llama-cli \
-	llama-convert-llama2c-to-ggml \
-	llama-embedding \
-	llama-eval-callback \
-	llama-export-lora \
-	llama-gbnf-validator \
-	llama-gguf \
-	llama-gguf-hash \
-	llama-gguf-split \
-	llama-gritlm \
-	llama-imatrix \
-	llama-infill \
-	llama-llava-cli \
-	llama-minicpmv-cli\
-	llama-lookahead \
-	llama-lookup \
-	llama-lookup-create \
-	llama-lookup-merge \
-	llama-lookup-stats \
-	llama-parallel \
-	llama-passkey \
-	llama-perplexity \
-	llama-q8dot \
-	llama-quantize \
-	llama-quantize-stats \
-	llama-retrieval \
-	llama-save-load-state \
-	llama-server \
-	llama-simple \
-	llama-speculative \
-	llama-tokenize \
-	llama-vdot \
-	llama-cvector-generator \
-	ibd_hx_type \
-	ibd_hx_type_v2 \
-	crohns \
-	crc_extraction_parallel \
-	advNeoplasia \
-	tests/test-c.o
+	all_extraction \
+	# tests/test-c.o \
+	# ibd_hx_type \
+	# ibd_hx_type_v2 \
+	# crohns \
+	# crc_extraction_parallel \
+	# advNeoplasia \
+	# llama-baby-llama \
+	# llama-batched \
+	# llama-batched-bench \
+	# llama-bench \
+	# llama-benchmark-matmult \
+	# llama-cli \
+	# llama-convert-llama2c-to-ggml \
+	# llama-embedding \
+	# llama-eval-callback \
+	# llama-export-lora \
+	# llama-gbnf-validator \
+	# llama-gguf \
+	# llama-gguf-hash \
+	# llama-gguf-split \
+	# llama-gritlm \
+	# llama-imatrix \
+	# llama-infill \
+	# llama-llava-cli \
+	# llama-minicpmv-cli\
+	# llama-lookahead \
+	# llama-lookup \
+	# llama-lookup-create \
+	# llama-lookup-merge \
+	# llama-lookup-stats \
+	# llama-parallel \
+	# llama-passkey \
+	# llama-perplexity \
+	# llama-q8dot \
+	# llama-quantize \
+	# llama-quantize-stats \
+	# llama-retrieval \
+	# llama-save-load-state \
+	# llama-server \
+	# llama-simple \
+	# llama-speculative \
+	# llama-tokenize \
+	# llama-vdot \
+	# llama-cvector-generator
+
 
 # Binaries only useful for tests
 TEST_TARGETS = \
 	tests/test-autorelease \
-	tests/test-backend-ops \
-	tests/test-chat-template \
-	tests/test-double-float \
-	tests/test-grad0 \
-	tests/test-grammar-integration \
-	tests/test-grammar-parser \
-	tests/test-json-schema-to-grammar \
-	tests/test-llama-grammar \
-	tests/test-model-load-cancel \
-	tests/test-opt \
-	tests/test-quantize-fns \
-	tests/test-quantize-perf \
-	tests/test-rope \
-	tests/test-sampling \
-	tests/test-tokenizer-0 \
-	tests/test-tokenizer-1-bpe \
-	tests/test-tokenizer-1-spm
+	# tests/test-backend-ops \
+	# tests/test-chat-template \
+	# tests/test-double-float \
+	# tests/test-grad0 \
+	# tests/test-grammar-integration \
+	# tests/test-grammar-parser \
+	# tests/test-json-schema-to-grammar \
+	# tests/test-llama-grammar \
+	# tests/test-model-load-cancel \
+	# tests/test-opt \
+	# tests/test-quantize-fns \
+	# tests/test-quantize-perf \
+	# tests/test-rope \
+	# tests/test-sampling \
+	# tests/test-tokenizer-0 \
+	# tests/test-tokenizer-1-bpe \
+	# tests/test-tokenizer-1-spm
 
 # Legacy build targets that were renamed in #7809, but should still be removed when the project is cleaned
 LEGACY_TARGETS_CLEAN = main quantize quantize-stats perplexity imatrix embedding vdot q8dot convert-llama2c-to-ggml \
@@ -74,7 +76,7 @@ LEGACY_TARGETS_CLEAN = main quantize quantize-stats perplexity imatrix embedding
 
 # Legacy build targets that were renamed in #7809, but we want to build binaries that for them that output a deprecation warning if people try to use them.
 #  We don't want to clutter things too much, so we only build replacements for the most commonly used binaries.
-LEGACY_TARGETS_BUILD = main quantize perplexity embedding server
+LEGACY_TARGETS_BUILD = main #quantize perplexity embedding server
 
 # Deprecation aliases
 ifdef LLAMA_CUBLAS
@@ -1390,6 +1392,11 @@ llama-lookup-create: examples/lookup/lookup-create.cpp \
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
 
 ibd_hx_type: examples/ibd_hx_type/ibd_hx_type.cpp  \
+	$(OBJ_ALL)
+	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
+	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
+
+all_extraction: examples/all_extraction/all_extraction.cpp  \
 	$(OBJ_ALL)
 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)

@@ -114,11 +114,9 @@ struct gpt_params {
     struct llama_sampling_params sparams;
 
     std::string model                = ""; // model path
-    std::string promptFormat         = ""; // promptFormat to use for the ibd hx extraction
+    std::string promptFormat         = ""; // promptFormat to use (model-based)
     std::string outDir               = ""; // out dir to write out txt files
-    std::string systemPrompt         = ""; // systemPrompt set by user
-    std::string answerKey            = ""; // Path to txt file to be fed into R to evaluate the answers
-    std::string answerType           = "calYear"; // For IBD hx extraction, either calYear or duration. Default is calYear
+    std::string extractionType       = ""; // What to extract from the input files (CRC, crohn's hx, etc.)
     std::string model_draft          = "";  // draft model for speculative decoding
     std::string model_alias          = "unknown"; // model alias
     std::string model_url            = ""; // model url to download

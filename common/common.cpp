@@ -315,36 +315,20 @@ bool gpt_params_find_arg(int argc, char ** argv, const std::string & arg, gpt_pa
         params.promptStartingNumber = std::stoi(argv[i]);
         return true;
     }
+    if (arg == "--extractionType") {
+        if (++i >= argc) {
+            invalid_param = true;
+            return true;
+        }
+        params.extractionType = argv[i];
+        return true;
+    }
     if (arg == "--outDir") {
         if (++i >= argc) {
             invalid_param = true;
             return true;
         }
         params.outDir = argv[i];
-        return true;
-    }
-    if (arg == "--answerKey") {
-        if (++i >= argc) {
-            invalid_param = true;
-            return true;
-        }
-        params.answerKey = argv[i];
-        return true;
-    }
-    if (arg == "--systemPrompt") {
-        if (++i >= argc) {
-            invalid_param = true;
-            return true;
-        }
-        params.systemPrompt = argv[i];
-        return true;
-    }
-    if (arg == "--answerType") {
-        if (++i >= argc) {
-            invalid_param = true;
-            return true;
-        }
-        params.answerType = argv[i];
         return true;
     }
     if (arg == "-t" || arg == "--threads") {
@@ -1480,6 +1464,7 @@ void gpt_params_print_usage(int /*argc*/, char ** argv, const gpt_params & param
 
     options.push_back({ "general" });
     options.push_back({ "*",           "-h,    --help, --usage",        "print usage and exit" });
+    options.push_back({ "*",           "--extractionType",              "The type of extraction to do. Examples are: CRC, adv neoplasia, LGD, Crohn's/IBD hx" });
     options.push_back({ "*",           "       --version",              "show version and build info" });
     options.push_back({ "*",           "-v,    --verbose",              "print verbose information" });
     options.push_back({ "*",           "       --verbosity N",          "set specific verbosity level (default: %d)", params.verbosity });

@@ -372,9 +372,6 @@ int main(int argc, char ** argv) {
 
     std::vector<llama_token> tokens_system;
     std::string system = default_system;
-    if(!params.systemPrompt.empty()){
-        system = params.systemPrompt;
-    }
 
     // Write system prompt to the out file
     outFile2 << "System prompt: " << quoteAndEscape(system, true) << std::endl << std::endl; // Adding newline for separation in file
