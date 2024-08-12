@@ -56,6 +56,9 @@ int ggml_sve_cnt_b = 0;
 // disable POSIX deprecation warnings
 // these functions are never going away, anyway
 #pragma warning(disable: 4996)
+
+// unreachable code because of multiple instances of code after GGML_ABORT
+#pragma warning(disable: 4702)
 #endif
 
 #if defined(_WIN32)
@@ -3721,7 +3724,8 @@ static struct ggml_tensor * ggml_new_tensor_impl(
         struct ggml_tensor  * view_src,
         size_t                view_offs) {
 
-    assert(n_dims >= 1 && n_dims <= GGML_MAX_DIMS);
+    GGML_ASSERT(type >= 0 && type < GGML_TYPE_COUNT);
+    GGML_ASSERT(n_dims >= 1 && n_dims <= GGML_MAX_DIMS);
 
     // find the base tensor and absolute offset
     if (view_src != NULL && view_src->view_src != NULL) {
@@ -21125,7 +21129,7 @@ struct gguf_context * gguf_init_from_file(const char * fname, struct gguf_init_p
                 (int64_t) info->ne[2] *
                 (int64_t) info->ne[3];
 
-            if (ne % ggml_blck_size(info->type) != 0) {
+            if (ggml_blck_size(info->type) == 0 || ne % ggml_blck_size(info->type) != 0) {
                 fprintf(stderr, "%s: tensor '%s' of type %d (%s) number of elements (%" PRId64 ") is not a multiple of block size (%" PRId64 ")\n",
                         __func__, info->name.data, (int) info->type, ggml_type_name(info->type), ne, ggml_blck_size(info->type));
                 fclose(file);

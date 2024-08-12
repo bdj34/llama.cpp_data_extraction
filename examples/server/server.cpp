@@ -631,6 +631,7 @@ struct server_context {
 
     bool clean_kv_cache = true;
     bool add_bos_token  = true;
+    bool has_eos_token  = false;
 
     int32_t n_ctx; // total context for all clients / slots
 
@@ -693,7 +694,7 @@ struct server_context {
         n_ctx = llama_n_ctx(ctx);
 
         add_bos_token = llama_should_add_bos_token(model);
-        GGML_ASSERT(llama_add_eos_token(model) != 1);
+        has_eos_token = llama_add_eos_token(model) != 1;
 
         return true;
     }
@@ -975,6 +976,8 @@ struct server_context {
                 (prompt->is_array() &&  prompt->size() == 1 && prompt->at(0).is_string()) ||
                 (prompt->is_array() && !prompt->empty()     && prompt->at(0).is_number_integer())) {
                 slot.prompt = *prompt;
+            } else if (prompt->is_array() && prompt->size() == 1 && prompt->at(0).is_array()) {
+                slot.prompt = prompt->at(0);
             } else {
                 send_error(task, "\"prompt\" must be a string or an array of integers", ERROR_TYPE_INVALID_REQUEST);
                 return false;
@@ -1029,7 +1032,7 @@ struct server_context {
         {
             slot.sparams.logit_bias.clear();
 
-            if (json_value(data, "ignore_eos", false)) {
+            if (json_value(data, "ignore_eos", false) && has_eos_token) {
                 slot.sparams.logit_bias[llama_token_eos(model)] = -INFINITY;
             }
 
