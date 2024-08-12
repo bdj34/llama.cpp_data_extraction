@@ -1,50 +1,50 @@
 # Define the default target now so that it is always the first target
 BUILD_TARGETS = \
 	libllava.a \
-	llama-baby-llama \
-	llama-batched \
-	llama-batched-bench \
-	llama-bench \
-	llama-benchmark-matmult \
-	llama-cli \
-	llama-convert-llama2c-to-ggml \
-	llama-embedding \
-	llama-eval-callback \
-	llama-export-lora \
-	llama-gbnf-validator \
-	llama-gguf \
-	llama-gguf-hash \
-	llama-gguf-split \
-	llama-gritlm \
-	llama-imatrix \
-	llama-infill \
-	llama-llava-cli \
-	llama-minicpmv-cli\
-	llama-lookahead \
-	llama-lookup \
-	llama-lookup-create \
-	llama-lookup-merge \
-	llama-lookup-stats \
-	llama-parallel \
-	llama-passkey \
-	llama-perplexity \
-	llama-q8dot \
-	llama-quantize \
-	llama-quantize-stats \
-	llama-retrieval \
-	llama-save-load-state \
-	llama-server \
-	llama-simple \
-	llama-speculative \
-	llama-tokenize \
-	llama-vdot \
-	llama-cvector-generator \
 	ibd_hx_type \
 	ibd_hx_type_v2 \
 	crohns \
 	crc_extraction_parallel \
 	advNeoplasia \
 	tests/test-c.o
+	# llama-baby-llama \
+	# llama-batched \
+	# llama-batched-bench \
+	# llama-bench \
+	# llama-benchmark-matmult \
+	# llama-cli \
+	# llama-convert-llama2c-to-ggml \
+	# llama-embedding \
+	# llama-eval-callback \
+	# llama-export-lora \
+	# llama-gbnf-validator \
+	# llama-gguf \
+	# llama-gguf-hash \
+	# llama-gguf-split \
+	# llama-gritlm \
+	# llama-imatrix \
+	# llama-infill \
+	# llama-llava-cli \
+	# llama-minicpmv-cli\
+	# llama-lookahead \
+	# llama-lookup \
+	# llama-lookup-create \
+	# llama-lookup-merge \
+	# llama-lookup-stats \
+	# llama-parallel \
+	# llama-passkey \
+	# llama-perplexity \
+	# llama-q8dot \
+	# llama-quantize \
+	# llama-quantize-stats \
+	# llama-retrieval \
+	# llama-save-load-state \
+	# llama-server \
+	# llama-simple \
+	# llama-speculative \
+	# llama-tokenize \
+	# llama-vdot \
+	# llama-cvector-generator \
 
 # Binaries only useful for tests
 TEST_TARGETS = \
@@ -74,7 +74,7 @@ LEGACY_TARGETS_CLEAN = main quantize quantize-stats perplexity imatrix embedding
 
 # Legacy build targets that were renamed in #7809, but we want to build binaries that for them that output a deprecation warning if people try to use them.
 #  We don't want to clutter things too much, so we only build replacements for the most commonly used binaries.
-LEGACY_TARGETS_BUILD = main quantize perplexity embedding server
+LEGACY_TARGETS_BUILD = main #quantize perplexity embedding server
 
 # Deprecation aliases
 ifdef LLAMA_CUBLAS
