@@ -2,3 +2,4 @@ root ::= oneSentence yesNo
 untilNewline ::= " " [^\n^\t^{^<]{10,400} "\nAnswer: "
 oneSentence ::= " " [^\n^\t^{^<^.]{10,400} ".\nAnswer: "
 yesNo ::= ("Yes" | "No" )
+
