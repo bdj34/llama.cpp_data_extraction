@@ -37,9 +37,8 @@ make
 --temp 0 \
 --promptFormat llama3 \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
---grammar-file ./grammars/yesNo_explain.gbnf \
+--grammar-file ./grammars/yesNo_grammar.gbnf \
 --outDir ../testing_CRC_extraction_outDir \
---promptStartingNumber 14 \
 --file ../testing_data/pathNeg.txt
 
 # Llama 3.1 8B

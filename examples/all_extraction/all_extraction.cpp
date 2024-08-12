@@ -462,7 +462,7 @@ int main(int argc, char ** argv) {
 
     const auto t_main_start = ggml_time_us();
 
-    LOG_TEE("%s: YEP STILL WORKING: Simulating parallel requests from %d patients:\n", __func__, n_seq);
+    LOG_TEE("%s: Simulating parallel requests from %d patients:\n", __func__, n_seq);
     LOG_TEE("%s: n_parallel (number of simultaneous requests) = %d, cont_batching = %d, system tokens = %d\n", __func__, n_clients, cont_batching, n_tokens_system);
     LOG_TEE("\n");
 
