@@ -1,0 +1,65 @@
+# Run CPU job and build CPU
+cd ~/VA_IBD/llama.cpp
+make
+
+# Gemma2-9B
+./advNeoplasia \
+-m ~/Downloads/models_gguf/gemma2-9B_SPPO_f16.gguf \
+--sequences 16 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+--temp 0 \
+--promptFormat gemma2 \
+--promptStartingNumber 0 \
+--grammar-file ./grammars/yesNo_grammar.gbnf  \
+--outDir ../testing_advNeo_outDir \
+--file ../testing_data/pathNeg.txt
+
+# Mistral 7b F16
+./advNeoplasia \
+-m ~/Downloads/Mistral-7B-Instruct-v0.2_F16_brianConverted.gguf \
+--sequences 16 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+--temp 0 --color \
+--promptFormat mistral \
+--promptStartingNumber 0 \
+--grammar-file ./grammars/yesNo_grammar.gbnf \
+--outDir ../testing_CRC_extraction_outDir \
+--file ../testing_data/pathPos.txt
+
+# Llama 3 8B
+./advNeoplasia \
+-m /Users/brianjohnson/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
+--sequences 16 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
+--no-escape \
+-n 2000 \
+--n-gpu-layers 99 \
+--temp 0 \
+--promptFormat llama3 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--grammar-file ./grammars/yesNo_grammar.gbnf \
+--outDir ../testing_CRC_extraction_outDir \
+--file ../testing_data/pathPos.txt
+
+# Llama 3.1 8B
+./advNeoplasia \
+-m /Users/brianjohnson/Downloads/models_gguf/Meta-Llama-3.1-8B-Instruct-F16.gguf  \
+--sequences 16 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
+--no-escape \
+-n 2000 \
+--n-gpu-layers 99 \
+--temp 0 \
+--promptFormat llama3 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--grammar-file ./grammars/yesNo_grammar.gbnf \
+--outDir ../testing_CRC_extraction_outDir \
+--file ../testing_data/pathMaybe.txt
+
+# mixtral
+./advNeoplasia \
+-m /Users/brianjohnson/Downloads/mixtral-8x7b-v0.1.Q4_K_M.gguf \
+--sequences 16 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+--temp 0 --color \
+--promptFormat llama3 \
+--promptStartingNumber 0 \
+--grammar-file ./grammars/yesNo_grammar.gbnf \
+--outDir ../testing_CRC_extraction_outDir \
+--file ../testing_data/pathNeg.txt
+

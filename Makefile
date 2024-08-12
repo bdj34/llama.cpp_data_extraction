@@ -42,6 +42,7 @@ BUILD_TARGETS = \
 	ibd_hx_type_v2 \
 	crohns \
 	crc_extraction_parallel \
+	advNeoplasia \
 	tests/test-c.o
 
 # Binaries only useful for tests
@@ -1401,6 +1402,11 @@ crohns: examples/crohns/crohns.cpp  \
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
 
 crc_extraction_parallel: examples/crc_extraction_parallel/crc_extraction_parallel.cpp \
+	$(OBJ_ALL)
+	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
+	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
+
+advNeoplasia: examples/advNeoplasia/advNeoplasia.cpp \
 	$(OBJ_ALL)
 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
