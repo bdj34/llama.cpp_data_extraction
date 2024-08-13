@@ -2,6 +2,7 @@
 BUILD_TARGETS = \
 	libllava.a \
 	all_extraction \
+	llama-cli \
 	# tests/test-c.o \
 	# ibd_hx_type \
 	# ibd_hx_type_v2 \
@@ -13,7 +14,6 @@ BUILD_TARGETS = \
 	# llama-batched-bench \
 	# llama-bench \
 	# llama-benchmark-matmult \
-	# llama-cli \
 	# llama-convert-llama2c-to-ggml \
 	# llama-embedding \
 	# llama-eval-callback \
