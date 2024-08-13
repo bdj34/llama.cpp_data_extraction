@@ -18,11 +18,10 @@ std::string generatePreSystemPrompt(const std::string& promptFormat);
 std::string generatePostSystemPrompt(const std::string& promptFormat, const std::string& extractionDx);
 std::string generatePreAnswer(const std::string& promptFormat, const std::string& extractionDx);
 std::string formatSystemPrompt(const std::string& systemPrompt, const std::string& promptFormat, const std::string& extractionDx);
-std::string quoteAndEscape(const std::string& input, bool quote);
 std::string escapeNewLines(const std::string& input);
 std::string convertEscapedNewlines(const std::string& input);
 
-// trim whitespace from the beginning and end of a string
+// trim whitespace from the beginning and end of a string. Only used for printing 
 static std::string trim(const std::string & str) {
     size_t start = 0;
     size_t end = str.size();
@@ -53,9 +52,9 @@ std::string convertEscapedNewlines(const std::string& input) {
 
 std::vector<std::string> k_prompts;
 
-std::string crohns_system = "You are provided with snippets of medical notes for a patient who may have Crohn's colitis."
+std::string crohns_system = "You are provided with excerpts of medical notes for a patient who may have Crohn's colitis."
 " Your task is to determine whether they have Crohn's disease which affects the colon."
-" You are not a clinician. Do not make diagnostic judgments. Only extract information on diagnoses reported in the note."
+" You are not a clinician. Do not make diagnostic judgments. Only extract information on diagnoses reported in the notes."
 " First, provide a one sentence summary from the notes about the diagnosis."//and/or direct quotes from the notes about the diagnosis."
 " Then, answer Yes if there is evidence of Crohn's disease causing colitis or affecting the colon (Crohn's colitis), or No if there is no evidence of Crohn's colitis."
 " If the patient has Crohn's disease but there is no evidence that it affects their colon, answer No - Crohn's without colitis."
@@ -89,7 +88,7 @@ std::string advNeo_system =
 
 std::string generatePreSystemPrompt(const std::string& promptFormat) {
     if (promptFormat == "mistral") {
-        return " [INST] ";
+        return "[INST] "; // Not sure whether to include preceding space...
     } else if (promptFormat == "llama3") {
         return "<|start_header_id|>system<|end_header_id|>\n\n";
     } else if (promptFormat == "phi3") {
@@ -105,7 +104,7 @@ std::string generatePostSystemPrompt(const std::string& promptFormat, const std:
 
     std::string postSys;
     if (extractionDx == "crohns"){
-        postSys = "";
+        postSys = "Excerpts:\n";
     } else if (extractionDx == "crc" || extractionDx == "advNeo"){
         postSys = "<<<\nPathology report:\n";
     } else{
@@ -114,13 +113,13 @@ std::string generatePostSystemPrompt(const std::string& promptFormat, const std:
 
 
     if (promptFormat == "mistral") {
-        return "\n" + postSys;
+        return "\n\n" + postSys;
     } else if (promptFormat == "llama3") {
         return "<|eot_id|>\n<|start_header_id|>user<|end_header_id|>\n\n" + postSys;
     } else if (promptFormat == "phi3") {
-        return "\n" + postSys;
+        return "\n\n" + postSys;
     } else if (promptFormat == "gemma2") {
-        return "\n" + postSys;
+        return "\n\n" + postSys;
     } else {
         throw std::runtime_error("Error: prompt format not recognized. Recognized options are: gemma2, phi3, llama3, mistral.");
     }
@@ -128,7 +127,7 @@ std::string generatePostSystemPrompt(const std::string& promptFormat, const std:
 
 std::string crohns_question = "Question: Does the patient have Crohn's colitis?";
 std::string crc_question = ">>>\n\nDoes the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?";
-std::string advNeo_question = ">>>\n\nDoes the pathology report indicate that the patient has"
+std::string advNeo_question = ">>>\n\nQuestion: Does the pathology report indicate that the patient has"
 " high-grade dysplasia, high grade dysplasia, in-situ adenocarcinoma, adenocarcinoma in situ, intramucosal adenocarcinoma, adenocarcinoma, or invasive adenocarcinoma"
 " in any colon or rectal sample?";
 
@@ -155,9 +154,9 @@ std::string generatePreAnswer(const std::string& promptFormat, const std::string
     }
 
     if (promptFormat == "mistral") {
-        return "\n\n" + question + " [/INST] " + preAnswer;
+        return "\n" + question + " [/INST] " + preAnswer;
     } else if (promptFormat == "llama3") {
-        return "\n" + question + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n" + preAnswer;
+        return "\n" + question + "<|eot_id|>\n<|start_header_id|>assistant<|end_header_id|>\n\n" + preAnswer;
     } else if (promptFormat == "phi3") {
         return "\n" + question + "<|end|>\n<|assistant|>\n" + preAnswer;
     } else if (promptFormat == "gemma2") {
@@ -172,34 +171,6 @@ std::string formatSystemPrompt(const std::string& systemPrompt, const std::strin
     std::string postSystem = generatePostSystemPrompt(promptFormat, extractionDx);
 
     return prePrompt + systemPrompt + postSystem;
-}
-
-// Function to escape quotes, newlines, and tabs, and optionally enclosethe string in quotes
-std::string quoteAndEscape(const std::string& input, bool quote) {
-
-    std::string output;
-    if(quote){
-        output = "\"";  // Start with an opening quote
-    }
-    for (char ch : input) {
-        switch (ch) {
-            case '"':
-                output += "\"\"";  // Escape quotes by doubling them
-                break;
-            case '\n':
-                output += "\\n";   // Escape newlines
-                break;
-            case '\t':
-                output += "\\t";   // Escape tabs
-                break;
-            default:
-                output += ch;
-        }
-    }
-    if(quote){
-        output += "\"";  // End with a closing quote
-    }
-    return output;
 }
 
 std::string escapeNewLines(const std::string& input) {
@@ -697,15 +668,15 @@ int main(int argc, char ** argv) {
 
                     const auto t_main_end = ggml_time_us();
 
-                    LOG_TEE("\033[92mPatient: %s, sequence %3d of %3d, prompt: %4d tokens, response: %4d tokens, time: %5.2f seconds, speed %5.2f t/s, \033[0m \nInput:\n\033[96m%s\n\033[91m%s\033[0m\n",
+                    LOG_TEE("\033[92mPatient: %s, sequence %3d of %3d, prompt: %4d tokens, response: %4d tokens, time: %5.2f seconds, speed %5.2f t/s, \033[0m \n%s\033[96m%s\033[91m%s\033[0m\n",
                             client.ptID.c_str(), client.seq_id, n_seq, client.n_prompt, client.n_decoded,
                             (t_main_end - client.t_start_prompt) / 1e6,
                             (double) (client.n_prompt + client.n_decoded) / (t_main_end - client.t_start_prompt) * 1e6,
                             // n_cache_miss,
-                            //k_system.c_str(),
+                            k_system.c_str(),
                             //::trim(prompts[promptNumber]).c_str(),
-                            escapeNewLines(client.input).c_str(),
-                            ::trim(client.response).c_str());
+                            client.input.c_str(),
+                            client.response.c_str());
 
                     n_total_prompt += client.n_prompt;
                     n_total_gen    += client.n_decoded;
