@@ -50,6 +50,7 @@ build*
 !docs/build.md
 /libllama.so
 /llama-*
+/brian-*
 /vulkan-shaders-gen
 android-ndk-*
 arm_neon.h
