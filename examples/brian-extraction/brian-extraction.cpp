@@ -668,14 +668,14 @@ int main(int argc, char ** argv) {
 
                     const auto t_main_end = ggml_time_us();
 
-                    LOG_TEE("\033[92mPatient: %s, sequence %3d of %3d, prompt: %4d tokens, response: %4d tokens, time: %5.2f seconds, speed %5.2f t/s, \033[0m \n%s\033[96m%s\033[91m%s\033[0m\n",
+                    LOG_TEE("\033[92mPatient: %s, sequence %3d of %3d, prompt: %4d tokens, response: %4d tokens, time: %5.2f seconds, speed %5.2f t/s, \033[0m \nInput:\n\033[96m%s\n\033[91m%s\033[0m\n",
                             client.ptID.c_str(), client.seq_id, n_seq, client.n_prompt, client.n_decoded,
                             (t_main_end - client.t_start_prompt) / 1e6,
                             (double) (client.n_prompt + client.n_decoded) / (t_main_end - client.t_start_prompt) * 1e6,
                             // n_cache_miss,
-                            k_system.c_str(),
+                            //k_system.c_str(),
                             //::trim(prompts[promptNumber]).c_str(),
-                            client.input.c_str(),
+                            escapeNewLines(client.input).c_str(),
                             client.response.c_str());
 
                     n_total_prompt += client.n_prompt;
