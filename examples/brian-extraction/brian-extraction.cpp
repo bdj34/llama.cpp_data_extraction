@@ -537,9 +537,9 @@ int main(int argc, char ** argv) {
                     client.i_batch   = batch.n_tokens - 1;
 
                     if(params.patient_file.empty()){
-                        LOG_TEE("\n\033[0mClient %3d, seq %4d, started decoding ...\033[0m\n", client.id, client.seq_id);
+                        LOG_TEE("\n\n\033[0mClient %3d, seq %4d, started decoding ...\033[0m\n", client.id, client.seq_id);
                     }else{
-                        LOG_TEE("\n\033[0mClient %3d, Patient %s, seq %4d, started decoding ...\033[0m\n", client.id, client.ptID.c_str(), client.seq_id);
+                        LOG_TEE("\n\n\033[0mClient %3d, Patient %s, seq %4d, started decoding ...\033[0m\n", client.id, client.ptID.c_str(), client.seq_id);
                     }
                     
                     g_seq_id += 1;
@@ -668,15 +668,15 @@ int main(int argc, char ** argv) {
 
                     const auto t_main_end = ggml_time_us();
 
-                    LOG_TEE("\033[92mPatient: %s, sequence %3d of %3d, prompt: %4d tokens, response: %4d tokens, time: %5.2f seconds, speed %5.2f t/s, \033[0m \nInput:\n\033[96m%s\n\033[91m%s\033[0m\n",
+                    LOG_TEE("\033[0m \nInput:\n\033[96m%s\n\033[91m%s\033[0m\n\033[92mJust completed: Patient: %s, sequence %3d of %3d, prompt: %4d tokens, response: %4d tokens, time: %5.2f seconds, speed %5.2f t/s",
+                            escapeNewLines(client.input).c_str(),
+                            client.response.c_str(),
                             client.ptID.c_str(), client.seq_id, n_seq, client.n_prompt, client.n_decoded,
                             (t_main_end - client.t_start_prompt) / 1e6,
-                            (double) (client.n_prompt + client.n_decoded) / (t_main_end - client.t_start_prompt) * 1e6,
+                            (double) (client.n_prompt + client.n_decoded) / (t_main_end - client.t_start_prompt) * 1e6);
                             // n_cache_miss,
                             //k_system.c_str(),
-                            //::trim(prompts[promptNumber]).c_str(),
-                            escapeNewLines(client.input).c_str(),
-                            client.response.c_str());
+                            //::trim(prompts[promptNumber]).c_str());
 
                     n_total_prompt += client.n_prompt;
                     n_total_gen    += client.n_decoded;
