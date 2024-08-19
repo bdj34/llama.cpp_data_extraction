@@ -6,7 +6,7 @@ make
 ./brian-extraction \
 -m ~/Downloads/models_gguf/gemma2-9B_SPPO_f16.gguf \
 --extractionType advNeo \
---sequences 1 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+--sequences 16 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
 --temp 0 \
 --promptStartingNumber 0 \
 --grammar-file ./grammars/yesNo_grammar.gbnf  \
@@ -16,20 +16,19 @@ make
 --promptFormat gemma2
 
 # Mistral 7b F16
-./advNeoplasia \
+./brian-extraction --extractionType advNeo \
 -m ~/Downloads/Mistral-7B-Instruct-v0.2_F16_brianConverted.gguf \
 --sequences 16 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
---temp 0 --color \
+--temp 0 \
 --promptFormat mistral \
 --promptStartingNumber 0 \
 --grammar-file ./grammars/yesNo_grammar.gbnf \
 --outDir ../testing_CRC_extraction_outDir \
---file ../testing_data/pathPos.txt
+--file ../testing_data/pathNeg.txt
 
 # Llama 3 8B
-./all_extraction \
+./brian-extraction --extractionType advNeo \
 -m /Users/brianjohnson/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
---extractionType advNeo \
 --sequences 16 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
 --no-escape \
 -n 2000 \
@@ -42,7 +41,7 @@ make
 --file ../testing_data/pathNeg.txt
 
 # Llama 3.1 8B
-./advNeoplasia \
+./brian-extraction --extractionType advNeo \
 -m /Users/brianjohnson/Downloads/models_gguf/Meta-Llama-3.1-8B-Instruct-F16.gguf  \
 --sequences 16 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
 --no-escape \
@@ -53,10 +52,10 @@ make
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
 --grammar-file ./grammars/yesNo_grammar.gbnf \
 --outDir ../testing_CRC_extraction_outDir \
---file ../testing_data/pathMaybe.txt
+--file ../testing_data/pathPos.txt
 
 # mixtral
-./advNeoplasia \
+./brian-extraction --extractionType advNeo \
 -m /Users/brianjohnson/Downloads/mixtral-8x7b-v0.1.Q4_K_M.gguf \
 --sequences 16 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
 --temp 0 --color \
@@ -64,5 +63,5 @@ make
 --promptStartingNumber 0 \
 --grammar-file ./grammars/yesNo_grammar.gbnf \
 --outDir ../testing_CRC_extraction_outDir \
---file ../testing_data/pathNeg.txt
+--file ../testing_data/pathPos.txt
 

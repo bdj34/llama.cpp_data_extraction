@@ -83,7 +83,7 @@ std::string advNeo_system =
 "The text provided is a pathology report, with samples originating from the colon or rectum unless specified otherwise."
 " Answer yes or no to the following question, matching the format 'Answer: Yes' or 'Answer: No'. Then, explain your reasoning."
 " Does the pathology report indicate that the patient has"
-" high-grade dysplasia, high grade dysplasia, in-situ adenocarcinoma, adenocarcinoma in situ, intramucosal adenocarcinoma, adenocarcinoma, or invasive adenocarcinoma"
+" high-grade dysplasia or adenocarcinoma (including in-situ adenocarcinoma)"
 " in any colon or rectal sample?";
 
 std::string generatePreSystemPrompt(const std::string& promptFormat) {
@@ -127,9 +127,9 @@ std::string generatePostSystemPrompt(const std::string& promptFormat, const std:
 
 std::string crohns_question = "Question: Does the patient have Crohn's colitis?";
 std::string crc_question = ">>>\n\nDoes the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?";
-std::string advNeo_question = ">>>\n\nQuestion: Does the pathology report indicate that the patient has"
-" high-grade dysplasia, high grade dysplasia, in-situ adenocarcinoma, adenocarcinoma in situ, intramucosal adenocarcinoma, adenocarcinoma, or invasive adenocarcinoma"
-" in any colon or rectal sample?";
+std::string advNeo_question = ">>>\n\nDoes the pathology report indicate that the patient has"
+" high-grade dysplasia or adenocarcinoma (including in-situ adenocarcinoma)"
+" in the colon or rectum?";
 
 std::string crohns_preAnswer = "Summary from notes:";
 std::string crc_preAnswer = "Answer:";
@@ -669,7 +669,8 @@ int main(int argc, char ** argv) {
                     const auto t_main_end = ggml_time_us();
 
                     LOG_TEE("\033[0m \nInput:\n\033[96m%s\n\033[91m%s\033[0m\n\033[92mJust completed: Patient: %s, sequence %3d of %3d, prompt: %4d tokens, response: %4d tokens, time: %5.2f seconds, speed %5.2f t/s",
-                            escapeNewLines(client.input).c_str(),
+                            //escapeNewLines(client.input).c_str(),
+                            client.input.c_str(),
                             client.response.c_str(),
                             client.ptID.c_str(), client.seq_id, n_seq, client.n_prompt, client.n_decoded,
                             (t_main_end - client.t_start_prompt) / 1e6,
@@ -677,6 +678,9 @@ int main(int argc, char ** argv) {
                             // n_cache_miss,
                             //k_system.c_str(),
                             //::trim(prompts[promptNumber]).c_str());
+                    
+                    LOG_TEE("\nJust completed Patient: %s",
+                        client.ptID.c_str());
 
                     n_total_prompt += client.n_prompt;
                     n_total_gen    += client.n_decoded;
