@@ -115,6 +115,21 @@
 --file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
 
 
+# Phi 3.5 Mini
+./brian-extraction --extractionType crohns \
+-m /Users/brianjohnson/Downloads/models_gguf/Phi-3.5-mini-instruct-F16.gguf \
+--sequences 38 --parallel 1 --cont-batching --batch-size 2048 --ctx-size 4096 \
+--no-escape \
+-n 2000 \
+--n-gpu-layers 99 \
+--temp 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/crohns_mixtral \
+--grammar-file ./grammars/crohns.gbnf \
+--promptFormat gemma2 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+
 # Mixtral
 ./crohns \
 -m /Users/brianjohnson/Downloads/mixtral-8x7b-v0.1.Q4_K_M.gguf \

@@ -15,6 +15,18 @@ make
 --file ../testing_data/pathNeg.txt \
 --promptFormat gemma2
 
+# Phi 3.5 Mini
+./brian-extraction --extractionType advNeo \
+-m /Users/brianjohnson/Downloads/models_gguf/Phi-3.5-mini-instruct-F16.gguf \
+--sequences 16 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+--temp 0 \
+--promptStartingNumber 0 \
+--grammar-file ./grammars/yesNo_grammar.gbnf  \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../testing_advNeo_outDir \
+--file ../testing_data/pathPos.txt \
+--promptFormat phi3
+
 # Mistral 7b F16
 ./brian-extraction --extractionType advNeo \
 -m ~/Downloads/Mistral-7B-Instruct-v0.2_F16_brianConverted.gguf \
