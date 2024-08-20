@@ -1,6 +1,13 @@
 root ::= untilNewline yesNoConf "\nPathology or endoscopy confirmed: " yesNo "\nExact diagnosis date stated: " yesNoYear
 
-yesNoConf ::= "Answer: " ("Yes - Crohn's with confirmed colitis" | "Yes - Crohn's with possible colitis" | "Undecided between UC and Crohn's" | "yes" | "no" | "No" | "No - neither Crohn's nor UC" | "No - Crohn's without colitis" | "No - UC" | "Insufficient information" | "insufficient information" | "Unknown" | "'Unknown'" | "unknown") ". Confidence: " confidence
+yesNoConf ::= "Answer: " ("Yes - Crohn's with confirmed colitis" | "Yes - Crohn's with possible colitis" | 
+"No - colitis not otherwise specified" | "No - Radiation proctitis" | "No - Ischemic colitis" |
+"No - Infectious colitis" | "No - C diff colitis" | "No - Collagenous colitis" | "No - Lymphocytic colitis" |
+"No - Microscopic colitis" | "No - Drug-induced colitis" | "No - Chemical colitis" | "No - Diversion colitis" | "No - Unspecified colitis" |
+"Undecided between UC and Crohn's" | "yes" | "no" | "No" | "No - neither Crohn's nor UC" | "No - Crohn's without colitis" | 
+"No - UC" | "Insufficient information" | "insufficient information" | "Unknown" | "'Unknown'" | "unknown") 
+". Confidence: " confidence
+
 yesNo ::= ("Yes" | "No" )
 yesNoYear ::= (("Yes\nYear of diagnosis: " fourdigityear) | "No" )
 
