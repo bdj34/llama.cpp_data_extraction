@@ -5,8 +5,7 @@ yesNoConf ::= "Answer: " ("Yes - Crohn's with confirmed colitis" | "Yes - Crohn'
 "No - Infectious colitis" | "No - C diff colitis" | "No - Collagenous colitis" | "No - Lymphocytic colitis" |
 "No - Microscopic colitis" | "No - Drug-induced colitis" | "No - Chemical colitis" | "No - Diversion colitis" | "No - Unspecified colitis" |
 "Undecided between UC and Crohn's" | "yes" | "no" | "No" | "No - neither Crohn's nor UC" | "No - Crohn's without colitis" | 
-"No - UC" | "Insufficient information" | "insufficient information" | "Unknown" | "'Unknown'" | "unknown") 
-". Confidence: " confidence
+"No - UC" | "Insufficient information" | "insufficient information" | "Unknown" | "'Unknown'" | "unknown") ". Confidence: " confidence
 
 yesNo ::= ("Yes" | "No" )
 yesNoYear ::= (("Yes\nYear of diagnosis: " fourdigityear) | "No" )

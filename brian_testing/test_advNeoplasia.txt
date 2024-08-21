@@ -6,8 +6,8 @@ make
 ./brian-extraction \
 -m ~/Downloads/models_gguf/gemma2-9B_SPPO_f16.gguf \
 --extractionType advNeo \
---sequences 16 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
---temp 0 \
+--sequences 16 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 0 --ctx-size 20000 \
+--temp 0 --threads 4 \
 --promptStartingNumber 0 \
 --grammar-file ./grammars/yesNo_grammar.gbnf  \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
