@@ -141,7 +141,7 @@ std::string advNeo_question = ">>>\n\nDoes the pathology report indicate that th
 " adenocarcinoma or high-grade dysplasia"
 " in the colon or rectum?";
 std::string lgd_question = ">>>\n\nDoes the pathology report indicate that the patient has"
-" adenocarcinoma or dysplasia of any grade"
+" adenocarcinoma, adenomatous lesions, or dysplasia of any grade"
 " in the colon or rectum?";
 
 std::string crohns_preAnswer = "Summary from notes:";
