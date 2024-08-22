@@ -91,7 +91,7 @@ std::string lgd_system =
 "The text provided is a pathology report, with samples originating from the colon or rectum unless specified otherwise."
 " Answer yes or no to the following question, matching the format 'Answer: Yes' or 'Answer: No'. Then, explain your reasoning."
 " Does the pathology report indicate that the patient has"
-" adenocarcinoma or dysplasia of any grade"
+" adenocarcinoma, adenomatous lesions, or dysplasia of any grade"
 " in any colon or rectal sample?";
 
 
