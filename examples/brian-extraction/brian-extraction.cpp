@@ -87,6 +87,15 @@ std::string advNeo_system =
 " adenocarcinoma (including in-situ or intramucosal adenocarcinoma) or high-grade dysplasia"
 " in any colon or rectal sample?";
 
+std::string lgd_system = 
+"The text provided is a pathology report, with samples originating from the colon or rectum unless specified otherwise."
+" Answer yes or no to the following question, matching the format 'Answer: Yes' or 'Answer: No'. Then, explain your reasoning."
+" Does the pathology report indicate that the patient has"
+" dysplasia of any grade or adenocarcinoma of any stage, including intramucosal and in-situ adenocarcinoma,"
+" in any colon or rectal sample?";
+
+
+
 std::string generatePreSystemPrompt(const std::string& promptFormat) {
     if (promptFormat == "mistral") {
         return "[INST] "; // Not sure whether to include preceding space...
@@ -106,7 +115,7 @@ std::string generatePostSystemPrompt(const std::string& promptFormat, const std:
     std::string postSys;
     if (extractionDx == "crohns"){
         postSys = "Excerpts:\n";
-    } else if (extractionDx == "crc" || extractionDx == "advNeo"){
+    } else if (extractionDx == "crc" || extractionDx == "advNeo" || extractionDx == "lgd"){
         postSys = "<<<\nPathology report:\n";
     } else{
         throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, crohns, advNeo. lgd coming soon.");
@@ -131,10 +140,12 @@ std::string crc_question = ">>>\n\nDoes the pathology report indicate that the p
 std::string advNeo_question = ">>>\n\nDoes the pathology report indicate that the patient has"
 " adenocarcinoma (including in-situ or intramucosal adenocarcinoma) or high-grade dysplasia"
 " in the colon or rectum?";
+std::string lgd_question = ">>>\n\nDoes the pathology report indicate that the patient has"
+" adenocarcinoma (including in-situ or intramucosal adenocarcinoma) or dysplasia of any grade"
+" in the colon or rectum?";
 
 std::string crohns_preAnswer = "Summary from notes:";
-std::string crc_preAnswer = "Answer:";
-std::string advNeo_preAnswer = "Answer:";
+std::string yesNo_preAnswer = "Answer:";
 
 std::string generatePreAnswer(const std::string& promptFormat, const std::string& extractionDx) {
 
@@ -146,11 +157,14 @@ std::string generatePreAnswer(const std::string& promptFormat, const std::string
         preAnswer = crohns_preAnswer;
     } else if (extractionDx == "crc"){
         question = crc_question;
-        preAnswer = crc_preAnswer;
+        preAnswer = yesNo_preAnswer;
     } else if(extractionDx == "advNeo"){
         question = advNeo_question;
-        preAnswer = advNeo_preAnswer;
-    }else{
+        preAnswer = yesNo_preAnswer;
+    } else if(extractionDx == "lgd"){
+        question = lgd_question;
+        preAnswer = yesNo_preAnswer;
+    } else{
         throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, crohns, advNeo. lgd coming soon.");
     }
 
@@ -257,7 +271,9 @@ int main(int argc, char ** argv) {
         system = crc_system;
     } else if(params.extractionType == "advNeo"){
         system = advNeo_system;
-    }else{
+    } else if(params.extractionType == "lgd"){
+        system = lgd_system;
+    } else{
         throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, crohns, advNeo. lgd coming soon.");
     }
 
