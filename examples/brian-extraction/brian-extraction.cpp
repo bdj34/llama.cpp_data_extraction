@@ -70,7 +70,7 @@ std::string crohns_system = "You are provided with excerpts of medical notes for
 "Summary from notes: {One sentence summary from the notes}\n"
 "Answer: {Your answer}. Confidence: {Low, Medium, High, or Certain}\n"
 "Pathology or endoscopy confirmed: {Yes or No}\n"
-"Exact diagnosis date stated: {Yes or No}";
+"Exact date of original colitis diagnosis stated: {Yes or No}";
 
 std::string crc_system = 
 "The text provided is a pathology report, with samples originating from the colon or rectum unless specified otherwise."
