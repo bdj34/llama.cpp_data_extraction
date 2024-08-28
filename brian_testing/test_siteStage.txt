@@ -8,7 +8,7 @@
 --grammar-file ./grammars/siteStage.gbnf  \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
 --outDir ../testing_siteStage_outDir \
---file ../testing_data/pathPos.txt \
+--file ../testing_data/pathMaybe.txt \
 --promptFormat gemma2
 
 # Llama3-8B

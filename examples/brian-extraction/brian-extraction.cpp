@@ -81,15 +81,14 @@ std::string crc_system =
 " Does the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?";
 
 std::string siteStage_system =
-"The text provided is a pathology report diagnosing adenocarcinoma or high grade dysplasia (HGD) in the colon or rectum."
-" Determine the TNM stage of the primary colorectal cancer. If it is high grade dysplasia and not colorectal cancer, mark the stage as HGD."
-" Consider HGD, intramucosal carcinoma and carcinoma in-situ to be distinct stages."
-" Also determine the site of the cancer or the distance from the anal verge, in cm."
+"The text provided is a pathology report diagnosing adenocarcinoma in the colon or rectum."
+" Determine the TNM stage of the colorectal adenocarcinoma. If it is high grade dysplasia or noninvasive, mark the stage as Not Invasive."
+" Also determine the site of the cancer or the distance in cm."
 " If the stage of the cancer is not clear, mark it as Unknown." //Alternatively, provide the minimum stage, such as 1+, 2+, or 3+."
 " If the site it not clear, mark it as Unknown or Unspecified colon."
 " Format your answer as follows:\n"
 "Site: {Primary tumor site}\n"
-"Stage: {TNM stage or HGD}";
+"Stage: {TNM stage or Unknown}";
 
 std::string advNeo_system = 
 "The text provided is a pathology report, with samples originating from the colon or rectum unless specified otherwise."
