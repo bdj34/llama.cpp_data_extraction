@@ -8,12 +8,12 @@
 --grammar-file ./grammars/siteStage.gbnf  \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
 --outDir ../testing_siteStage_outDir \
---file ../testing_data/pathMaybe.txt \
+--file ../testing_data/pathPos.txt \
 --promptFormat gemma2
 
 # Llama3-8B
 ./brian-extraction \
--m ~/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
+-m /Users/brianjohnson/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
 --extractionType siteStage \
 --sequences 16 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
 --temp 0 --threads 4 \

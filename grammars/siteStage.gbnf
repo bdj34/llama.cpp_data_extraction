@@ -1,4 +1,4 @@
-root ::= site "\nStage:" stage
+root ::= site "\nStage:" stage "\nGrade:" grade
 
 cm ::= " " measurement "cm"
 measurement ::= oneDigit | twoDigits
@@ -12,9 +12,10 @@ site ::= (" Ileum" | " Ascending colon" | " Descending colon" | " Transverse col
 " Ileocecal valve" | " Hepatic flexure" | " Splenic flexure" | " Rectum" | " Anus" | 
 " Unknown")
 
-stage ::= ((" T" tStage " N" nStage " M" mStage | " Unknown") "\nGrade:" grade | " Not Invasive")
-# " Unknown (invasive)" | " Unknown (noninvasive)" | " Unknown (intramucosal)" | 
-# " Unknown (in-situ) | " HGD" | " Carcinoma in-situ" | " Intramucosal carcinoma" )
+stage ::= (" T" tStage " N" nStage " M" mStage |
+" pT" tStage " N" nStage " M" mStage |
+ " Unknown")
+
 
 tStage ::= ("is" | "1" | "2" | "3" | "4a" | "4b" | "1+" | "2+" | "3+")
 nStage ::= ("0" | "1a" | "1b" | "1c" | "2a" | "2b" | "X" | "x" )
