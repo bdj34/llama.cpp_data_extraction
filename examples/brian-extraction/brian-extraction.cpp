@@ -80,6 +80,17 @@ std::string crc_system =
 " Answer yes or no to the following question, matching the format 'Answer: Yes' or 'Answer: No'. Then, explain your reasoning."
 " Does the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?";
 
+std::string siteStage_system =
+"The text provided is a pathology report diagnosing adenocarcinoma or high grade dysplasia (HGD) in the colon or rectum."
+" Determine the TNM stage of the primary colorectal cancer. If it is high grade dysplasia and not colorectal cancer, mark the stage as HGD."
+" Consider HGD, intramucosal carcinoma and carcinoma in-situ to be distinct stages."
+" Also determine the site of the cancer or the distance from the anal verge, in cm."
+" If the stage of the cancer is not clear, mark it as Unknown." //Alternatively, provide the minimum stage, such as 1+, 2+, or 3+."
+" If the site it not clear, mark it as Unknown or Unspecified colon."
+" Format your answer as follows:\n"
+"Site: {Primary tumor site}\n"
+"Stage: {TNM stage or HGD}";
+
 std::string advNeo_system = 
 "The text provided is a pathology report, with samples originating from the colon or rectum unless specified otherwise."
 " Answer yes or no to the following question, matching the format 'Answer: Yes' or 'Answer: No'. Then, explain your reasoning."
@@ -115,7 +126,7 @@ std::string generatePostSystemPrompt(const std::string& promptFormat, const std:
     std::string postSys;
     if (extractionDx == "crohns"){
         postSys = "Excerpts:\n";
-    } else if (extractionDx == "crc" || extractionDx == "advNeo" || extractionDx == "lgd"){
+    } else if (extractionDx == "crc" || extractionDx == "advNeo" || extractionDx == "lgd" || extractionDx == "siteStage"){
         postSys = "<<<\nPathology report:\n";
     } else{
         throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, crohns, advNeo. lgd coming soon.");
@@ -137,6 +148,7 @@ std::string generatePostSystemPrompt(const std::string& promptFormat, const std:
 
 std::string crohns_question = "Question: Does the patient have Crohn's colitis?";
 std::string crc_question = ">>>\n\nDoes the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?";
+std::string siteStage_question = ">>>";
 std::string advNeo_question = ">>>\n\nDoes the pathology report indicate that the patient has"
 " adenocarcinoma or high-grade dysplasia"
 " in the colon or rectum?";
@@ -146,6 +158,7 @@ std::string lgd_question = ">>>\n\nDoes the pathology report indicate that the p
 
 std::string crohns_preAnswer = "Summary from notes:";
 std::string yesNo_preAnswer = "Answer:";
+std::string siteStage_preAnswer = "Site:";
 
 std::string generatePreAnswer(const std::string& promptFormat, const std::string& extractionDx) {
 
@@ -164,6 +177,9 @@ std::string generatePreAnswer(const std::string& promptFormat, const std::string
     } else if(extractionDx == "lgd"){
         question = lgd_question;
         preAnswer = yesNo_preAnswer;
+    } else if(extractionDx == "siteStage"){
+        question = siteStage_question;
+        preAnswer = siteStage_preAnswer;
     } else{
         throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, crohns, advNeo. lgd coming soon.");
     }
@@ -273,6 +289,8 @@ int main(int argc, char ** argv) {
         system = advNeo_system;
     } else if(params.extractionType == "lgd"){
         system = lgd_system;
+    } else if(params.extractionType == "siteStage"){
+        system = siteStage_system;
     } else{
         throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, crohns, advNeo. lgd coming soon.");
     }

@@ -1,0 +1,24 @@
+root ::= site "\nStage:" stage "\nGrade:" grade
+
+cm ::= " " measurement "cm"
+measurement ::= oneDigit | twoDigits
+oneDigit ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+twoDigits ::= oneDigit digit
+digit ::= "0" | oneDigit
+
+site ::= (" Ileum" | " Ascending colon" | " Descending colon" | " Transverse colon" | " Cecum" |
+" Unspecified colon" | " Rectosigmoid junction" | " Sigmoid colon" |
+" Right colon" | " Left colon" | cm |
+" Ileocecal valve" | " Hepatic flexure" | " Splenic flexure" | " Rectum" | " Anus" | 
+" Unknown")
+
+stage ::= (" T" tStage "N" nStage "M" mStage | " HGD" | " Unknown" | " Carcinoma in-situ" | " Intramucosal carcinoma" |
+" Unknown (invasive)" | " Unknown (noninvasive)" | " Unknown (intramucosal)" | " Unknown (in-situ)")
+
+tStage ::= ("is" | "1" | "2" | "3" | "4a" | "4b" | "1+" | "2+" | "3+")
+nStage ::= ("0" | "1a" | "1b" | "1c" | "2a" | "2b" | "X" | "x" )
+mStage ::= ("0" | "1a" | "1b" | "1c" | "X" | "x")
+
+grade ::= (((" Well-" | " Moderately " | " Poorly " | " Un") "differentiated") | " Unknown")
+
+
