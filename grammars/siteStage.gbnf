@@ -24,3 +24,5 @@ mStage ::= ("0" | "1a" | "1b" | "1c" | "X" | "x")
 grade ::= (((" Well-" | " Moderately " | " Poorly " | " Un") "differentiated") | " Unknown")
 
 
+# ajcc ::= ("0" | "I" | "II" | "III" | "IV" | "Unknown")
+
