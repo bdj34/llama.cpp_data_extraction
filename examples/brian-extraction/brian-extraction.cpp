@@ -20,6 +20,55 @@ std::string generatePreAnswer(const std::string& promptFormat, const std::string
 std::string formatSystemPrompt(const std::string& systemPrompt, const std::string& promptFormat, const std::string& extractionDx);
 std::string escapeNewLines(const std::string& input);
 std::string convertEscapedNewlines(const std::string& input);
+std::string addFieldToJsonArray(const std::string& jsonArray, const std::string& newFieldName, const std::string& newFieldValue);
+
+// Function to add a field to each entry of the JSON array
+std::string addFieldToJsonArray(const std::string& jsonArray, const std::string& newFieldName, const std::string& newFieldValue) {
+    std::string result;
+    size_t pos = 0;
+    bool firstEntry = true;
+
+    while (pos != std::string::npos) {
+        // Find the end of the next JSON object
+        size_t endPos = jsonArray.find('}', pos);
+
+        if (endPos == std::string::npos) {
+            break; // No more entries
+        }
+
+        // Extract the JSON object
+        std::string jsonObject = jsonArray.substr(pos, endPos - pos + 1);
+
+        // Add new field before the closing '}'
+        if (jsonObject.back() == '}') {
+            // Remove the last closing brace '}'
+            jsonObject.pop_back();
+
+            // Add comma if this is not an empty object
+            if (jsonObject.length() > 1) {
+                jsonObject += ",";
+            }
+
+            // Add the new field
+            jsonObject += "\"" + newFieldName + "\":\"" + newFieldValue + "\"}";
+
+            // Handle the comma separation between array entries
+            // if (!firstEntry) {
+            //     result += ",";
+            // }
+
+            // Append the modified object to the result
+            result += jsonObject;
+        }
+
+        // Move the position past this object
+        pos = endPos + 1;
+        firstEntry = false;
+    }
+
+    // Wrap the result in array brackets
+    return result;
+}
 
 // trim whitespace from the beginning and end of a string. Only used for printing 
 static std::string trim(const std::string & str) {
@@ -104,6 +153,59 @@ std::string lgd_system =
 " any type of adenoma, adenomatous/dysplastic lesion(s), or dysplasia of any grade"
 " in any colon or rectal sample?";
 
+std::string lgdClass_system = R"(The text provided is a pathology report diagnosing dysplasia or adenoma.
+Classify the adenoma(s) or dysplastic lesions into a JSON format with the following fields: "description" "lesion_type", "sample_ID", "indication", "location", "size_mm", "morphology", "dysplasia_grade", "background_colitis_inflammation", and "multifocal".
+If there is no adenoma or dysplasia, fill each field with "NULL". Only annotate/classify the samples that are adenoma and/or dysplasia from the colon or rectum!
+
+Format each entry as follows:
+
+[
+  {
+    "description": "<description of adenoma/dysplasia or NULL>",
+    "lesion_type": "<type of lesion>",
+    "sample_ID": "<letter or number identifying the adenoma or dysplastic lesion>",
+    "indication": "<why was the biopsy taken>",
+    "location": "<location of lesion>",
+    "size_mm": "<size in mm or null if not applicable>",
+    "shape": "<shape of lesion>",
+    "dysplasia_grade": "<grade of dysplasia>",
+    "background_colitis_inflammation": "<description of background colitis or inflammation>"
+    "multifocal": "<yes, no, or unknown>"
+  }
+]
+
+Example input:
+- A. Tubular adenomas (x2), ascending colon, 5 mm, tubular architecture, smooth surface, tan color, no background colitis or inflammation.
+- #3. Invisible dysplasia, random biopsy from descending colon, not visible on endoscopy, low-grade dysplasia, moderate chronic inflammation.
+
+Expected output:
+[
+  {
+    "description": "5mm tubular adenoma in ascending colon",
+    "lesion_type": "tubular adenoma",
+    "sample_ID": "A",
+    "indication": "polyp",
+    "location": "ascending colon",
+    "size_mm": "5",
+    "shape": "polypoid",
+    "dysplasia_grade": "low grade",
+    "background_colitis_inflammation": "none",
+    "multifocal": "yes"
+  },
+  {
+    "description": "invisible dysplasia from a random biopsy of the descending colon with background inflammation",
+    "lesion_type": "invisible dysplasia",
+    "sample_ID": "3",
+    "indication": "random biopsy",
+    "location": "descending colon",
+    "size_mm": "null",
+    "shape": "invisible",
+    "dysplasia_grade": "low grade",
+    "background_colitis_inflammation": "moderate chronic inflammation",
+    "multifocal": "unknown"
+  }
+])";
+
 
 
 std::string generatePreSystemPrompt(const std::string& promptFormat) {
@@ -125,7 +227,7 @@ std::string generatePostSystemPrompt(const std::string& promptFormat, const std:
     std::string postSys;
     if (extractionDx == "crohns"){
         postSys = "Excerpts:\n";
-    } else if (extractionDx == "crc" || extractionDx == "advNeo" || extractionDx == "lgd" || extractionDx == "siteStage"){
+    } else if (extractionDx == "crc" || extractionDx == "advNeo" || extractionDx == "lgd" || extractionDx == "siteStage" || extractionDx == "lgdClass"){
         postSys = "<<<\nPathology report:\n";
     } else{
         throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, crohns, advNeo. lgd coming soon.");
@@ -148,6 +250,7 @@ std::string generatePostSystemPrompt(const std::string& promptFormat, const std:
 std::string crohns_question = "Question: Does the patient have Crohn's colitis?";
 std::string crc_question = ">>>\n\nDoes the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?";
 std::string siteStage_question = ">>>";
+std::string lgdClass_question = ">>>";
 std::string advNeo_question = ">>>\n\nDoes the pathology report indicate that the patient has"
 " adenocarcinoma or high-grade dysplasia"
 " in the colon or rectum?";
@@ -158,6 +261,7 @@ std::string lgd_question = ">>>\n\nDoes the pathology report indicate that the p
 std::string crohns_preAnswer = "Summary from notes:";
 std::string yesNo_preAnswer = "Answer:";
 std::string siteStage_preAnswer = "Site:";
+std::string lgdClass_preAnswer = "[";
 
 std::string generatePreAnswer(const std::string& promptFormat, const std::string& extractionDx) {
 
@@ -179,6 +283,9 @@ std::string generatePreAnswer(const std::string& promptFormat, const std::string
     } else if(extractionDx == "siteStage" || extractionDx == "siteAN"){
         question = siteStage_question;
         preAnswer = siteStage_preAnswer;
+    } else if(extractionDx == "lgdClass"){
+        question = lgdClass_question;
+        preAnswer = lgdClass_preAnswer;
     } else{
         throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, crohns, advNeo. lgd coming soon.");
     }
@@ -290,6 +397,8 @@ int main(int argc, char ** argv) {
         system = lgd_system;
     } else if(params.extractionType == "siteStage"){
         system = siteStage_system;
+    } else if(params.extractionType == "lgdClass"){
+        system = lgdClass_system;
     } else{
         throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, crohns, advNeo. lgd coming soon.");
     }
@@ -690,9 +799,14 @@ int main(int argc, char ** argv) {
                     }
 
                     // Copy the client response and the ptID to the output file
-                    outFile3 << escapeNewLines(client.response);
-                    if(!client.ptID.empty()){
+                    if(!client.ptID.empty() && params.extractionType != "lgdClass"){
+                        outFile3 << escapeNewLines(client.response);
                         outFile3 << "\t" << client.ptID;
+                    } else if (params.extractionType == "lgdClass" && !client.ptID.empty()){
+                        outFile3 << addFieldToJsonArray(client.response, "SurgPathSID", client.ptID);
+                    } else{
+                        std::cerr << "No Patient ID or SurgPathSID to identify each input!" << std::endl;
+                        return 1;
                     }
                     outFile3 << std::endl;
 
@@ -702,7 +816,7 @@ int main(int argc, char ** argv) {
 
                     const auto t_main_end = ggml_time_us();
 
-                    LOG_TEE("\033[0m \nInput:\n\033[96m%s\n\033[91m%s\033[0m\n\033[92mJust completed: Patient: %s, sequence %3d of %3d, prompt: %4d tokens, response: %4d tokens, time: %5.2f seconds, speed %5.2f t/s",
+                    LOG_TEE("\033[0m \nInput:\n\033[96m%s\033[91m%s\033[0m\n\033[92mJust completed: Patient: %s, sequence %3d of %3d, prompt: %4d tokens, response: %4d tokens, time: %5.2f seconds, speed %5.2f t/s",
                             //escapeNewLines(client.input).c_str(),
                             client.input.c_str(),
                             client.response.c_str(),

@@ -1,0 +1,60 @@
+root ::= entry ("," entry){0,9} "]" | "{\"description\": \"NULL\"}" 
+
+entry ::= ("{\"description\": " string
+",\"lesion_type\": " lesion 
+",\"sample_ID\": " ID 
+",\"indication\": " indication 
+",\"location\": " site 
+",\"size_mm\": " size
+",\"shape\": " shape
+",\"dysplasia_grade\": " grade 
+",\"background_colitis_inflammation\": " background 
+",\"multifocal\": " yesNoUnknown 
+"}")
+
+string ::=
+  "\"" (
+    [a-z .,'] |  # Restrict to lowercase letters, spaces, single quotes, and commas
+    digit
+  )* "\""
+
+indication ::= "\"" ("random biopsy" | "polyp" | "mass" | "lesion" | "abnormal mucosa" | "null" | "adenoma" |
+"surveillance biopsy" | "thickened fold" | "nodularity" | "flat elevated" | "flat depressed") "\""
+
+ID ::= "\"" (oneDigit | twoDigits | "null" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z") "\"" 
+
+grade ::= "\"" ("low grade" | "high grade" | "no dysplasia" | "null" | "carcinoma in-situ" | 
+"adenocarcinoma" | "carcinoma" | "adenocarcinoma in-situ" | "adenoma" | "adenomatous") "\""
+
+lesion ::= "\"" ("tubular adenoma" | "sessile serrated adenoma" | "villous adenoma" | 
+"tubulovillous adenoma" | "villotubular adenoma" |
+"invisible dysplasia" | "random biopsy" | "adenocarcinoma" | "carcinoma" |
+"serrated adenoma" | "hyperplastic polyp" | "hamartomatous polyp" | "juvenile polyp" |
+"inflammatory polyp" | "hypermucinous dysplasia" | "goblet-cell deficient dysplasia" |
+"crypt cell dysplasia" | "dysplasia with increased Paneth cell differentiation" |
+"traditional serrated adenoma" | "low grade dysplasia" | "high grade dysplasia" |
+"adenoma" | "adenomatous tissue" | "dysplasia" | "low grade dysplasia" |
+"adenomatous polyp" | "no pathologic diagnsosis"
+) (" with adenocarcinoma" | " with carcinoma")? ("in-situ")? "\""
+
+morphology ::= "\"" ("pedunculated" | "sessile" | "flat" | "invisible" | "tubular" | "polypoid" | "adenoma" | "nonpolypoid" | "null") "\""
+
+shape ::= "\"" ("flat" | "invisible" | "polypoid" | "adenoma" | "nonpolypoid" | "null" | "flat elevated" | "flat depressed") "\""
+
+background ::= "\"" ("mild "|"moderate "|"severe ")? ("chronic inflammation" | "colitis" | "active colitis" | "inactive colitis" | "no inflammation" | "null") "\""
+
+site ::= "\"" ((("colon, ")? ("ascending colon" | "descending colon" | "transverse colon" | "cecum" |
+"unspecified" | "rectosigmoid" | "sigmoid colon" | "proximal colon" |
+"right colon" | "left colon" | cm | "distal colon" | "not otherwise specified" |
+"ileocecal valve" | "hepatic flexure" | "splenic flexure")) | ("rectum" | "anus" | cm | "unknown" | "ileum" | "unspecified colon")) "\""
+
+cm ::= measurement "cm"
+measurement ::= oneDigit | twoDigits
+
+size ::= "\"" (oneDigit | twoDigits | "null") "\""
+oneDigit ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+twoDigits ::= oneDigit digit
+digit ::= "0" | oneDigit
+
+yesNoUnknown ::= "\"" ("yes" | "no" | "unknown") "\""
+
