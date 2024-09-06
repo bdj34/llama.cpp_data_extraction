@@ -7,7 +7,7 @@
 --promptStartingNumber 0 \
 --grammar-file ./grammars/lgdClass.gbnf  \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
---outDir ../testing_siteStage_outDir \
+--outDir ../testing_lgdClass_outDir \
 --file ../testing_data/pathNeg.txt \
 --promptFormat gemma2
 
@@ -35,5 +35,20 @@
 --grammar-file ./grammars/lgdClass.gbnf  \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
 --outDir ../testing_siteStage_outDir \
---file ../testing_data/pathMaybe.txt \
+--file ../testing_data/pathNeg.txt \
 --promptFormat llama3
+
+
+# Reflection Llama 3 70B 
+./brian-extraction \
+-m /Users/brianjohnson/Downloads/Reflection-Llama-3.1-70B-Q4_K_M.gguf \
+--extractionType lgdClass \
+--sequences 16 --parallel 1 --cont-batching --n-predict 1000 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+--temp 0 --threads 4 \
+--promptStartingNumber 0 \
+--grammar-file ./grammars/lgdClass.gbnf  \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../testing_siteStage_outDir \
+--file ../testing_data/pathNeg.txt \
+--promptFormat llama3
+

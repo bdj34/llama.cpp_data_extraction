@@ -1,4 +1,4 @@
-root ::= entry ("," entry){0,9} "]" | "{\"description\": \"NULL\"}" 
+root ::= entry ("," entry){0,9} "]" | "{\"description\": \"NULL\"}" | ("{\"description\": " string ",\"lesion_type\": " nondysplastic "}")
 
 entry ::= ("{\"description\": " string
 ",\"lesion_type\": " lesion 
@@ -14,34 +14,49 @@ entry ::= ("{\"description\": " string
 
 string ::=
   "\"" (
-    [a-z .,'] |  # Restrict to lowercase letters, spaces, single quotes, and commas
+    [a-z .,'] |  # Restrict to lowercase letters, spaces, periods, single quotes, and commas
     digit
   )* "\""
 
 indication ::= "\"" ("random biopsy" | "polyp" | "mass" | "lesion" | "abnormal mucosa" | "null" | "adenoma" |
-"surveillance biopsy" | "thickened fold" | "nodularity" | "flat elevated" | "flat depressed") "\""
+"surveillance biopsy" | "thickened fold" | "nodularity" | "flat elevated lesion" | "flat depressed lesion" |
+"suspicious area" | "stricture" | "follow-up biopsy" | "bleeding site" | "site of previous lesion" |
+"normal appearing mucosa" | "unremarkable mucosa" | "non-remarkable mucosa" |
+"surveillance of known lesion" | "inflammatory changes" | "ulcer") "\""
 
-ID ::= "\"" (oneDigit | twoDigits | "null" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z") "\"" 
+ID ::= "\"" (oneDigit | twoDigits | "null" | "A" | "B" | "C" | "D" | "E" | 
+"F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | 
+"S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z") "\"" 
 
 grade ::= "\"" ("low grade" | "high grade" | "no dysplasia" | "null" | "carcinoma in-situ" | 
 "adenocarcinoma" | "carcinoma" | "adenocarcinoma in-situ" | "adenoma" | "adenomatous") "\""
 
-lesion ::= "\"" ("tubular adenoma" | "sessile serrated adenoma" | "villous adenoma" | 
+lesionItem ::= (("intramucosal ")? ("tubular adenoma" | "sessile serrated adenoma" | "villous adenoma" | 
 "tubulovillous adenoma" | "villotubular adenoma" |
-"invisible dysplasia" | "random biopsy" | "adenocarcinoma" | "carcinoma" |
-"serrated adenoma" | "hyperplastic polyp" | "hamartomatous polyp" | "juvenile polyp" |
-"inflammatory polyp" | "hypermucinous dysplasia" | "goblet-cell deficient dysplasia" |
-"crypt cell dysplasia" | "dysplasia with increased Paneth cell differentiation" |
+"invisible dysplasia" | "adenocarcinoma" | "carcinoma" |
+"serrated adenoma" | "juvenile polyp" withDys | "inflammatory polyp" withDys | 
 "traditional serrated adenoma" | "low grade dysplasia" | "high grade dysplasia" |
 "adenoma" | "adenomatous tissue" | "dysplasia" | "low grade dysplasia" |
-"adenomatous polyp" | "no pathologic diagnsosis"
-) (" with adenocarcinoma" | " with carcinoma")? ("in-situ")? "\""
+"adenomatous polyp" | "polyp" | "hyperplastic polyp" withDys | "indeterminate dysplasia" |
+nondysplastic |
+"colonic mucosa" withDys | "DALM" | "dysplasia-associated lesion or mass" ) 
+withDys? ("in-situ")?) 
+
+lesion ::= "\"" lesionItem (" and " lesionItem){0,5} "\""
+
+withDys ::= (" with adenocarcinoma" | " with carcinoma" | " with dysplasia" | " indefinite for dysplasia")
+
+nondysplastic ::= ("no pathologic diagnsosis" | "normal colonic mucosa" | "inflammatory polyp" |
+"inflammation" | "chronic inflammation" |
+"serrated polyp" | "sessile serrated polyp" | "paneth cell metaplasia" | "no dysplasia" |
+"hyperplastic polyp" | "hamartomatous polyp" | "juvenile polyp" ) (" without dysplasia")?
 
 morphology ::= "\"" ("pedunculated" | "sessile" | "flat" | "invisible" | "tubular" | "polypoid" | "adenoma" | "nonpolypoid" | "null") "\""
 
 shape ::= "\"" ("flat" | "invisible" | "polypoid" | "adenoma" | "nonpolypoid" | "null" | "flat elevated" | "flat depressed") "\""
 
-background ::= "\"" ("mild "|"moderate "|"severe ")? ("chronic inflammation" | "colitis" | "active colitis" | "inactive colitis" | "no inflammation" | "null") "\""
+background ::= "\"" (( "mild "| "moderate "| "severe " | "no ")? ("chronic ")? ("inactive " | "active ")?
+("inflammation" | "ulceration" | "colitis" | "null")) "\""
 
 site ::= "\"" ((("colon, ")? ("ascending colon" | "descending colon" | "transverse colon" | "cecum" |
 "unspecified" | "rectosigmoid" | "sigmoid colon" | "proximal colon" |
