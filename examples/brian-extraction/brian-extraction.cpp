@@ -26,7 +26,6 @@ std::string addFieldToJsonArray(const std::string& jsonArray, const std::string&
 std::string addFieldToJsonArray(const std::string& jsonArray, const std::string& newFieldName, const std::string& newFieldValue) {
     std::string result;
     size_t pos = 0;
-    bool firstEntry = true;
 
     while (pos != std::string::npos) {
         // Find the end of the next JSON object
@@ -52,18 +51,12 @@ std::string addFieldToJsonArray(const std::string& jsonArray, const std::string&
             // Add the new field
             jsonObject += "\"" + newFieldName + "\":\"" + newFieldValue + "\"}";
 
-            // Handle the comma separation between array entries
-            // if (!firstEntry) {
-            //     result += ",";
-            // }
-
             // Append the modified object to the result
             result += jsonObject;
         }
 
         // Move the position past this object
         pos = endPos + 1;
-        firstEntry = false;
     }
 
     // Wrap the result in array brackets
@@ -155,8 +148,10 @@ std::string lgd_system =
 
 std::string lgdClass_system = R"(The text provided is a pathology report diagnosing dysplasia or adenoma.
 Classify each adenoma or dysplastic lesion in JSON format with the following fields: "description" "lesion_type", "sample_ID", "indication", "location", "size_mm", "shape", "dysplasia_grade", "background_inflammation", and "multifocal".
-If there is no adenoma or dysplasia, fill each field with "NULL".
+Choose a "lesion_type" based on the following list: "tubular adenoma", "sessile serrated adenoma", "traditional serrated adenoma", "tubulovillous adenoma", "villous adenoma", "villotubular adenoma", "low grade dysplasia", "high grade dysplasia", "inflammation", "dysplasia", "polyp with dysplasia", "post-inflammatory polyp with dysplasia", "adenomatous polyp", "sessile serrated polyp with dysplasia", "indefinite dysplasia", "dysplasia-associated lesion or mass", or "indeterminate dysplasia".
+If the lesion type cannot be classified using the given list, fill each field with "NULL".
 For "size_mm", write the length of the largest dimension and make sure the output is in millimeters.
+Choose a "shape" based on the following list: "pedunculated", "sessile", "flat", "flat elevated", "flat depressed", "null", "invisible", "mass", "polypoid", or "nonpolypoid". 
 ONLY CLASSIFY THE SAMPLES THAT ARE ADENOMA AND/OR DYSPLASIA IN THE COLON OR RECTUM!
 
 Format each entry as follows:
@@ -164,7 +159,7 @@ Format each entry as follows:
 [
   {
     "description": "<description of adenoma/dysplasia or NULL>",
-    "lesion_type": "<type of lesion>",
+    "lesion_type": "<type of lesion or NULL>",
     "sample_ID": "<letter or number identifying the adenoma or dysplastic lesion>",
     "indication": "<why was the biopsy taken>",
     "location": "<location of lesion>",
@@ -192,7 +187,7 @@ Expected output:
     "shape": "polypoid",
     "dysplasia_grade": "low grade",
     "background_inflammation": "no inflammation",
-    "multifocal": "yes"
+    "multifocal": "yes, x2"
   },
   {
     "description": "invisible dysplasia from a random biopsy of the descending colon with background inflammation",

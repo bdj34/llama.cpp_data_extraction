@@ -1,4 +1,4 @@
-root ::= entry ("," entry){0,9} "]" | "{\"description\": \"NULL\"}" | ("{\"description\": " string ",\"lesion_type\": " nondysplastic "}")
+root ::= entry ("," entry){0,9} "]" | "{\"description\": \"NULL\"}" | ("{\"description\": " string ",\"lesion_type\": \"NULL\"}")
 
 entry ::= ("{\"description\": " string
 ",\"lesion_type\": " lesion 
@@ -28,7 +28,7 @@ ID ::= "\"" (oneDigit | twoDigits | "null" | "A" | "B" | "C" | "D" | "E" |
 "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | 
 "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z") "\"" 
 
-grade ::= "\"" ("low grade" | "high grade" | "no dysplasia" | "null" | "carcinoma in-situ" | 
+grade ::= "\"" ("low grade" | "high grade" | "no dysplasia" | "null" | "carcinoma in-situ" | "indefinite for dysplasia" |
 "adenocarcinoma" | "carcinoma" | "adenocarcinoma in-situ" | "adenoma" | "adenomatous") "\""
 
 lesionItem ::= (("intramucosal ")? ("tubular adenoma" | "sessile serrated adenoma" | "villous adenoma" | 
@@ -38,7 +38,7 @@ lesionItem ::= (("intramucosal ")? ("tubular adenoma" | "sessile serrated adenom
 "traditional serrated adenoma" | "low grade dysplasia" | "high grade dysplasia" |
 "adenoma" | "adenomatous tissue" | "dysplasia" | "low grade dysplasia" |
 "adenomatous polyp" | "polyp" | "hyperplastic polyp" withDys | "indeterminate dysplasia" |
-nondysplastic |
+nondysplastic | "post-inflammatory polyp with dysplasia" |
 "colonic mucosa" withDys | "DALM" | "dysplasia-associated lesion or mass" ) 
 withDys? ("in-situ")?) 
 
@@ -53,7 +53,7 @@ nondysplastic ::= ("no pathologic diagnsosis" | "normal colonic mucosa" | "infla
 
 morphology ::= "\"" ("pedunculated" | "sessile" | "flat" | "invisible" | "tubular" | "polypoid" | "adenoma" | "nonpolypoid" | "null") "\""
 
-shape ::= "\"" ("flat" | "invisible" | "polypoid" | "adenoma" | "nonpolypoid" | "null" | "flat elevated" | "flat depressed") "\""
+shape ::= "\"" ("flat" | "invisible" | "polypoid" | "adenoma" | "nonpolypoid" | "null" | "flat elevated" | "flat depressed" | "pedunculated" | "sessile" | "mass")  "\""
 
 background ::= "\"" (( "mild "| "moderate "| "severe " | "no ")? ("chronic ")? ("inactive " | "active ")?
 ("inflammation" | "ulceration" | "colitis" | "null")) "\""
@@ -71,5 +71,5 @@ oneDigit ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 twoDigits ::= oneDigit digit
 digit ::= "0" | oneDigit
 
-yesNoUnknown ::= "\"" ("yes" | "no" | "unknown") "\""
+yesNoUnknown ::= "\"" ("yes" | "no" | "unknown" | "yes, x" digit) "\""
 
