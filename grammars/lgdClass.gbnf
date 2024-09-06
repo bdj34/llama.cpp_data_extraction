@@ -1,4 +1,4 @@
-root ::= entry ("," entry){0,9} "]"
+root ::= entry ("," entry){0,9} ("]")?
 
 entry ::= (("{\"description\": " string
 ",\"lesion_type\": " lesion 
@@ -11,8 +11,8 @@ entry ::= (("{\"description\": " string
 ",\"background_colitis_inflammation\": " background 
 ",\"multifocal\": " yesNoUnknown 
 "}") |
-("{\"description\": \"NULL\"}") |
-("{\"description\": " string ",\"lesion_type\": \"NULL\"}")
+("{\"description\": \"NULL\"}]") |
+("{\"description\": " string ",\"lesion_type\": \"NULL\"}]")
 )
 
 string ::=
