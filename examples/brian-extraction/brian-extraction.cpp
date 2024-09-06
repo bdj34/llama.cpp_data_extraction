@@ -198,7 +198,7 @@ Expected output:
     "size_mm": "null",
     "shape": "invisible",
     "dysplasia_grade": "low grade",
-    "background_colitis_inflammation": "mild inflammation",
+    "background_inflammation": "mild inflammation",
     "multifocal": "unknown"
   }
 ])";
