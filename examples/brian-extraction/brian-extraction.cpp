@@ -149,9 +149,9 @@ std::string lgd_system =
 std::string lgdClass_system = R"(The text provided is a pathology report diagnosing dysplasia or adenoma.
 Classify each adenoma or dysplastic lesion in JSON format with the following fields: "description" "lesion_type", "sample_ID", "indication", "location", "size_mm", "shape", "dysplasia_grade", "background_inflammation", and "multifocal".
 Choose a "lesion_type" based on the following list: "tubular adenoma", "sessile serrated adenoma", "traditional serrated adenoma", "tubulovillous adenoma", "villous adenoma", "villotubular adenoma", "low grade dysplasia", "high grade dysplasia", "inflammation", "dysplasia", "polyp with dysplasia", "post-inflammatory polyp with dysplasia", "adenomatous polyp", "sessile serrated polyp with dysplasia", "indefinite dysplasia", "dysplasia-associated lesion or mass", or "indeterminate dysplasia".
-If the lesion type cannot be classified using the given list, fill each field with "NULL".
+If "lesion_type" cannot be classified using the given list, fill each field with "NULL".
 For "size_mm", write the length of the largest dimension and make sure the output is in millimeters.
-Choose a "shape" based on the following list: "pedunculated", "sessile", "flat", "flat elevated", "flat depressed", "null", "invisible", "mass", "polypoid", or "nonpolypoid". 
+Choose a "shape" based on the following list: "pedunculated", "sessile", "flat", "flat elevated", "flat depressed", "invisible", "mass", "polypoid", or "nonpolypoid". 
 ONLY CLASSIFY THE SAMPLES THAT ARE ADENOMA AND/OR DYSPLASIA IN THE COLON OR RECTUM!
 
 Format each entry as follows:
@@ -172,13 +172,13 @@ Format each entry as follows:
 ]
 
 Example input:
-- A. Tubular adenomas (x2), ascending colon, 0.5 cm x 0.3 cm x 0.3 cm, tubular architecture, smooth surface, tan color, no background colitis or inflammation.
+- A. Ascending colon polyps, tubular adenomas (x2), each measuring 0.5 cm x 0.3 cm x 0.3 cm, tubular architecture, smooth surface, tan color, no background colitis or inflammation.
 - #3. Low-grade dysplasia found on random biopsy from descending colon, not visible on endoscopy, with mildly inflamed background mucosa.
 
 Expected output:
 [
   {
-    "description": "5mm tubular adenomas in ascending colon",
+    "description": "2 tubular adenomas in ascending colon",
     "lesion_type": "tubular adenoma",
     "sample_ID": "A",
     "indication": "polyp",
@@ -198,7 +198,7 @@ Expected output:
     "size_mm": "null",
     "shape": "invisible",
     "dysplasia_grade": "low grade",
-    "background_colitis_inflammation": "mild chronic inflammation",
+    "background_colitis_inflammation": "mild inflammation",
     "multifocal": "unknown"
   }
 ])";
