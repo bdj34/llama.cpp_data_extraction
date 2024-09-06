@@ -26,7 +26,7 @@ indication ::= "\"" ("random biopsy" | "polyp" | "mass" | "lesion" | "abnormal m
 "suspicious area" | "stricture" | "follow-up biopsy" | "bleeding site" | "site of previous lesion" |
 "normal appearing mucosa" | "unremarkable mucosa" | "non-remarkable mucosa" |
 "surveillance of known lesion" | "inflammatory changes" | "ulcer" |
-"ulcerated area" | "anastomosis site" | "mucosal irregularity") "\""
+"ulcerated area" | "anastomosis site" | "mucosal irregularity" | "unknown" | "not stated") "\""
 
 ID ::= "\"" (oneDigit | twoDigits | "null" | "A" | "B" | "C" | "D" | "E" | 
 "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | 
