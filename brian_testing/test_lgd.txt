@@ -11,6 +11,8 @@
 --file ../testing_data/pathNeg.txt \
 --promptFormat gemma2
 
+./parallel -m ~/Downloads/models_gguf/gemma2-9B_SPPO_f16.gguf --cont-batching
+
 # Gemma2 27B SimPo Q4
 ./brian-extraction \
 -m ~/Downloads/gemma-2-27b-it-SimPO-37K-Q4_K_L.gguf \
