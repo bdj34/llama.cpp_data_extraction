@@ -150,7 +150,7 @@ std::string lgdClass_system = R"(The text provided is a pathology report diagnos
 Classify each adenoma or dysplastic lesion in JSON format with the following fields: "description" "lesion_type", "sample_ID", "indication", "location", "size_mm", "shape", "dysplasia_grade", "background_inflammation", and "multifocal".
 Choose a "lesion_type" based on the following list: "tubular adenoma", "sessile serrated adenoma", "traditional serrated adenoma", "tubulovillous adenoma", "villous adenoma", "villotubular adenoma", "low grade dysplasia", "high grade dysplasia", "inflammation", "dysplasia", "polyp with dysplasia", "post-inflammatory polyp with dysplasia", "adenomatous polyp", "sessile serrated polyp with dysplasia", "indefinite dysplasia", "dysplasia-associated lesion or mass", or "indeterminate dysplasia".
 If "lesion_type" cannot be classified using the given list, fill each field with "NULL".
-For "size_mm", write the length of the largest dimension and make sure the output is in millimeters.
+For "size_mm", write the length of the largest dimension and make sure the output is in millimeters. The size information is usually found in the Gross Description section of the report.
 Choose a "shape" based on the following list: "pedunculated", "sessile", "flat", "flat elevated", "flat depressed", "invisible", "mass", "polypoid", or "nonpolypoid". 
 ONLY CLASSIFY THE SAMPLES THAT ARE ADENOMA AND/OR DYSPLASIA IN THE COLON OR RECTUM!
 

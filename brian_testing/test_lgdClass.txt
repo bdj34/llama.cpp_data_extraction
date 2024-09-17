@@ -11,6 +11,32 @@
 --file ../testing_data/pathNeg.txt \
 --promptFormat gemma2
 
+# Mistral NEMO
+./brian-extraction \
+-m ~/Downloads/Mistral-Nemo-Instruct-2407-Q8_0.gguf \
+--extractionType lgdClass \
+--sequences 16 --parallel 1 --cont-batching --n-predict 1000 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+--temp 0 --threads 4 \
+--promptStartingNumber 0 \
+--grammar-file ./grammars/lgdClass.gbnf  \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../testing_lgdClass_outDir \
+--file ../testing_data/pathNeg.txt \
+--promptFormat mistral
+
+# Llama 3 
+./brian-extraction \
+-m ~/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
+--extractionType lgdClass \
+--sequences 16 --parallel 1 --cont-batching --n-predict 1000 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+--temp 0 --threads 4 \
+--promptStartingNumber 0 \
+--grammar-file ./grammars/lgdClass.gbnf  \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../testing_lgdClass_outDir \
+--file ../testing_data/pathNeg.txt \
+--promptFormat llama3
+
 # Gemma 27 SimPO
 ./brian-extraction \
 -m ~/Downloads/gemma-2-27b-it-SimPO-37K-Q4_K_L.gguf \
@@ -23,11 +49,24 @@
 --outDir ../testing_siteStage_outDir \
 --file ../testing_data/pathMaybe.txt \
 --promptFormat gemma2
---
 
-# Llama 3 70B 
+# Llama 3.1 70B IQ2M
 ./brian-extraction \
--m /Users/brianjohnson/Downloads/Meta-Llama-3-70B-Instruct-Q4_K_M.gguf \
+-m /Users/brianjohnson/Downloads/Meta-Llama-3.1-70B-Instruct-IQ2_M.gguf \
+--extractionType lgdClass \
+--sequences 16 --parallel 1 --cont-batching --n-predict 1000 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+--temp 0 --threads 4 \
+--promptStartingNumber 0 \
+--grammar-file ./grammars/lgdClass.gbnf  \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../testing_lgdClass_outDir \
+--file ../testing_data/pathNeg.txt \
+--promptFormat llama3
+
+
+# Llama 3.1 70B 
+./brian-extraction \
+-m /Users/brianjohnson/Downloads/Meta-Llama-3.1-70B-Instruct-Q4_K_M.gguf \
 --extractionType lgdClass \
 --sequences 16 --parallel 1 --cont-batching --n-predict 1000 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
 --temp 0 --threads 4 \
