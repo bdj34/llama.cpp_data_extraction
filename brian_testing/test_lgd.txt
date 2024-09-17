@@ -2,7 +2,7 @@
 ./brian-extraction \
 -m ~/Downloads/models_gguf/gemma2-9B_SPPO_f16.gguf \
 --extractionType lgd \
---sequences 16 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+--sequences 16 --parallel 1 --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
 --temp 0 --threads 4 \
 --promptStartingNumber 0 \
 --grammar-file ./grammars/yesNo_grammar.gbnf  \

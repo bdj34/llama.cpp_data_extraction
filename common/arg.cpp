@@ -368,7 +368,53 @@ gpt_params_context gpt_params_parser_init(gpt_params & params, llama_example ex,
         }
     };
 
+    add_opt(llama_arg(
+        {"--promptFormat"}, "FORMAT",
+        "set the format of the prompt (default: empty)",
+        [](gpt_params & params, const std::string & value) {
+            params.promptFormat = value;
+        }
+    ));
 
+    add_opt(llama_arg(
+        {"--promptStartingNumber"}, "NUMBER",
+        format("set the starting number for the prompt (default: %d)", params.promptStartingNumber),
+        [](gpt_params & params, int value) {
+            params.promptStartingNumber = value;
+        }
+    ));
+
+    add_opt(llama_arg(
+        {"--extractionType"}, "TYPE",
+        "set the type of extraction to be performed (default: empty)",
+        [](gpt_params & params, const std::string & value) {
+            params.extractionType = value;
+        }
+    ));
+
+    add_opt(llama_arg(
+        {"--outDir"}, "DIRECTORY",
+        "specify the output directory (default: current directory)",
+        [](gpt_params & params, const std::string & value) {
+            params.outDir = value;
+        }
+    ));
+
+    add_opt(llama_arg(
+        {"--patientFile"}, "FILE",
+        "specify the patient file to read (default: none)",
+        [](gpt_params & params, const std::string & value) {
+            std::ifstream file(value);
+            if (!file) {
+                throw std::runtime_error(format("error: failed to open file '%s'\n", value.c_str()));
+            }
+            params.patient_file = value;
+            std::copy(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>(), std::back_inserter(params.patients));
+            if (!params.patients.empty() && params.patients.back() == '\n') {
+                params.patients.pop_back();
+            }
+        }
+    ));
     add_opt(llama_arg(
         {"-h", "--help", "--usage"},
         "print usage and exit",
