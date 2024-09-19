@@ -147,7 +147,7 @@ std::string lgd_system =
 " Answer yes or no to the following question, matching the format 'Answer: Yes' or 'Answer: No'. Then, explain your reasoning."
 " Does the pathology report indicate that the patient has"
 " any type of adenoma, adenomatous/dysplastic lesion(s), or dysplasia of any grade"
-" in any colon or rectal sample?";
+" in any colon or rectal sample? Exclude sessile serrated adenomas unless they are specified to have dysplasia.";
 
 std::string lgdClass_system = R"(The text provided is a pathology report diagnosing dysplasia or adenoma.
 Classify each adenoma or dysplastic lesion in JSON format with the following fields: "description" "lesion_type", "sample_ID", "indication", "location", "size_mm", "shape", "dysplasia_grade", "background_inflammation", and "multifocal".
@@ -255,7 +255,7 @@ std::string advNeo_question = ">>>\n\nDoes the pathology report indicate that th
 " adenocarcinoma or high-grade dysplasia"
 " in the colon or rectum?";
 std::string lgd_question = ">>>\n\nDoes the pathology report indicate that the patient has"
-" any type of adenoma, adenomatous/dysplastic lesion(s), or dysplasia of any grade"
+" any type of adenoma (excluding sessile serrated adenoma), adenomatous/dysplastic lesion(s), or dysplasia of any grade"
 " in the colon or rectum?";
 
 std::string crohns_preAnswer = "Summary from notes:";
