@@ -382,7 +382,7 @@ gpt_params_context gpt_params_parser_init(gpt_params & params, llama_example ex,
 
     add_opt(llama_arg(
         {"--promptStartingNumber"}, "NUMBER",
-        format("set the starting number for the prompt (default: %d)", params.promptStartingNumber),
+        format("set the starting number for the prompt (default: %zu)", params.promptStartingNumber),
         [](gpt_params & params, int value) {
             params.promptStartingNumber = value;
         }

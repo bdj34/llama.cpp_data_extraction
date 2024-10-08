@@ -22,8 +22,20 @@ make
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
 --grammar-file ./grammars/yesNo_grammar.gbnf \
 --outDir ../testing_CRC_extraction_outDir \
---file ../testing_data/pathMaybe.txt \
+--file ../testing_data/pathPos.txt \
 --promptFormat llama3 
+
+# Gemma-2 2B
+./brian-extraction --extractionType crc \
+-m ~/Downloads/gemma-2-2b-it-Q8_0.gguf \
+--sequences 16 --parallel 1 --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+--temp 0 \
+--promptStartingNumber 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--grammar-file ./grammars/yesNo_grammar.gbnf \
+--outDir ../testing_CRC_extraction_outDir \
+--file ../testing_data/pathPos.txt \
+--promptFormat gemma2
 
 # Mistral 7b F16
 ./crc_extraction_parallel \

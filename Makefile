@@ -1,7 +1,7 @@
 # Define the default target now so that it is always the first target
 BUILD_TARGETS = \
 	libllava.a \
-	brian-extraction \
+	data-extraction \
 	llama-cli \
 	# tests/test-c.o \
 	# ibd_hx_type \
@@ -1422,7 +1422,7 @@ ibd_hx_type: examples/ibd_hx_type/ibd_hx_type.cpp  \
 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
 
-brian-extraction: examples/brian-extraction/brian-extraction.cpp  \
+data-extraction: examples/data-extraction/data-extraction.cpp  \
 	$(OBJ_ALL)
 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
