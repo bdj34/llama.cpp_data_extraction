@@ -2,7 +2,7 @@
 cd ~/VA_IBD/llama.cpp
 make
 
-./brian-extraction --extractionType crc \
+./data-extraction --extractionType crc \
 -m ~/Downloads/models_gguf/gemma2-9B_f16.gguf \
 --sequences 16 --parallel 1 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
 --temp 0 \
@@ -14,7 +14,7 @@ make
 --promptFormat gemma2 
 
 # Llama 3.2 3B
-./brian-extraction --extractionType crc \
+./data-extraction --extractionType crc \
 -m ~/Downloads/Llama-3.2-3B-Instruct-Q8_0.gguf \
 --sequences 16 --parallel 1 --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
 --temp 0 \
@@ -26,7 +26,7 @@ make
 --promptFormat llama3 
 
 # Gemma-2 2B
-./brian-extraction --extractionType crc \
+./data-extraction --extractionType crc \
 -m ~/Downloads/gemma-2-2b-it-Q8_0.gguf \
 --sequences 16 --parallel 1 --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
 --temp 0 \
