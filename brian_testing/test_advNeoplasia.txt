@@ -28,6 +28,18 @@ make
 --file ../testing_data/pathNeg.txt \
 --promptFormat gemma2
 
+# Mistral large
+./data-extraction --extractionType advNeo \
+-m ~/Downloads/Mistral-Large-Instruct-2407-Q4_K_M-00001-of-00002.gguf \
+--sequences 16 --parallel 1 --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 2000 \
+--temp 0 \
+--promptStartingNumber 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--grammar-file ./grammars/yesNo_grammar.gbnf \
+--outDir ../testing_CRC_extraction_outDir \
+--file ../testing_data/pathNeg.txt \
+--promptFormat mistral 
+
 # Phi 3.5 Mini
 ./brian-extraction --extractionType advNeo \
 -m /Users/brianjohnson/Downloads/models_gguf/Phi-3.5-mini-instruct-F16.gguf \

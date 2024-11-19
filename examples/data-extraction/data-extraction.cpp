@@ -330,7 +330,7 @@ std::string escapeNewLines(const std::string& input) {
 struct client {
     ~client() {
         if (smpl) {
-            gpt_sampler_free(smpl);
+            common_sampler_free(smpl);
         }
     }
 
@@ -353,7 +353,7 @@ struct client {
 
     std::string ptID;
 
-    struct gpt_sampler * smpl = nullptr;
+    struct common_sampler * smpl = nullptr;
 };
 
 static void print_date_time() {
@@ -379,13 +379,13 @@ static std::vector<std::string> split_string(const std::string& input, char deli
 int main(int argc, char ** argv) {
     srand(1234);
 
-    gpt_params params;
+    common_params params;
 
-    if (!gpt_params_parse(argc, argv, params, LLAMA_EXAMPLE_PARALLEL)) {
+    if (!common_params_parse(argc, argv, params, LLAMA_EXAMPLE_PARALLEL)) {
         return 1;
     }
 
-    gpt_init();
+    common_init();
     
     std::string system;
     if (params.extractionType == "crohns"){
@@ -437,9 +437,11 @@ int main(int argc, char ** argv) {
 
     // initialize the model 
 
-    llama_model_params model_params = llama_model_params_from_gpt_params(params);
+    // load the target model
+    common_init_result llama_init = common_init_from_params(params);
 
-    llama_model * model = llama_load_model_from_file(params.model.c_str(), model_params);
+    llama_model * model = llama_init.model;
+    llama_context * ctx = llama_init.context;
 
     if (model == NULL) {
         fprintf(stderr , "%s: error: unable to load model\n" , __func__);
@@ -450,9 +452,9 @@ int main(int argc, char ** argv) {
 
     // initialize the context
 
-    llama_context_params ctx_params = llama_context_params_from_gpt_params(params);
+    //llama_context_params ctx_params = llama_context_params_from_common_params(params);
 
-    llama_context * ctx = llama_new_context_with_model(model, ctx_params);
+    //llama_context * ctx = llama_new_context_with_model(model, ctx_params);
 
     if (ctx == NULL) {
         fprintf(stderr , "%s: error: failed to create the llama_context\n" , __func__);
@@ -514,7 +516,7 @@ int main(int argc, char ** argv) {
     std::string promptFormat_example = formatSystemPrompt(system, params.promptFormat, params.extractionType) + convertEscapedNewlines(k_prompts[params.promptStartingNumber]);
     std::vector<llama_token> tokens_format;
     // Bool in third arg represents BOS token, which we DO want here.
-    tokens_format = ::llama_tokenize(ctx, promptFormat_example, true);
+    tokens_format = ::common_tokenize(ctx, promptFormat_example, true);
     // Create and open a text file to save the promptFormat
     std::ofstream outFile2(metadataFile.c_str());
 
@@ -545,7 +547,7 @@ int main(int argc, char ** argv) {
     for (size_t i = 0; i < clients.size(); ++i) {
         auto & client = clients[i];
         client.id = i;
-        client.smpl = gpt_sampler_init(model, params.sparams);
+        client.smpl = common_sampler_init(model, params.sparams);
     }
 
     // Initialize system prompt token vec
@@ -554,7 +556,7 @@ int main(int argc, char ** argv) {
     std::string k_system = formatSystemPrompt(system, params.promptFormat, params.extractionType);
     // Print the string
     printf("System prompt: %s\n", k_system.c_str());
-    tokens_system = ::llama_tokenize(ctx, k_system, true);
+    tokens_system = common_tokenize(ctx, k_system, true);
     const int32_t n_tokens_system = tokens_system.size();
 
     llama_seq_id g_seq_id = params.promptStartingNumber;
@@ -579,7 +581,7 @@ int main(int argc, char ** argv) {
         LOG_INF("%s: Evaluating the system prompt ...\n", __func__);
 
         for (int32_t i = 0; i < n_tokens_system; ++i) {
-            llama_batch_add(batch, tokens_system[i], i, { 0 }, false);
+            common_batch_add(batch, tokens_system[i], i, { 0 }, false);
         }
 
         if (llama_decode(ctx, batch) != 0) {
@@ -608,10 +610,10 @@ int main(int argc, char ** argv) {
     while (true) {
         if (dump_kv_cache) {
             llama_kv_cache_view_update(ctx, &kvc_view);
-            llama_kv_cache_dump_view_seqs(kvc_view, 40);
+            common_kv_cache_dump_view_seqs(kvc_view, 40);
         }
 
-        llama_batch_clear(batch);
+        common_batch_clear(batch);
 
         // decode any currently ongoing sequences
         for (auto & client : clients) {
@@ -621,7 +623,7 @@ int main(int argc, char ** argv) {
 
             client.i_batch = batch.n_tokens;
 
-            llama_batch_add(batch, client.sampled, n_tokens_system + client.n_prompt + client.n_decoded, { client.id + 1 }, true);
+            common_batch_add(batch, client.sampled, n_tokens_system + client.n_prompt + client.n_decoded, { client.id + 1 }, true);
 
             client.n_decoded += 1;
         }
@@ -655,14 +657,14 @@ int main(int argc, char ** argv) {
                     client.prompt   = client.input;
                     client.response = "";
 
-                    gpt_sampler_reset(client.smpl);
+                    common_sampler_reset(client.smpl);
 
                     // do not prepend BOS because we have a system prompt!
                     std::vector<llama_token> tokens_prompt;
-                    tokens_prompt = ::llama_tokenize(ctx, client.prompt, false);
+                    tokens_prompt = ::common_tokenize(ctx, client.prompt, false);
 
                     for (size_t i = 0; i < tokens_prompt.size(); ++i) {
-                        llama_batch_add(batch, tokens_prompt[i], i + n_tokens_system, { client.id + 1 }, false);
+                        common_batch_add(batch, tokens_prompt[i], i + n_tokens_system, { client.id + 1 }, false);
                     }
 
                     // extract the logits only for the last token
@@ -704,18 +706,17 @@ int main(int argc, char ** argv) {
                 batch.n_seq_id + i,
                 batch.seq_id   + i,
                 batch.logits   + i,
-                0, 0, 0, // unused
             };
 
             const int ret = llama_decode(ctx, batch_view);
             if (ret != 0) {
                 if (n_batch == 1 || ret < 0) {
                     // if you get here, it means the KV cache is full - try increasing it via the context size
-                    LOG_INF("%s : failed to decode the batch, n_batch = %d, ret = %d\n", __func__, n_batch, ret);
+                    LOG_ERR("%s : failed to decode the batch, n_batch = %d, ret = %d\n", __func__, n_batch, ret);
                     return 1;
                 }
 
-                LOG("%s : failed to decode the batch, retrying with n_batch = %d\n", __func__, n_batch / 2);
+                LOG_ERR("%s : failed to decode the batch, retrying with n_batch = %d\n", __func__, n_batch / 2);
 
                 n_cache_miss += 1;
 
@@ -726,7 +727,7 @@ int main(int argc, char ** argv) {
                 continue;
             }
 
-            LOG("%s : decoded batch of %d tokens\n", __func__, n_tokens);
+            LOG_DBG("%s : decoded batch of %d tokens\n", __func__, n_tokens);
 
             for (auto & client : clients) {
                 if (client.i_batch < (int) i || client.i_batch >= (int) (i + n_tokens)) {
@@ -736,9 +737,9 @@ int main(int argc, char ** argv) {
                 //printf("client %d, seq %d, token %d, pos %d, batch %d\n",
                 //        client.id, client.seq_id, client.sampled, client.n_decoded, client.i_batch);
 
-                const llama_token id = gpt_sampler_sample(client.smpl, ctx, client.i_batch - i);
+                const llama_token id = common_sampler_sample(client.smpl, ctx, client.i_batch - i);
 
-                gpt_sampler_accept(client.smpl, id, true);
+                common_sampler_accept(client.smpl, id, true);
 
                 if (client.n_decoded == 1) {
                     // start measuring generation time after the first token to make sure all concurrent clients
@@ -746,7 +747,7 @@ int main(int argc, char ** argv) {
                     client.t_start_gen = ggml_time_us();
                 }
 
-                const std::string token_str = llama_token_to_piece(ctx, id);
+                const std::string token_str = common_token_to_piece(ctx, id);
 
                 client.response += token_str;
                 //printf("%s", token_str.c_str());
@@ -768,14 +769,14 @@ int main(int argc, char ** argv) {
                          (params.n_predict > 0 && client.n_decoded >= params.n_predict))) {
                     
                     // Brian edit: basic reverse prompt identifying the EOT or EOS tokens
-                    const std::string eos_str = llama_token_to_piece(ctx, llama_token_eos(model));
+                    const std::string eos_str = common_token_to_piece(ctx, llama_token_eos(model));
                     int32_t eot_token = llama_token_eot(model);
 
                     size_t pos;
                     if (eot_token == -1) {
                         pos = client.response.rfind(eos_str);
                     } else{
-                        const std::string eot_str = llama_token_to_piece(ctx, llama_token_eot(model));
+                        const std::string eot_str = common_token_to_piece(ctx, llama_token_eot(model));
                         const size_t pos_eos = client.response.rfind(eos_str);
                         const size_t pos_eot = client.response.rfind(eot_str);
                         if (pos_eos == std::string::npos && pos_eot == std::string::npos) {

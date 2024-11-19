@@ -352,15 +352,15 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
     add_opt(common_arg(
         {"--promptFormat"}, "FORMAT",
         "set the format of the prompt (default: empty)",
-        [](gpt_params & params, const std::string & value) {
+        [](common_params & params, const std::string & value) {
             params.promptFormat = value;
         }
     ));
 
     add_opt(common_arg(
         {"--promptStartingNumber"}, "NUMBER",
-        format("set the starting number for the prompt (default: %zu)", params.promptStartingNumber),
-        [](gpt_params & params, int value) {
+        string_format("set the starting number for the prompt (default: %zu)", params.promptStartingNumber),
+        [](common_params & params, int value) {
             params.promptStartingNumber = value;
         }
     ));
@@ -368,7 +368,7 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
     add_opt(common_arg(
         {"--extractionType"}, "TYPE",
         "set the type of extraction to be performed (default: empty)",
-        [](gpt_params & params, const std::string & value) {
+        [](common_params & params, const std::string & value) {
             params.extractionType = value;
         }
     ));
@@ -376,7 +376,7 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
     add_opt(common_arg(
         {"--outDir"}, "DIRECTORY",
         "specify the output directory (default: current directory)",
-        [](gpt_params & params, const std::string & value) {
+        [](common_params & params, const std::string & value) {
             params.outDir = value;
         }
     ));
@@ -384,10 +384,10 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
     add_opt(common_arg(
         {"--patientFile"}, "FILE",
         "specify the patient file to read (default: none)",
-        [](gpt_params & params, const std::string & value) {
+        [](common_params & params, const std::string & value) {
             std::ifstream file(value);
             if (!file) {
-                throw std::runtime_error(format("error: failed to open file '%s'\n", value.c_str()));
+                throw std::runtime_error(string_format("error: failed to open file '%s'\n", value.c_str()));
             }
             params.patient_file = value;
             std::copy(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>(), std::back_inserter(params.patients));

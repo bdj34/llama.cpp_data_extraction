@@ -37,16 +37,36 @@ make
 --file ../testing_data/pathPos.txt \
 --promptFormat gemma2
 
-# Mistral 7b F16
-./crc_extraction_parallel \
+# Mistral large
+./data-extraction --extractionType crc \
+-m ~/Downloads/Mistral-Large-Instruct-2407-Q4_K_M-00001-of-00002.gguf \
+--sequences 16 --parallel 1 --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 2000 \
+--temp 0 \
+--promptStartingNumber 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--grammar-file ./grammars/yesNo_grammar.gbnf \
+--outDir ../testing_CRC_extraction_outDir \
+--file ../testing_data/pathMaybe.txt \
+--promptFormat mistral 
+
+# Llama 3 8B
+./data-extraction \
 -m ~/Downloads/Meta-Llama-3-8B-Instruct_F16_brianConverted.gguf \
---sequences 16 --parallel 4 --cont-batching --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
---temp 0 --color \
+--sequences 16 --parallel 4 --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+--temp 0 \
+--extractionType crc \
 --promptFormat llama3 \
 --promptStartingNumber 0 \
 --grammar-file ./grammars/yesNo_grammar.gbnf \
 --outDir ../testing_CRC_extraction_outDir \
---file ../testing_data/pathMaybe.txt
+--file ../testing_data/pathPos.txt \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--file ../testing_data/pathPos.txt
+
+
+
+
+
 
 # Mixtral 8x7b 
 /tscc/projects/ps-curtiuslab/brian/nlp/llama.cpp_04242024_git/build_CPU_tmp/bin/crc_extraction_parallel \
