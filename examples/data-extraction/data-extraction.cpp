@@ -97,25 +97,58 @@ std::string convertEscapedNewlines(const std::string& input) {
 
 std::vector<std::string> k_prompts;
 
-std::string crohns_system = "You are provided with excerpts of medical notes for a patient who may have Crohn's colitis."
-" Your task is to determine whether they have Crohn's disease which affects the colon."
-" You are not a clinician. Do not make diagnostic judgments. Only extract information on diagnoses reported in the notes."
-" First, provide a one sentence summary from the notes about the diagnosis."//and/or direct quotes from the notes about the diagnosis."
-" Then, answer Yes if there is evidence of Crohn's disease causing colitis or affecting the colon (Crohn's colitis), or No if there is no evidence of Crohn's colitis."
-" If the patient has Crohn's disease but there is no evidence that it affects their colon, answer No - Crohn's without colitis."
-" If the diagnosis is undecided between Crohn's Disease and Ulcerative Colitis (UC), answer Undecided between UC and Crohn's."
-" If the diagnosis is Ulcerative Colitis or Ulcerative Proctitis, answer No - UC."
-" If the diagnosis is another type of colitis, answer No - {colitis type}."
-" If the information is insufficient, answer Insufficient information or Unknown."
-" Otherwise, just answer No."
-" Provide your confidence in the answer (low, medium, high, certain)."
-" Also, indicate whether the diagnosis has been confirmed by colonoscopy, endoscopy or pathology."
-" Finally, indicate if the exact date of diagnosis is stated in the notes."
-" Format your answer as follows:\n"
-"Summary from notes: {One sentence summary from the notes}\n"
-"Answer: {Your answer}. Confidence: {Low, Medium, High, or Certain}\n"
+// std::string ibd_system = "You are provided with excerpts of medical notes for a patient who may have colitis caused by Inflammatory Bowel Disease (IBD)."
+// " Your task is to determine whether they have IBD which affects the colon (IBD colitis)."
+// " You are not a clinician. Do not make diagnostic judgments. Only extract information on diagnoses reported in the notes."
+// " First, provide a one sentence summary from the notes about the diagnosis."//and/or direct quotes from the notes about the diagnosis."
+// " Then, provide your IBD colitis answer based on the following instructions:\n"
+// "   - If the patient has Crohn's disease that affects their colon, answer Crohn's colitis.\n"
+// "   - If the patient has Crohn's disease but there is no evidence that it affects their colon, answer Crohn's without colitis.\n"
+// "   - If the diagnosis is undecided between Crohn's Disease and Ulcerative Colitis (UC), answer Undecided between UC and Crohn's.\n"
+// "   - If the diagnosis is Ulcerative Colitis, answer Ulcerative Colitis.\n"
+// "   - If the diagnosis is Ulcerative Proctitis (UC confined to rectum), answer Ulcerative proctitis.\n"
+// "   - If the diagnosis is another type of colitis, answer {colitis type}.\n"
+// "   - If the information is insufficient, answer Insufficient information or Unknown.\n"
+// "Then provide your confidence in the answer (low, medium, high, certain)."
+// " Also, indicate whether the diagnosis has been confirmed by colonoscopy, endoscopy or pathology."
+// " Finally, indicate if the exact date of diagnosis is stated in the notes."
+// " Format your answer as follows:\n"
+// "Summary from notes: {One sentence summary from the notes}\n"
+// "IBD colitis answer: {Your answer}. Confidence: {Low, Medium, High, or Certain}\n"
+// "Pathology or endoscopy confirmed: {Yes or No}\n"
+// "Exact date of original colitis diagnosis stated: {Yes or No}";
+
+std::string ibd_system = 
+"You are provided with excerpts of medical notes for a patient who may have colitis caused by Inflammatory Bowel Disease (IBD)."
+" Your task is to identify whether the patient has IBD affecting the colon (IBD colitis), based solely on information reported in the notes."
+" You are not a clinician and must not make diagnostic judgments. Only summarize and classify based on the evidence provided in the notes."
+"\n\n"
+"### Instructions:\n"
+"1. Extract and summarize relevant information from the notes related to IBD diagnoses (two sentences or less).\n"
+"2. Use the following guidelines to classify the diagnosis:\n"
+"   - If the patient has Crohn's disease affecting the colon, answer 'Crohn's colitis'.\n"
+"   - If the patient has Crohn's disease but no evidence of colon involvement, answer 'Crohn's without colitis'.\n"
+"   - If the diagnosis is undecided between Crohn's Disease and Ulcerative Colitis (UC), answer 'Undecided between UC and Crohn's'.\n"
+"   - If the diagnosis is Ulcerative Colitis, answer 'Ulcerative Colitis'.\n"
+"   - If the diagnosis is Ulcerative Proctitis (UC confined to the rectum), answer 'Ulcerative proctitis'.\n"
+"   - If the diagnosis is another type of colitis, specify as '{colitis type}'.\n"
+"   - If the information is insufficient to make a determination, answer 'Insufficient information' or 'Unknown'.\n"
+"\n"
+"3. Indicate your confidence level in the answer (Low, Medium, High, or Certain).\n"
+"4. Indicate whether the diagnosis has been confirmed by colonoscopy, endoscopy, or pathology.\n"
+"5. State if the exact date of the original colitis diagnosis is provided in the notes.\n"
+"\n"
+"### Format your response as follows:\n"
+"Summary from notes: {Provide a concise one or two sentence summary of the relevant diagnosis information from the notes.}\n"
+"IBD colitis answer: {Your answer}. Confidence: {Low, Medium, High, or Certain}\n"
 "Pathology or endoscopy confirmed: {Yes or No}\n"
-"Exact date of original colitis diagnosis stated: {Yes or No}";
+"Exact date of original colitis diagnosis stated: {Yes or No}\n"
+"\n"
+"### Important points:\n"
+"- Do not assume information that is not stated in the notes.\n"
+"- When summarizing, include only the most relevant information related to the IBD diagnosis.\n"
+"- Use direct quotes from the notes wherever possible to support your answer.";
+
 
 std::string crc_system = 
 "The text provided is a pathology report, with samples originating from the colon or rectum unless specified otherwise."
@@ -225,12 +258,12 @@ std::string generatePreSystemPrompt(const std::string& promptFormat) {
 std::string generatePostSystemPrompt(const std::string& promptFormat, const std::string& extractionDx) {
 
     std::string postSys;
-    if (extractionDx == "crohns"){
+    if (extractionDx == "ibd"){
         postSys = "Excerpts:\n";
     } else if (extractionDx == "crc" || extractionDx == "advNeo" || extractionDx == "lgd" || extractionDx == "siteStage" || extractionDx == "lgdClass"){
         postSys = "<<<\nPathology report:\n";
     } else{
-        throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, crohns, advNeo. lgd coming soon.");
+        throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, ibd, advNeo, lgd.");
     }
 
 
@@ -247,7 +280,7 @@ std::string generatePostSystemPrompt(const std::string& promptFormat, const std:
     }
 }
 
-std::string crohns_question = "Question: Does the patient have Crohn's colitis?";
+std::string ibd_question = "";
 std::string crc_question = ">>>\n\nDoes the pathology report indicate that the patient has an invasive adenocarcinoma in any colon or rectal sample?";
 std::string siteStage_question = ">>>";
 std::string lgdClass_question = ">>>";
@@ -258,7 +291,7 @@ std::string lgd_question = ">>>\n\nDoes the pathology report indicate that the p
 " any type of adenoma (excluding sessile serrated adenoma), adenomatous/dysplastic lesion(s), or dysplasia of any grade"
 " in the colon or rectum?";
 
-std::string crohns_preAnswer = "Summary from notes:";
+std::string ibd_preAnswer = "Summary from notes:";
 std::string yesNo_preAnswer = "Answer:";
 std::string siteStage_preAnswer = "Site:";
 std::string lgdClass_preAnswer = "[";
@@ -268,9 +301,9 @@ std::string generatePreAnswer(const std::string& promptFormat, const std::string
     std::string question;
     std::string preAnswer;
 
-    if (extractionDx == "crohns"){
-        question = crohns_question;
-        preAnswer = crohns_preAnswer;
+    if (extractionDx == "ibd"){
+        question = ibd_question;
+        preAnswer = ibd_preAnswer;
     } else if (extractionDx == "crc"){
         question = crc_question;
         preAnswer = yesNo_preAnswer;
@@ -287,7 +320,7 @@ std::string generatePreAnswer(const std::string& promptFormat, const std::string
         question = lgdClass_question;
         preAnswer = lgdClass_preAnswer;
     } else{
-        throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, crohns, advNeo. lgd coming soon.");
+        throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, ibd, advNeo, lgd.");
     }
 
     if (promptFormat == "mistral") {
@@ -388,8 +421,8 @@ int main(int argc, char ** argv) {
     common_init();
     
     std::string system;
-    if (params.extractionType == "crohns"){
-        system = crohns_system;
+    if (params.extractionType == "ibd"){
+        system = ibd_system;
     } else if (params.extractionType == "crc"){
         system = crc_system;
     } else if(params.extractionType == "advNeo"){
@@ -401,7 +434,7 @@ int main(int argc, char ** argv) {
     } else if(params.extractionType == "lgdClass"){
         system = lgdClass_system;
     } else{
-        throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, crohns, advNeo. lgd coming soon.");
+        throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, ibd, advNeo, lgd.");
     }
 
     // Get the prompt Number we start at
