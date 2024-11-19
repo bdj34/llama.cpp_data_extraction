@@ -41,6 +41,8 @@ The following release is verified with good quality:
 
 ## News
 
+- 2024.11
+  - Use syclcompat to improve the performance on some platforms. This requires to use oneAPI 2025.0 or newer.
 
 - 2024.8
   - Use oneDNN as the default GEMM library, improve the compatibility for new Intel GPUs.
@@ -310,12 +312,14 @@ export CPLUS_INCLUDE_DIR=/path/to/oneMKL/buildWithCublas/include:$CPLUS_INCLUDE_
 export CPLUS_INCLUDE_DIR=/path/to/oneMKL/include:$CPLUS_INCLUDE_DIR
 
 # Build LLAMA with Nvidia BLAS acceleration through SYCL
+# Setting GGML_SYCL_DEVICE_ARCH is optional but can improve performance
+GGML_SYCL_DEVICE_ARCH=sm_80 # Example architecture
 
 # Option 1: Use FP32 (recommended for better performance in most cases)
-cmake -B build -DGGML_SYCL=ON -DGGML_SYCL_TARGET=NVIDIA -DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icpx
+cmake -B build -DGGML_SYCL=ON -DGGML_SYCL_TARGET=NVIDIA -DGGML_SYCL_DEVICE_ARCH=${GGML_SYCL_DEVICE_ARCH} -DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icpx
 
 # Option 2: Use FP16
-cmake -B build -DGGML_SYCL=ON -DGGML_SYCL_TARGET=NVIDIA -DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icpx -DGGML_SYCL_F16=ON
+cmake -B build -DGGML_SYCL=ON -DGGML_SYCL_TARGET=NVIDIA -DGGML_SYCL_DEVICE_ARCH=${GGML_SYCL_DEVICE_ARCH} -DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icpx -DGGML_SYCL_F16=ON
 
 # build all binary
 cmake --build build --config Release -j -v
@@ -333,8 +337,9 @@ export CPLUS_INCLUDE_DIR=/path/to/oneMKL/buildWithrocBLAS/include:$CPLUS_INCLUDE
 
 ## AMD
 # Use FP32, FP16 is not supported
-# Find your GGML_SYCL_HIP_TARGET with rocminfo, under the key 'Name:'
-cmake -B build -DGGML_SYCL=ON -DGGML_SYCL_TARGET=AMD -DGGML_SYCL_HIP_TARGET=${GGML_SYCL_HIP_TARGET} -DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icpx
+# Find your GGML_SYCL_DEVICE_ARCH with rocminfo, under the key 'Name:'
+GGML_SYCL_DEVICE_ARCH=gfx90a # Example architecture
+cmake -B build -DGGML_SYCL=ON -DGGML_SYCL_TARGET=AMD -DGGML_SYCL_DEVICE_ARCH=${GGML_SYCL_DEVICE_ARCH} -DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icpx
 
 # build all binary
 cmake --build build --config Release -j -v
@@ -377,7 +382,7 @@ found 2 SYCL devices:
 
 |Chosen Device ID|Setting|
 |-|-|
-|0|`export ONEAPI_DEVICE_SELECTOR="level_zero:1"` or no action|
+|0|`export ONEAPI_DEVICE_SELECTOR="level_zero:0"` or no action|
 |1|`export ONEAPI_DEVICE_SELECTOR="level_zero:1"`|
 |0 & 1|`export ONEAPI_DEVICE_SELECTOR="level_zero:0;level_zero:1"`|
 
@@ -644,6 +649,7 @@ use 1 SYCL GPUs: [0] with Max compute units:512
 |--------------------|---------------------------------------|---------------------------------------------|
 | GGML_SYCL          | ON (mandatory)                        | Enable build with SYCL code path.<br>FP32 path - recommended for better perforemance than FP16 on quantized model|
 | GGML_SYCL_TARGET   | INTEL *(default)* \| NVIDIA \| AMD    | Set the SYCL target device type.            |
+| GGML_SYCL_DEVICE_ARCH | Optional (except for AMD)          | Set the SYCL device architecture, optional except for AMD. Setting the device architecture can improve the performance. See the table [--offload-arch](https://github.com/intel/llvm/blob/sycl/sycl/doc/design/OffloadDesign.md#--offload-arch) for a list of valid architectures. |
 | GGML_SYCL_F16      | OFF *(default)* \|ON *(optional)*     | Enable FP16 build with SYCL code path.      |
 | CMAKE_C_COMPILER   | `icx` *(Linux)*, `icx/cl` *(Windows)* | Set `icx` compiler for SYCL code path.      |
 | CMAKE_CXX_COMPILER | `icpx` *(Linux)*, `icx` *(Windows)*   | Set `icpx/icx` compiler for SYCL code path. |
