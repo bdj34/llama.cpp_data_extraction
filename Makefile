@@ -42,6 +42,7 @@ BUILD_TARGETS = \
 	# llama-save-load-state \
 	# llama-server \
 	# llama-simple \
+	# llama-run \
 	# llama-speculative \
 	# llama-tokenize \
 	# llama-vdot \
@@ -259,7 +260,7 @@ endif
 #
 
 # keep standard at C11 and C++11
-MK_CPPFLAGS  = -Iggml/include -Iggml/src -Iinclude -Isrc -Icommon
+MK_CPPFLAGS  = -Iggml/include -Iggml/src -Iinclude -Isrc -Icommon -DGGML_USE_CPU
 MK_CFLAGS    = -std=c11   -fPIC
 MK_CXXFLAGS  = -std=c++11 -fPIC
 MK_NVCCFLAGS = -std=c++11
@@ -298,6 +299,7 @@ endif
 # some memory allocation are available on Linux through GNU extensions in libc
 ifeq ($(UNAME_S),Linux)
 	MK_CPPFLAGS += -D_GNU_SOURCE
+	MK_LDFLAGS  += -ldl
 endif
 
 # RLIMIT_MEMLOCK came in BSD, is not specified in POSIX.1,
@@ -738,10 +740,10 @@ GLSLC_CMD  = glslc
 _ggml_vk_genshaders_cmd = $(shell pwd)/vulkan-shaders-gen
 _ggml_vk_header = ggml/src/ggml-vulkan-shaders.hpp
 _ggml_vk_source = ggml/src/ggml-vulkan-shaders.cpp
-_ggml_vk_input_dir = ggml/src/vulkan-shaders
+_ggml_vk_input_dir = ggml/src/ggml-vulkan/vulkan-shaders
 _ggml_vk_shader_deps = $(echo $(_ggml_vk_input_dir)/*.comp)
 
-ggml/src/ggml-vulkan.o: ggml/src/ggml-vulkan.cpp ggml/include/ggml-vulkan.h $(_ggml_vk_header) $(_ggml_vk_source)
+ggml/src/ggml-vulkan.o: ggml/src/ggml-vulkan/ggml-vulkan.cpp ggml/include/ggml-vulkan.h $(_ggml_vk_header) $(_ggml_vk_source)
 	$(CXX) $(CXXFLAGS) $(shell pkg-config --cflags vulkan) -c $< -o $@
 
 $(_ggml_vk_header): $(_ggml_vk_source)
@@ -753,12 +755,12 @@ $(_ggml_vk_source): $(_ggml_vk_shader_deps) vulkan-shaders-gen
 		--target-hpp $(_ggml_vk_header) \
 		--target-cpp $(_ggml_vk_source)
 
-vulkan-shaders-gen: ggml/src/vulkan-shaders/vulkan-shaders-gen.cpp
-	$(CXX) $(CXXFLAGS) -o $@ $(LDFLAGS) ggml/src/vulkan-shaders/vulkan-shaders-gen.cpp
+vulkan-shaders-gen: ggml/src/ggml-vulkan/vulkan-shaders/vulkan-shaders-gen.cpp
+	$(CXX) $(CXXFLAGS) -o $@ $(LDFLAGS) ggml/src/ggml-vulkan/vulkan-shaders/vulkan-shaders-gen.cpp
 
 endif # GGML_VULKAN
 
-ifdef GGML_HIPBLAS
+ifdef GGML_HIP
 	ifeq ($(wildcard /opt/rocm),)
 		ROCM_PATH      ?= /usr
 		AMDGPU_TARGETS ?= $(shell $(shell which amdgpu-arch))
@@ -813,7 +815,7 @@ ggml/src/ggml-cuda/%.o: \
 	ggml/src/ggml-common.h \
 	ggml/src/ggml-cuda/common.cuh
 	$(HIPCC) $(CXXFLAGS) $(HIPFLAGS) -x hip -c -o $@ $<
-endif # GGML_HIPBLAS
+endif # GGML_HIP
 
 ifdef GGML_MUSA
 	ifeq ($(wildcard /opt/musa),)
@@ -821,7 +823,7 @@ ifdef GGML_MUSA
 	else
 		MUSA_PATH ?= /opt/musa
 	endif
-	MTGPU_TARGETS ?= mp_21 mp_22
+	MUSA_ARCHITECTURES ?= 21;22
 
 	MK_CPPFLAGS += -DGGML_USE_MUSA -DGGML_USE_CUDA
 	MK_LDFLAGS += -L$(MUSA_PATH)/lib -Wl,-rpath=$(MUSA_PATH)/lib
@@ -840,7 +842,8 @@ ifdef GGML_MUSA
 	CXX := $(MUSA_PATH)/bin/clang++
 	MCC := $(CCACHE) $(MUSA_PATH)/bin/mcc
 
-	MUSAFLAGS += $(addprefix --cuda-gpu-arch=, $(MTGPU_TARGETS))
+	MUSAFLAGS  = -x musa -mtgpu
+	MUSAFLAGS += $(foreach arch,$(subst ;, ,$(MUSA_ARCHITECTURES)),--cuda-gpu-arch=mp_$(arch))
 
 ifdef GGML_CUDA_FORCE_MMQ
 	MUSAFLAGS += -DGGML_CUDA_FORCE_MMQ
@@ -884,14 +887,14 @@ ggml/src/ggml-cuda/ggml-cuda.o: \
 	ggml/src/ggml-backend-impl.h \
 	ggml/src/ggml-common.h \
 	$(wildcard ggml/src/ggml-cuda/*.cuh)
-	$(MCC) $(CXXFLAGS) $(MUSAFLAGS) -x musa -mtgpu -c -o $@ $<
+	$(MCC) $(CXXFLAGS) $(MUSAFLAGS) -c -o $@ $<
 
 ggml/src/ggml-cuda/%.o: \
 	ggml/src/ggml-cuda/%.cu \
 	ggml/include/ggml.h \
 	ggml/src/ggml-common.h \
 	ggml/src/ggml-cuda/common.cuh
-	$(MCC) $(CXXFLAGS) $(MUSAFLAGS) -x musa -mtgpu -c -o $@ $<
+	$(MCC) $(CXXFLAGS) $(MUSAFLAGS) -c -o $@ $<
 endif # GGML_MUSA
 
 ifdef GGML_METAL
@@ -974,6 +977,7 @@ OBJ_COMMON = \
 	$(DIR_COMMON)/console.o \
 	$(DIR_COMMON)/ngram-cache.o \
 	$(DIR_COMMON)/sampling.o \
+	$(DIR_COMMON)/speculative.o \
 	$(DIR_COMMON)/build-info.o \
 	$(DIR_COMMON)/json-schema-to-grammar.o
 
@@ -1169,6 +1173,11 @@ llama-cli: examples/main/main.cpp \
 	@echo
 
 llama-infill: examples/infill/infill.cpp \
+	$(OBJ_ALL)
+	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
+	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
+
+llama-run: examples/run/run.cpp \
 	$(OBJ_ALL)
 	$(CXX) $(CXXFLAGS) -c $< -o $(call GET_OBJ_FILE, $<)
 	$(CXX) $(CXXFLAGS) $(filter-out %.h $<,$^) $(call GET_OBJ_FILE, $<) -o $@ $(LDFLAGS)
