@@ -33,6 +33,7 @@ else()
 endif()
 
 option(BUILD_SHARED_LIBS "ggml: build shared libraries" ${BUILD_SHARED_LIBS_DEFAULT})
+option(GGML_BACKEND_DL   "ggml: build backends as dynamic libraries (requires BUILD_SHARED_LIBS)" OFF)
 
 #
 # option list
@@ -109,6 +110,7 @@ if (NOT MSVC)
 endif()
 option(GGML_LASX        "ggml: enable lasx"             ON)
 option(GGML_LSX         "ggml: enable lsx"              ON)
+option(GGML_RVV         "ggml: enable rvv"              ON)
 option(GGML_SVE         "ggml: enable SVE"              OFF)
 
 if (WIN32)
