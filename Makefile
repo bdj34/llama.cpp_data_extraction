@@ -3,6 +3,7 @@ BUILD_TARGETS = \
 	libllava.a \
 	data-extraction \
 	llama-cli \
+	llama-speculative \
 	# tests/test-c.o \
 	# ibd_hx_type \
 	# ibd_hx_type_v2 \
@@ -43,7 +44,6 @@ BUILD_TARGETS = \
 	# llama-server \
 	# llama-simple \
 	# llama-run \
-	# llama-speculative \
 	# llama-tokenize \
 	# llama-vdot \
 	# llama-cvector-generator

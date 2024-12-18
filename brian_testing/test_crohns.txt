@@ -15,6 +15,40 @@
 --promptFormat gemma2 \
 --file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
 
+# Llama 3.3 70B
+./data-extraction \
+-m ~/Downloads/models_gguf/Llama-3.3-70B-Instruct-Q3_K_L.gguf \
+--extractionType ibd \
+--sequences 24 --parallel 1 --batch-size 2048 --ctx-size 4096 \
+--no-escape \
+--threads 4 \
+-n 2000 \
+--n-gpu-layers 99 \
+--temp 0 \
+--promptStartingNumber 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/crohns_llama3.3 \
+--grammar-file ./grammars/crohns.gbnf \
+--promptFormat llama3 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
+# Llama 3 70B
+./data-extraction \
+-m ~/Downloads/models_gguf/Meta-Llama-3-70B-Instruct-Q4_K_M.gguf \
+--extractionType ibd \
+--sequences 24 --parallel 1 --batch-size 2048 --ctx-size 4096 \
+--no-escape \
+--threads 4 \
+-n 2000 \
+--n-gpu-layers 99 \
+--temp 0 \
+--promptStartingNumber 0 \
+--patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
+--outDir ../llm_ibd_outDir/crohns_llama3_70B \
+--grammar-file ./grammars/crohns.gbnf \
+--promptFormat llama3 \
+--file /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_input_06062024_revChronological.txt
+
 ./data-extraction \
 -m ~/Downloads/models_gguf/gemma2-9B_SPPO_f16.gguf \
 --sequences 38 --parallel 1 --batch-size 2048 --ctx-size 4096 \
