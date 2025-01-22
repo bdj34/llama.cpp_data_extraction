@@ -182,6 +182,13 @@ std::string lgd_system =
 " any type of adenoma, adenomatous/dysplastic lesion(s), or dysplasia of any grade"
 " in any colon or rectal sample? Exclude sessile serrated adenomas unless they are specified to have dysplasia.";
 
+std::string ind_system = 
+"The text provided is a pathology report."
+" Answer yes or no to the following question, matching the format 'Answer: Yes' or 'Answer: No'. Then, explain your reasoning."
+" Does the pathology report describe findings consistent with 'indefinite dysplasia'?"
+" Exclude clear diagnoses of dysplasia (low-grade or high-grade) and non-dysplastic changes (e.g., inflammatory changes without atypia)."
+" Focus specifically on cases where the pathologist explicitly indicates uncertainty or borderline features, often requiring follow-up or further sampling.";
+
 std::string lgdClass_system = R"(The text provided is a pathology report diagnosing dysplasia or adenoma.
 Classify each adenoma or dysplastic lesion in JSON format with the following fields: "description" "lesion_type", "sample_ID", "indication", "location", "size_mm", "shape", "dysplasia_grade", "background_inflammation", and "multifocal".
 Choose a "lesion_type" based on the following list: "tubular adenoma", "sessile serrated adenoma", "traditional serrated adenoma", "tubulovillous adenoma", "villous adenoma", "villotubular adenoma", "low grade dysplasia", "high grade dysplasia", "inflammation", "dysplasia", "polyp with dysplasia", "post-inflammatory polyp with dysplasia", "adenomatous polyp", "sessile serrated polyp with dysplasia", "indefinite dysplasia", "dysplasia-associated lesion or mass", or "indeterminate dysplasia".

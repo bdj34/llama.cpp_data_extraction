@@ -2,7 +2,7 @@ root ::= untilNewline yesNoConf "\nPathology or endoscopy confirmed: " yesNo "\n
 
 yesNoConf ::= "Answer: " ("Crohn's with confirmed colitis" | "Crohn's with possible colitis" | 
 "Crohn's colitis" | "Unspecified colitis" | "Ulcerative proctitis" | "Ulcerative colitis" |
-"Colitis, not otherwise specified" | "Radiation proctitis" | "Ischemic colitis" |
+"Colitis, not otherwise specified" | "Proctitis, not otherwise specified" | "Radiation proctitis" | "Ischemic colitis" |
 "Infectious colitis" | "C diff colitis" | "Clostridioides difficile colitis" | "C. difficile colitis" |
 "Collagenous colitis" | "Lymphocytic colitis" |
 "Microscopic colitis" | "Drug-induced colitis" | "Chemical colitis" | "Diversion colitis" | "Unspecified colitis" |

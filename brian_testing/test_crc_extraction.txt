@@ -4,7 +4,7 @@ make
 
 ./data-extraction --extractionType crc \
 -m ~/Downloads/models_gguf/gemma2-9B_f16.gguf \
---sequences 16 --parallel 1 --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+--sequences 16 --parallel 16 --n-predict 300 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
 --temp 0 \
 --promptStartingNumber 0 \
 --patientFile /Users/brianjohnson/VA_IBD/testing_data/IBD_hx_deID/concat_patientIDs_06042024.txt \
@@ -71,7 +71,7 @@ make
 # Mixtral 8x7b 
 /tscc/projects/ps-curtiuslab/brian/nlp/llama.cpp_04242024_git/build_CPU_tmp/bin/crc_extraction_parallel \
 -m /tscc/projects/ps-curtiuslab/brian/nlp/models_gguf/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf \
---n-gpu-layers 0 --sequences 16 --parallel 4 --cont-batching --n-predict 300 --batch-size 2048 --threads 4 --ctx-size 20000 \
+--n-gpu-layers 0 --sequences 16 --parallel 4 --cont_batching false --n-predict 300 --batch-size 2048 --threads 4 --ctx-size 20000 \
 --temp 0 --color \
 --promptFormat mistral \
 --grammar-file /tscc/projects/ps-curtiuslab/brian/nlp/grammars/yesNo_grammar.gbnf \
