@@ -182,13 +182,6 @@ std::string lgd_system =
 " any type of adenoma, adenomatous/dysplastic lesion(s), or dysplasia of any grade"
 " in any colon or rectal sample? Exclude sessile serrated adenomas unless they are specified to have dysplasia.";
 
-std::string ind_system = 
-"The text provided is a pathology report."
-" Answer yes or no to the following question, matching the format 'Answer: Yes' or 'Answer: No'. Then, explain your reasoning."
-" Does the pathology report describe findings consistent with 'indefinite dysplasia'?"
-" Exclude clear diagnoses of dysplasia (low-grade or high-grade) and non-dysplastic changes (e.g., inflammatory changes without atypia)."
-" Focus specifically on cases where the pathologist explicitly indicates uncertainty or borderline features, often requiring follow-up or further sampling.";
-
 std::string ind_system = "The text provided is a pathology report."
 " Answer yes or no to the following question, matching the format 'Answer: Yes' or 'Answer: No'. Then, explain your reasoning."
 " Does the pathology report indicate that any colon or rectal sample contains tissue which is considered 'indefinite for dysplasia'?"
