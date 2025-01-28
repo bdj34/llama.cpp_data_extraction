@@ -189,6 +189,12 @@ std::string ind_system =
 " Exclude clear diagnoses of dysplasia (low-grade or high-grade) and non-dysplastic changes (e.g., inflammatory changes without atypia)."
 " Focus specifically on cases where the pathologist explicitly indicates uncertainty or borderline features, often requiring follow-up or further sampling.";
 
+std::string ind_system = "The text provided is a pathology report."
+" Answer yes or no to the following question, matching the format 'Answer: Yes' or 'Answer: No'. Then, explain your reasoning."
+" Does the pathology report indicate that any colon or rectal sample contains tissue which is considered 'indefinite for dysplasia'?"
+" 'Indefinite for dysplasia' is defined as uncertainty about the presence of dysplasia and may include descriptions of equivocal findings"
+" which are insufficient to confirm or exclude dysplasia. Answer yes if any colon or rectal sample is considered indefinite for dysplasia.";
+
 std::string lgdClass_system = R"(The text provided is a pathology report diagnosing dysplasia or adenoma.
 Classify each adenoma or dysplastic lesion in JSON format with the following fields: "description" "lesion_type", "sample_ID", "indication", "location", "size_mm", "shape", "dysplasia_grade", "background_inflammation", and "multifocal".
 Choose a "lesion_type" based on the following list: "tubular adenoma", "sessile serrated adenoma", "traditional serrated adenoma", "tubulovillous adenoma", "villous adenoma", "villotubular adenoma", "low grade dysplasia", "high grade dysplasia", "inflammation", "dysplasia", "polyp with dysplasia", "post-inflammatory polyp with dysplasia", "adenomatous polyp", "sessile serrated polyp with dysplasia", "indefinite dysplasia", "dysplasia-associated lesion or mass", or "indeterminate dysplasia".
@@ -267,10 +273,11 @@ std::string generatePostSystemPrompt(const std::string& promptFormat, const std:
     std::string postSys;
     if (extractionDx == "ibd"){
         postSys = "Excerpts:\n";
-    } else if (extractionDx == "crc" || extractionDx == "advNeo" || extractionDx == "lgd" || extractionDx == "siteStage" || extractionDx == "lgdClass"){
+    } else if (extractionDx == "crc" || extractionDx == "advNeo" || extractionDx == "lgd" || extractionDx == "ind" || 
+            extractionDx == "siteStage" || extractionDx == "lgdClass"){
         postSys = "<<<\nPathology report:\n";
     } else{
-        throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, ibd, advNeo, lgd.");
+        throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, ibd, advNeo, lgd, ind.");
     }
 
 
@@ -297,6 +304,8 @@ std::string advNeo_question = ">>>\n\nDoes the pathology report indicate that th
 std::string lgd_question = ">>>\n\nDoes the pathology report indicate that the patient has"
 " any type of adenoma (excluding sessile serrated adenoma), adenomatous/dysplastic lesion(s), or dysplasia of any grade"
 " in the colon or rectum?";
+std::string ind_question = ">>>\n\nDoes the pathology report indicate that the patient has"
+" any colon or rectal sample that is indefinite for dysplasia?";
 
 std::string ibd_preAnswer = "Summary from notes:";
 std::string yesNo_preAnswer = "Answer:";
@@ -320,6 +329,9 @@ std::string generatePreAnswer(const std::string& promptFormat, const std::string
     } else if(extractionDx == "lgd"){
         question = lgd_question;
         preAnswer = yesNo_preAnswer;
+    } else if(extractionDx == "ind"){
+        question = ind_question;
+        preAnswer = yesNo_preAnswer;
     } else if(extractionDx == "siteStage" || extractionDx == "siteAN"){
         question = siteStage_question;
         preAnswer = siteStage_preAnswer;
@@ -327,7 +339,7 @@ std::string generatePreAnswer(const std::string& promptFormat, const std::string
         question = lgdClass_question;
         preAnswer = lgdClass_preAnswer;
     } else{
-        throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, ibd, advNeo, lgd.");
+        throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, ibd, advNeo, lgd, ind.");
     }
 
     if (promptFormat == "mistral") {
@@ -436,12 +448,14 @@ int main(int argc, char ** argv) {
         system = advNeo_system;
     } else if(params.extractionType == "lgd"){
         system = lgd_system;
+    } else if(params.extractionType == "ind"){
+        system = ind_system;
     } else if(params.extractionType == "siteStage"){
         system = siteStage_system;
     } else if(params.extractionType == "lgdClass"){
         system = lgdClass_system;
     } else{
-        throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, ibd, advNeo, lgd.");
+        throw std::runtime_error("Error: extraction type not recognized. Recgonized options are: crc, ibd, advNeo, lgd, ind.");
     }
 
     // Get the prompt Number we start at
