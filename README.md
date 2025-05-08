@@ -13,7 +13,7 @@ See https://github.com/bdj34/llama.cpp_dev for an alternative fork I created for
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-### Demo
+## Demo
 I will focus on how to compile this software on a remote server without internet access. The first steps for this are to download this code, compress it, and transfer it to the server:
 git clone https://github.com/bdj34/llama.cpp_data_extraction
 tar -czvf DESIRED_PATH/llama.cpp_data_extraction.tar.gz -C PATH_USED_FOR_GIT_CLONE/llama.cpp_data_extraction .
@@ -22,17 +22,31 @@ Upload/transfer the llama.cpp_data_extraction.tar.gz file to the server somehow.
 
 See https://huggingface.co/briandj97/models_used/tree/main to download one of the gguf models we used in our work (or use your desired model).
 
-## Compiling on linux
+### Compiling on linux
 I used a linux development server. Initially, we didn't have a GPU
 
-# No GPU
-
-# GPU
+#### No GPU
 mkdir llama.cpp_data_extraction
+
 tar -xzvf llama.cpp_IBD_hx.tar.gz -C llama.cpp_IBD_hx/
+
 cd llama.cpp_IBD_hx
-cmake -B build -DGGML_CUDA=ON --fresh
+
+cmake -B build --fresh
+
 cmake --build build --config Release
+
+#### GPU
+mkdir llama.cpp_data_extraction
+
+tar -xzvf llama.cpp_IBD_hx.tar.gz -C llama.cpp_IBD_hx/
+
+cd llama.cpp_IBD_hx
+
+cmake -B build -DGGML_CUDA=ON --fresh
+
+cmake --build build --config Release
+
 
 ## Compiling on windows (untested by me, copied from llama.cpp, see llama.cpp for support)
 
