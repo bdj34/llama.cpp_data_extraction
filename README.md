@@ -28,24 +28,18 @@ I used a linux development server. Initially we didn't have a GPU, and then we d
 #### No GPU (linux)
 mkdir llama.cpp_data_extraction
 
-tar -xzvf llama.cpp_IBD_hx.tar.gz -C llama.cpp_IBD_hx/
-
-cd llama.cpp_IBD_hx
-
-cmake -B build --fresh
-
-cmake --build build --config Release
+tar -xzvf llama.cpp_IBD_hx.tar.gz -C llama.cpp_IBD_hx/  \n
+cd llama.cpp_IBD_hx  \n
+cmake -B build --fresh  \n
+cmake --build build --config Release  \n
 
 #### GPU (linux + CUDA)
 mkdir llama.cpp_data_extraction
 
-tar -xzvf llama.cpp_IBD_hx.tar.gz -C llama.cpp_IBD_hx/
-
-cd llama.cpp_IBD_hx
-
-cmake -B build -DGGML_CUDA=ON --fresh
-
-cmake --build build --config Release
+tar -xzvf llama.cpp_IBD_hx.tar.gz -C llama.cpp_IBD_hx/  \n
+cd llama.cpp_IBD_hx  \n
+cmake -B build -DGGML_CUDA=ON --fresh  \n
+cmake --build build --config Release  \n
 
 
 ## Compiling on windows (untested by me, copied from llama.cpp, see llama.cpp for support)
