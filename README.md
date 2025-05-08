@@ -23,9 +23,9 @@ Upload/transfer the llama.cpp_data_extraction.tar.gz file to the server somehow.
 See https://huggingface.co/briandj97/models_used/tree/main to download one of the gguf models we used in our work (or use your desired model).
 
 ### Compiling on linux
-I used a linux development server. Initially, we didn't have a GPU
+I used a linux development server. Initially we didn't have a GPU, and then we did get access to one which was only used for the indefinite for dysplasia task.
 
-#### No GPU
+#### No GPU (linux)
 mkdir llama.cpp_data_extraction
 
 tar -xzvf llama.cpp_IBD_hx.tar.gz -C llama.cpp_IBD_hx/
@@ -36,7 +36,7 @@ cmake -B build --fresh
 
 cmake --build build --config Release
 
-#### GPU
+#### GPU (linux + CUDA)
 mkdir llama.cpp_data_extraction
 
 tar -xzvf llama.cpp_IBD_hx.tar.gz -C llama.cpp_IBD_hx/
