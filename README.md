@@ -39,7 +39,9 @@ As in step 1, transfer the gguf file to the remote server.
 *(Example: at the VA, I split the gguf, transfer it via MS Teams to my VA computer, then email VINCI asking them to upload a large file.)*
 
 **Step 3: Unzip and compile**  
+
 Platform dependent: see below
+
 ---
 
 ## Unzipping and compiling on Linux
