@@ -34,11 +34,12 @@ tar -czvf DESIRED_PATH/llama.cpp_data_extraction.tar.gz -C PATH_USED_FOR_GIT_CLO
 ```
 
 Transfer `llama.cpp_data_extraction.tar.gz` to the server.  
-*(Example: at the VA, I transfer it via MS Teams, then upload it using the VINCI upload tool.)*
+*(Example: at the VA, I transfer it via MS Teams to my VA computer, then upload it using the VINCI upload tool.)*
 
 **Step 2: Download model**  
 Visit [HuggingFace](https://huggingface.co/briandj97/models_used/tree/main) to download one of the GGUF models used in our work (or use your own).
-
+Similarly, transfer the gguf file to the remote server
+*(Example: at the VA, I split the gguf, transfer it via MS Teams to my VA computer, then email VINCI asking them to upload a large file.)*
 ---
 
 ## Compiling on Linux
@@ -46,8 +47,8 @@ Visit [HuggingFace](https://huggingface.co/briandj97/models_used/tree/main) to d
 ### No GPU
 ```bash
 mkdir llama.cpp_data_extraction
-tar -xzvf llama.cpp_IBD_hx.tar.gz -C llama.cpp_IBD_hx/
-cd llama.cpp_IBD_hx
+tar -xzvf llama.cpp_data_extraction.tar.gz -C llama.cpp_data_extraction/
+cd llama.cpp_data_extraction
 cmake -B build --fresh
 cmake --build build --config Release
 ```
@@ -55,8 +56,8 @@ cmake --build build --config Release
 ### With GPU (CUDA)
 ```bash
 mkdir llama.cpp_data_extraction
-tar -xzvf llama.cpp_IBD_hx.tar.gz -C llama.cpp_IBD_hx/
-cd llama.cpp_IBD_hx
+tar -xzvf llama.cpp_data_extraction.tar.gz -C llama.cpp_data_extraction/
+cd llama.cpp__data_extraction
 cmake -B build -DGGML_CUDA=ON --fresh
 cmake --build build --config Release
 ```
@@ -65,13 +66,35 @@ cmake --build build --config Release
 
 ## Compiling on Windows
 
+Unzip and expand the .tar.gz (using 7zip)
 *(Untested by me — instructions copied from `llama.cpp`. Refer to the main repo for support.)*
+- Building for Windows (x86, x64 and arm64) with MSVC or clang as compilers:
+    - Install Visual Studio 2022, e.g. via the [Community Edition](https://visualstudio.microsoft.com/vs/community/). In the installer, select at least the following options (this also automatically installs the required additional tools like CMake,...):
+    - Tab Workload: Desktop-development with C++
+    - Tab Components (select quickly via search): C++-_CMake_ Tools for Windows, _Git_ for Windows, C++-_Clang_ Compiler for Windows, MS-Build Support for LLVM-Toolset (clang)
+    - Please remember to always use a Developer Command Prompt / PowerShell for VS2022 for git, build, test
+    - For Windows on ARM (arm64, WoA) build with:
+    ```bash
+    cmake --preset arm64-windows-llvm-release -D GGML_OPENMP=OFF
+    cmake --build build-arm64-windows-llvm-release
+    ```
+    Building for arm64 can also be done with the MSVC compiler with the build-arm64-windows-MSVC preset, or the standard CMake build instructions. However, note that the MSVC compiler does not support inline ARM assembly code, used e.g. for the accelerated Q4_0_N_M CPU kernels.
 
+    For building with ninja generator and clang compiler as default:
+      -set path:set LIB=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64;C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.41.34120\lib\x64\uwp;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64
+      ```bash
+      cmake --preset x64-windows-llvm-release
+      cmake --build build-x64-windows-llvm-release
+      ```
 ---
 
 ## Compiling on macOS (Apple Silicon)
 
-*(TBD — add instructions if/when tested.)*
+*(I have tested this and it should work. Let me know if there are issues.)*
+```bash
+cmake -B build
+cmake --build build --config Release
+```
 
 ---
 
