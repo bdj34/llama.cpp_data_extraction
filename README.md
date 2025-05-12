@@ -94,7 +94,7 @@ cmake -B build
 cmake --build build --config Release
 ```
 
-## Compiling without cmake (linux and/or mac)
+## Compiling without cmake (linux and/or mac; deprecated by llama.cpp)
 *(I have tested this and it should work. Let me know if there are issues.)*
 ```bash
 make
