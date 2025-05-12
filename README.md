@@ -40,7 +40,7 @@ As in step 1, transfer the gguf file to the remote server.
 
 **Step 3: Unzip and compile**  
 
-Platform dependent: see below
+Platform dependent: see below.
 
 ---
 
@@ -59,7 +59,7 @@ cmake --build build --config Release
 ```bash
 mkdir llama.cpp_data_extraction
 tar -xzvf llama.cpp_data_extraction.tar.gz -C llama.cpp_data_extraction/
-cd llama.cpp__data_extraction
+cd llama.cpp_data_extraction
 cmake -B build -DGGML_CUDA=ON --fresh
 cmake --build build --config Release
 ```
@@ -78,6 +78,7 @@ Unzip and expand the .tar.gz (using 7zip), then change directory into the expand
     - Please remember to always use a Developer Command Prompt / PowerShell for VS2022 for git, build, test
     - For Windows on ARM (arm64, WoA) build with:
     ```bash
+    cd PATH_TO_DIR/llama.cpp_data_extraction
     cmake --preset arm64-windows-llvm-release -D GGML_OPENMP=OFF
     cmake --build build-arm64-windows-llvm-release
     ```
@@ -95,6 +96,7 @@ Unzip and expand the .tar.gz (using 7zip), then change directory into the expand
 
 *(I have tested this and it should work. Let me know if there are issues.)*
 ```bash
+cd PATH_TO_DIR/llama.cpp_data_extraction
 cmake -B build
 cmake --build build --config Release
 ```
@@ -102,6 +104,7 @@ cmake --build build --config Release
 ## Compiling without cmake (linux and/or mac; deprecated by llama.cpp)
 *(I have tested this and it should work. Let me know if there are issues.)*
 ```bash
+cd PATH_TO_DIR/llama.cpp_data_extraction
 make
 ```
 
@@ -109,7 +112,7 @@ make
 
 ## Example running command (if compiled with cmake)
 ```bash
-cd DESIRED_PATH/llama.cpp_data_extraction
+cd PATH_TO_DIR/llama.cpp_data_extraction
 mkdir -p ../testing_CRC_extraction_outDir
 
 ./build/bin/data-extraction --extractionType crc \
@@ -130,7 +133,7 @@ mkdir -p ../testing_CRC_extraction_outDir
 The only difference is that the path to the binary "data-extraction" changes  
 
 ```bash
-cd DESIRED_PATH/llama.cpp_data_extraction
+cd PATH_TO_DIR/llama.cpp_data_extraction
 mkdir -p ../testing_CRC_extraction_outDir
 
 ./data-extraction --extractionType crc \
@@ -150,7 +153,7 @@ mkdir -p ../testing_CRC_extraction_outDir
 
 | Parameter | Description |
 |----------|-------------|
-| `--extractionType ` | Type of extraction to perform; `crc` refers to colorectal cancer-specific extraction. Other options are indefinite for dysplasia (`ind`), any dysplasia (`lgd`), and high grade dysplasia and/or adenocarcinoma (`advNeo`). |
+| `--extractionType` | Type of extraction to perform; `crc` refers to colorectal cancer-specific extraction. Other options are indefinite for dysplasia (`ind`), any dysplasia (`lgd`), and high grade dysplasia and/or adenocarcinoma (`advNeo`). |
 | `-m <path>` | Path to the GGUF model file to use for inference. |
 | `--sequences <int>` | Number of input sequences (path reports) to process. |
 | `--parallel <int>` | Number of prompts to process in parallel. |
@@ -164,7 +167,7 @@ mkdir -p ../testing_CRC_extraction_outDir
 | `--grammar-file <path>` | Path to the GBNF grammar file used to constrain output format. |
 | `--outDir <path>` | Directory where output files will be saved. |
 | `--file <path>` | Path to the input file containing text to process. Each path report should be on a new line, with new lines within each path report escaped "\n" -> "\\n" |
-| `--promptFormat <name>` | Prompt formatting to  (e.g., `gemma2`, `llama3`). |
+| `--promptFormat <name>` | Prompt formatting to match with formatting model was trained on (Options: `gemma2`, `llama3`, `mistral` or `phi3`). |
 
 ## Description (copied from main llama.cpp page)
 
