@@ -1,66 +1,91 @@
 # llama.cpp_data_extraction
 
-This is a fork of the main llama.cpp github found at: https://github.com/ggml-org/llama.cpp 
-I have added a few command-line parameters and an example called data-extraction for the purpose of structuring pathology reports using LLMs.
-This is the code we used for the work in our preprint: https://www.medrxiv.org/content/10.1101/2024.11.27.24318083v2
-Create an issue on this repo or reach out to me at brian.d.johnson97@gmail.com (bdj001@ucsd.edu) if you have questions!
+This is a fork of the main [llama.cpp GitHub](https://github.com/ggml-org/llama.cpp).  
+I have added a few command-line parameters and an example called `data-extraction` for the purpose of structuring pathology reports using LLMs.
 
-**Supported/recommended models:**
-This fork is up to date with the main llama.cpp github as of Nov 27, 2024 and mainly exists for exact reproduction of our work. Any models released since Nov 27, 2024 will not work. 
-See https://github.com/bdj34/llama.cpp_dev for an alternative fork I created for ongoing work that has support for more recent models and should be easier to use in general.  
+This is the code we used for the work in our preprint:  
+📄 https://www.medrxiv.org/content/10.1101/2024.11.27.24318083v2
+
+Create an issue on this repo or reach out to me at brian.d.johnson97@gmail.com or bdj001@ucsd.edu if you have questions!
+
+---
+
+**Supported/recommended models:**  
+This fork is up to date with the main `llama.cpp` GitHub as of **Nov 27, 2024** and exists primarily for exact reproduction of our work.  
+Any models released after that date will likely not work.
+
+👉 For ongoing work and support for newer models, see my alternative fork:  
+https://github.com/bdj34/llama.cpp_dev
 
 ![llama](https://user-images.githubusercontent.com/1991296/230134379-7181e485-c521-4d23-a0d6-f7b3b61ba524.png)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-## Demo
-I will focus on how to compile this software on a remote server without internet access. The first steps for this are to download this code, compress it, and transfer it to the server:
+---
+
+## Demo: Air-gapped Server Setup
+
+We focus on compiling this software on a remote server **without internet access**.
+
+**Step 1: Clone, compress, and transfer**
+```bash
 git clone https://github.com/bdj34/llama.cpp_data_extraction
 tar -czvf DESIRED_PATH/llama.cpp_data_extraction.tar.gz -C PATH_USED_FOR_GIT_CLONE/llama.cpp_data_extraction .
-Upload/transfer the llama.cpp_data_extraction.tar.gz file to the server somehow. As an example for the VA, I would transfer this to my VA workspace via MS Teams, then use the VINCI upload tool to upload it. This will depend on your exact configuration.
+```
 
+Transfer `llama.cpp_data_extraction.tar.gz` to the server.  
+*(Example: at the VA, I transfer it via MS Teams, then upload it using the VINCI upload tool.)*
 
-See https://huggingface.co/briandj97/models_used/tree/main to download one of the gguf models we used in our work (or use your desired model).
+**Step 2: Download model**  
+Visit [HuggingFace](https://huggingface.co/briandj97/models_used/tree/main) to download one of the GGUF models used in our work (or use your own).
 
-### Compiling on linux
-I used a linux development server. Initially we didn't have a GPU, and then we did get access to one which was only used for the indefinite for dysplasia task.
+---
 
-#### No GPU (linux)
+## Compiling on Linux
+
+### No GPU
+```bash
 mkdir llama.cpp_data_extraction
+tar -xzvf llama.cpp_IBD_hx.tar.gz -C llama.cpp_IBD_hx/
+cd llama.cpp_IBD_hx
+cmake -B build --fresh
+cmake --build build --config Release
+```
 
-tar -xzvf llama.cpp_IBD_hx.tar.gz -C llama.cpp_IBD_hx/  \n
-cd llama.cpp_IBD_hx  \n
-cmake -B build --fresh  \n
-cmake --build build --config Release  \n
-
-#### GPU (linux + CUDA)
+### With GPU (CUDA)
+```bash
 mkdir llama.cpp_data_extraction
+tar -xzvf llama.cpp_IBD_hx.tar.gz -C llama.cpp_IBD_hx/
+cd llama.cpp_IBD_hx
+cmake -B build -DGGML_CUDA=ON --fresh
+cmake --build build --config Release
+```
 
-tar -xzvf llama.cpp_IBD_hx.tar.gz -C llama.cpp_IBD_hx/  \n
-cd llama.cpp_IBD_hx  \n
-cmake -B build -DGGML_CUDA=ON --fresh  \n
-cmake --build build --config Release  \n
+---
 
+## Compiling on Windows
 
-## Compiling on windows (untested by me, copied from llama.cpp, see llama.cpp for support)
+*(Untested by me — instructions copied from `llama.cpp`. Refer to the main repo for support.)*
 
-## Compiling on mac (apple M1 or later chips)
+---
 
+## Compiling on macOS (Apple Silicon)
+
+*(TBD — add instructions if/when tested.)*
+
+---
 
 ## Description (from main llama.cpp page)
 
-The main goal of `llama.cpp` is to enable LLM inference with minimal setup and state-of-the-art performance on a wide
-variety of hardware - locally and in the cloud.
+The main goal of `llama.cpp` is to enable LLM inference with minimal setup and state-of-the-art performance on a wide variety of hardware — locally and in the cloud.
 
-- Plain C/C++ implementation without any dependencies
-- Apple silicon is a first-class citizen - optimized via ARM NEON, Accelerate and Metal frameworks
-- AVX, AVX2, AVX512 and AMX support for x86 architectures
-- 1.5-bit, 2-bit, 3-bit, 4-bit, 5-bit, 6-bit, and 8-bit integer quantization for faster inference and reduced memory use
-- Custom CUDA kernels for running LLMs on NVIDIA GPUs (support for AMD GPUs via HIP and Moore Threads MTT GPUs via MUSA)
-- Vulkan and SYCL backend support
-- CPU+GPU hybrid inference to partially accelerate models larger than the total VRAM capacity
+- Plain C/C++ implementation with zero dependencies
+- First-class support for Apple Silicon (ARM NEON, Accelerate, Metal)
+- AVX, AVX2, AVX512, and AMX support for x86 CPUs
+- Support for 1.5–8 bit quantization
+- CUDA kernels for NVIDIA GPUs; HIP support for AMD; MUSA for Moore Threads GPUs
+- Vulkan and SYCL backends
+- Hybrid CPU+GPU inference to enable running models larger than VRAM
 
-Since its [inception](https://github.com/ggerganov/llama.cpp/issues/33#issuecomment-1465108022), the project has
-improved significantly thanks to many contributions. It is the main playground for developing new features for the
-[ggml](https://github.com/ggerganov/ggml) library.
-
+Since its [inception](https://github.com/ggerganov/llama.cpp/issues/33#issuecomment-1465108022), the project has grown rapidly thanks to community contributions.  
+It serves as the main playground for development of the [ggml](https://github.com/ggerganov/ggml) library.
