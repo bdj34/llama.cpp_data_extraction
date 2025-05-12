@@ -64,7 +64,8 @@ cmake --build build --config Release
 
 ## Compiling on Windows
 
-Unzip and expand the .tar.gz (using 7zip)  
+Unzip and expand the .tar.gz (using 7zip), then change directory into the expanded directory.  
+
 *(Untested by me — instructions copied from `llama.cpp`. Refer to the main repo for support.)*  
 - Building for Windows (x86, x64 and arm64) with MSVC or clang as compilers:
     - Install Visual Studio 2022, e.g. via the [Community Edition](https://visualstudio.microsoft.com/vs/community/). In the installer, select at least the following options (this also automatically installs the required additional tools like CMake,...):
@@ -81,7 +82,7 @@ Unzip and expand the .tar.gz (using 7zip)
     For building with ninja generator and clang compiler as default:  
       -set path:set LIB=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64;C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.41.  34120\lib\x64\uwp;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64  
       ```bash
-      cmake --preset x64-windows-llvm-release  
+      cmake --preset x64-windows-llvm-release
       cmake --build build-x64-windows-llvm-release
       ```
 ---
@@ -108,7 +109,7 @@ cd DESIRED_PATH/llama.cpp_data_extraction
 mkdir -p ../testing_CRC_extraction_outDir
 
 ./build/bin/data-extraction --extractionType crc \
--m PATH_TO_GGUF/Gemma-2-9B-It-SPPO-Iter3-fp16 \
+-m PATH_TO_GGUF/Gemma-2-9B-It-SPPO-Iter3-fp16.gguf \
 --sequences 16 --parallel 4 --n-predict 300 \
 --batch-size 2048 --n-gpu-layers 99 --ctx-size 2000 \
 --temp 0 \
@@ -129,7 +130,7 @@ cd DESIRED_PATH/llama.cpp_data_extraction
 mkdir -p ../testing_CRC_extraction_outDir
 
 ./data-extraction --extractionType crc \
--m PATH_TO_GGUF/Gemma-2-9B-It-SPPO-Iter3-fp16 \
+-m PATH_TO_GGUF/Gemma-2-9B-It-SPPO-Iter3-fp16.gguf \
 --sequences 16 --parallel 4 --n-predict 300 \
 --batch-size 2048 --n-gpu-layers 99 --ctx-size 2000 \
 --temp 0 \
