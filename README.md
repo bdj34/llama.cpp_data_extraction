@@ -8,16 +8,12 @@ This is the code we used for the work in our preprint:
 
 Create an issue on this repo or reach out to me at brian.d.johnson97@gmail.com or bdj001@ucsd.edu if you have questions!
 
----
-
 **Supported/recommended models:**  
 This fork is up to date with the main `llama.cpp` GitHub as of **Nov 27, 2024** and exists primarily for exact reproduction of our work.  
 Any models released after that date will likely not work.
 
-👉 For ongoing work and support for newer models, see my alternative fork:  
+For ongoing work and support for newer models, see my alternative fork:  
 https://github.com/bdj34/llama.cpp_dev
-
-![llama](https://user-images.githubusercontent.com/1991296/230134379-7181e485-c521-4d23-a0d6-f7b3b61ba524.png)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
@@ -37,12 +33,14 @@ Transfer `llama.cpp_data_extraction.tar.gz` to the server.
 *(Example: at the VA, I transfer it via MS Teams to my VA computer, then upload it using the VINCI upload tool.)*
 
 **Step 2: Download model**  
+
 Visit [HuggingFace](https://huggingface.co/briandj97/models_used/tree/main) to download one of the GGUF models used in our work (or use your own).
 Similarly, transfer the gguf file to the remote server
 *(Example: at the VA, I split the gguf, transfer it via MS Teams to my VA computer, then email VINCI asking them to upload a large file.)*
+
 ---
 
-## Compiling on Linux
+## Unzipping and compiling on Linux
 
 ### No GPU
 ```bash
