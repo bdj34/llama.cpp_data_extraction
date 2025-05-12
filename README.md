@@ -146,21 +146,21 @@ mkdir -p ../testing_CRC_extraction_outDir
 
 | Parameter | Description |
 |----------|-------------|
-| `--extractionType crc` | Type of extraction to perform; `crc` refers to colorectal cancer-specific extraction logic. |
+| `--extractionType ` | Type of extraction to perform; `crc` refers to colorectal cancer-specific extraction. Other options are indefinite for dysplasia (`ind`), any dysplasia (`lgd`), and high grade dysplasia and/or adenocarcinoma (`advNeo`). |
 | `-m <path>` | Path to the GGUF model file to use for inference. |
 | `--sequences <int>` | Number of input sequences (path reports) to process. |
 | `--parallel <int>` | Number of prompts to process in parallel. |
 | `--n-predict <int>` | Maximum number of tokens to generate for each prompt. Anything above 1 should be sufficient for a "yes"/"no" |
 | `--batch-size <int>` | Token batch size for inference. I recommend setting to 2048 because I sometimes observed errors for other values. |
-| `--n-gpu-layers <int>` | Number of model layers to offload to the GPU. |
-| `--ctx-size <int>` | Context window size in tokens. Must be less than or equal to the model’s maximum context length. |
-| `--temp <float>` | Temperature for sampling; 0 means deterministic output. |
-| `--promptStartingNumber <int>` | Used for indexing or resuming prompts from a specific starting number. |
-| `--patientFile <path>` | File containing patient identifiers or metadata. |
+| `--n-gpu-layers <int>` | Number of model layers to offload to the GPU. Set to 99 for all if your entire model+context fits on your GPU. Set to 0 for CPU only inference. |
+| `--ctx-size <int>` | Context window size in tokens. Must be less than or equal to the model’s maximum context length multiplied by value given for `--parallel`. Also, must be low enough so that the model+context fits within your GPU VRAM (or CPU RAM, if only using CPU). |
+| `--temp <float>` | Temperature for sampling; 0 means deterministic output. We always used 0. |
+| `--promptStartingNumber <int>` | Used for indexing or resuming prompts from a specific starting number. Helpful if you get an error somewhere in the middle and want to resume from there. |
+| `--patientFile <path>` | File containing path report (or patient) identifiers. Identifier will be save with LLM answer as tab separated txt file. |
 | `--grammar-file <path>` | Path to the GBNF grammar file used to constrain output format. |
 | `--outDir <path>` | Directory where output files will be saved. |
-| `--file <path>` | Path to the input file containing text to process. |
-| `--promptFormat <name>` | Prompt formatting style (e.g., `gemma2`) which defines how input is structured before inference. |
+| `--file <path>` | Path to the input file containing text to process. Each path report should be on a new line, with new lines within each path report escaped "\n" -> "\\n" |
+| `--promptFormat <name>` | Prompt formatting to  (e.g., `gemma2`, `llama3`). |
 
 ## Description (copied from main llama.cpp page)
 
