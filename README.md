@@ -98,6 +98,24 @@ cmake --build build --config Release
 
 ---
 
+## Example running command
+```bash
+cd DESIRED_PATH/llama.cpp_data_extraction
+mkdir -p ../testing_CRC_extraction_outDir
+
+./data-extraction --extractionType crc \
+-m ~/Downloads/models_gguf/gemma2-9B_f16.gguf \
+--sequences 16 --parallel 16 --n-predict 300 \
+--batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+--temp 0 \
+--promptStartingNumber 0 \
+--patientFile ./testing_data/fake_patientIDs.txt \
+--grammar-file ./grammars/yesNo_grammar.gbnf \
+--outDir ../testing_CRC_extraction_outDir \
+--file ./testing_data/pathMaybe.txt \
+--promptFormat gemma2 
+```
+
 ## Description (from main llama.cpp page)
 
 The main goal of `llama.cpp` is to enable LLM inference with minimal setup and state-of-the-art performance on a wide variety of hardware — locally and in the cloud.
