@@ -102,7 +102,7 @@ cd DESIRED_PATH/llama.cpp_data_extraction
 mkdir -p ../testing_CRC_extraction_outDir
 
 ./build/bin/data-extraction --extractionType crc \
--m PATH_TO_GGUF/gemma2-9B_f16.gguf \
+-m PATH_TO_GGUF/Gemma-2-9B-It-SPPO-Iter3-fp16 \
 --sequences 16 --parallel 4 --n-predict 300 \
 --batch-size 2048 --n-gpu-layers 99 --ctx-size 2000 \
 --temp 0 \
