@@ -35,7 +35,7 @@ Transfer `llama.cpp_data_extraction.tar.gz` to the server.
 **Step 2: Download model**  
 
 Visit [HuggingFace](https://huggingface.co/briandj97/models_used/tree/main) to download one of the GGUF models used in our work (or use your own).
-Similarly, transfer the gguf file to the remote server
+As in step 1, transfer the gguf file to the remote server.  
 *(Example: at the VA, I split the gguf, transfer it via MS Teams to my VA computer, then email VINCI asking them to upload a large file.)*
 
 ---
@@ -64,8 +64,8 @@ cmake --build build --config Release
 
 ## Compiling on Windows
 
-Unzip and expand the .tar.gz (using 7zip)
-*(Untested by me — instructions copied from `llama.cpp`. Refer to the main repo for support.)*
+Unzip and expand the .tar.gz (using 7zip)  
+*(Untested by me — instructions copied from `llama.cpp`. Refer to the main repo for support.)*  
 - Building for Windows (x86, x64 and arm64) with MSVC or clang as compilers:
     - Install Visual Studio 2022, e.g. via the [Community Edition](https://visualstudio.microsoft.com/vs/community/). In the installer, select at least the following options (this also automatically installs the required additional tools like CMake,...):
     - Tab Workload: Desktop-development with C++
@@ -78,10 +78,10 @@ Unzip and expand the .tar.gz (using 7zip)
     ```
     Building for arm64 can also be done with the MSVC compiler with the build-arm64-windows-MSVC preset, or the standard CMake build instructions. However, note that the MSVC compiler does not support inline ARM assembly code, used e.g. for the accelerated Q4_0_N_M CPU kernels.
 
-    For building with ninja generator and clang compiler as default:
-      -set path:set LIB=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64;C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.41.34120\lib\x64\uwp;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64
+    For building with ninja generator and clang compiler as default:  
+      -set path:set LIB=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64;C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.41.  34120\lib\x64\uwp;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64  
       ```bash
-      cmake --preset x64-windows-llvm-release
+      cmake --preset x64-windows-llvm-release  
       cmake --build build-x64-windows-llvm-release
       ```
 ---
@@ -102,9 +102,9 @@ cd DESIRED_PATH/llama.cpp_data_extraction
 mkdir -p ../testing_CRC_extraction_outDir
 
 ./build/bin/data-extraction --extractionType crc \
--m ~/Downloads/models_gguf/gemma2-9B_f16.gguf \
---sequences 16 --parallel 16 --n-predict 300 \
---batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
+-m PATH_TO_GGUF/gemma2-9B_f16.gguf \
+--sequences 16 --parallel 4 --n-predict 300 \
+--batch-size 2048 --n-gpu-layers 99 --ctx-size 2000 \
 --temp 0 \
 --promptStartingNumber 0 \
 --patientFile ./example_data/fake_patientIDs.txt \
@@ -114,7 +114,7 @@ mkdir -p ../testing_CRC_extraction_outDir
 --promptFormat gemma2 
 ```
 
-## Description (from main llama.cpp page)
+## Description (copied from main llama.cpp page)
 
 The main goal of `llama.cpp` is to enable LLM inference with minimal setup and state-of-the-art performance on a wide variety of hardware — locally and in the cloud.
 
@@ -126,5 +126,3 @@ The main goal of `llama.cpp` is to enable LLM inference with minimal setup and s
 - Vulkan and SYCL backends
 - Hybrid CPU+GPU inference to enable running models larger than VRAM
 
-Since its [inception](https://github.com/ggerganov/llama.cpp/issues/33#issuecomment-1465108022), the project has grown rapidly thanks to community contributions.  
-It serves as the main playground for development of the [ggml](https://github.com/ggerganov/ggml) library.
