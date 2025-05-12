@@ -103,16 +103,16 @@ cmake --build build --config Release
 cd DESIRED_PATH/llama.cpp_data_extraction
 mkdir -p ../testing_CRC_extraction_outDir
 
-./data-extraction --extractionType crc \
+./build/bin/data-extraction --extractionType crc \
 -m ~/Downloads/models_gguf/gemma2-9B_f16.gguf \
 --sequences 16 --parallel 16 --n-predict 300 \
 --batch-size 2048 --n-gpu-layers 99 --ctx-size 20000 \
 --temp 0 \
 --promptStartingNumber 0 \
---patientFile ./testing_data/fake_patientIDs.txt \
+--patientFile ./example_data/fake_patientIDs.txt \
 --grammar-file ./grammars/yesNo_grammar.gbnf \
 --outDir ../testing_CRC_extraction_outDir \
---file ./testing_data/pathMaybe.txt \
+--file ./example_data/pathMaybe.txt \
 --promptFormat gemma2 
 ```
 
