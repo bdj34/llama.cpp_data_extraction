@@ -32,12 +32,14 @@ tar -czvf DESIRED_PATH/llama.cpp_data_extraction.tar.gz -C PATH_USED_FOR_GIT_CLO
 Transfer `llama.cpp_data_extraction.tar.gz` to the server.  
 *(Example: at the VA, I transfer it via MS Teams to my VA computer, then upload it using the VINCI upload tool.)*
 
-**Step 2: Download model**  
+**Step 2: Download model and transfer**  
 
 Visit [HuggingFace](https://huggingface.co/briandj97/models_used/tree/main) to download one of the GGUF models used in our work (or use your own).
 As in step 1, transfer the gguf file to the remote server.  
 *(Example: at the VA, I split the gguf, transfer it via MS Teams to my VA computer, then email VINCI asking them to upload a large file.)*
 
+**Step 3: Unzip and compile**  
+Platform dependent: see below
 ---
 
 ## Unzipping and compiling on Linux
