@@ -1,0 +1,16 @@
+Method,task,cohort,source,N_llama3_8B,N_gemma2_9B_SPPO,N_overlap,N_pos_llama3_8B,N_pos_gemma2_9B_SPPO,N_pos_both,N_pos_either,mean_nChar,median_nChar
+nonIBD_dysplasia_mvp,any dysplasia,non-ibd,MVP,838,838,838,750,751,748,753,419.548,281
+ibd_dysplasia_mvp,any dysplasia,ibd,MVP,963,963,963,242,252,240,254,791.9133333,723
+nonIBD_advNeo_mvp,hgd or crc,non-ibd,MVP,1000,1000,1000,260,306,258,308,659.265,413
+ibd_advNeo_mvp,hgd or crc,ibd,MVP,1492,1492,1492,223,262,218,267,975.4691689,813
+nonIBD_crc_mvp,invasive crc,non-ibd,MVP,1000,1000,1000,515,522,503,534,1035.698,650.5
+ibd_crc_mvp,invasive crc,ibd,MVP,607,607,607,152,156,149,159,1052.892916,808
+ibd_ind_mvp,indefinite dysplasia,ibd,MVP,14379,14379,14379,333,428,293,468,828.3881,701
+nonIBD_dysplasia_cdw,any dysplasia,non-ibd,CDW,1000,1000,1000,875,870,867,878,416.983,273
+ibd_dysplasia_cdw,any dysplasia,ibd,CDW,1000,1000,1000,310,313,303,320,789.745,635
+nonIBD_advNeo_cdw,hgd or crc,non-ibd,CDW,1000,783,783,370,322,289,324,612.772,435
+ibd_advNeo_cdw,hgd or crc,ibd,CDW,1000,1000,1000,186,219,182,223,951.264,722.5
+nonIBD_crc_cdw,invasive crc,non-ibd,CDW,488,343,343,261,180,172,187,842.8685714,569
+ibd_crc_cdw,invasive crc,ibd,CDW,3825,700,700,1003,186,174,197,1044.947143,746.5
+ibd_ind_cdw,indefinite dysplasia,ibd,CDW,65453,65453,65453,1577,2024,1414,2187,790.8384,649
+ibd_crc_unfiltered_mvp,invasive crc unfiltered,ibd,MVP,21372,21372,21372,151,157,149,159,737.6544544,604
