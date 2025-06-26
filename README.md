@@ -4,8 +4,8 @@ This is a fork of the main [llama.cpp GitHub](https://github.com/ggml-org/llama.
 I have added a few command-line parameters and an example called `data-extraction` for the purpose of structuring pathology reports using LLMs.
 
 This is the code we used for the work in our preprint:  
-📄 https://www.medrxiv.org/content/10.1101/2024.11.27.24318083v2
-To reproduce our caculation of performance metrics from this paper, see the directory "reproduce_paper_results".
+📄 https://www.medrxiv.org/content/10.1101/2024.11.27.24318083v2 
+To reproduce our calculation of performance metrics from the paper, see the directory "reproduce_paper_results".
 
 Create an issue on this repo or reach out to me at brian.d.johnson97@gmail.com or bdj001@ucsd.edu if you have questions!
 
