@@ -3,8 +3,8 @@
 This is a fork of the main [llama.cpp GitHub](https://github.com/ggml-org/llama.cpp).  
 I have added a few command-line parameters and an example called `data-extraction` for the purpose of structuring pathology reports using LLMs.
 
-This is the code we used for the work in our preprint:  
-📄 https://www.medrxiv.org/content/10.1101/2024.11.27.24318083v2 
+This is the code we used for the work in our paper "Large language models for extracting histopathologic diagnoses of colorectal cancer and dysplasia from electronic health records":  
+📄 PMID: 40973184 DOI: 10.1136/bmjgast-2025-001896
 
 To reproduce our calculation of performance metrics from the paper, see the directory "reproduce_paper_results".
 
